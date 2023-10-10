@@ -9,7 +9,8 @@ import (
 )
 
 func (r *memoryRespository) AddOrder(ctx context.Context, order models.Order) (models.Order, error) {
-	logctx.Info(ctx, "adding order to in-memory DB", logger.String("orderId", order.Id))
-	r.Orders[order.Id] = order
+	orderIdStr := order.Id.String()
+	logctx.Info(ctx, "adding order to in-memory DB", logger.String("orderId", orderIdStr))
+	r.Orders[orderIdStr] = order
 	return order, nil
 }

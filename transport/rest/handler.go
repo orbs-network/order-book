@@ -6,11 +6,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
+	"github.com/shopspring/decimal"
 )
 
 // Service represents the methods available on the service to handle the actual request.
 type Service interface {
-	CreateOrder(ctx context.Context, price string, symbol string, size string) (models.Order, error)
+	CreateOrder(ctx context.Context, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error)
 }
 
 type Handler struct {

@@ -7,10 +7,11 @@ import (
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
+	"github.com/shopspring/decimal"
 )
 
-func (s *Service) CreateOrder(ctx context.Context, price string, symbol string, size string) (models.Order, error) {
-	id := uuid.New().String()
+func (s *Service) CreateOrder(ctx context.Context, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error) {
+	id := uuid.New()
 	order := models.Order{
 		Id:        id,
 		Price:     price,
@@ -26,6 +27,6 @@ func (s *Service) CreateOrder(ctx context.Context, price string, symbol string, 
 		return models.Order{}, err
 	}
 
-	logctx.Info(ctx, "order added", logger.String("ID", order.Id), logger.String("price", order.Price), logger.String("size", order.Size))
+	logctx.Info(ctx, "order added", logger.String("ID", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()))
 	return order, nil
 }

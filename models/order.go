@@ -1,10 +1,15 @@
 package models
 
+import (
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+)
+
 type Order struct {
-	Id        string
-	Price     string
-	Symbol    string
-	Size      string
+	Id        uuid.UUID
+	Price     decimal.Decimal
+	Symbol    Symbol
+	Size      decimal.Decimal
 	Signature *string // EIP 712
-	Pending   bool
+	Pending   bool    // when order is pending, it should not be updateable
 }
