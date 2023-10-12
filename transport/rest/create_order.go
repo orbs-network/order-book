@@ -46,6 +46,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logctx.Info(r.Context(), "user trying to create order", logger.String("userId", userId.String()), logger.String("price", decPrice.String()), logger.String("size", decSize.String()))
 	order, err := h.svc.AddOrder(r.Context(), userId, decPrice, symbol, decSize)
 
 	if err == models.ErrOrderAlreadyExists {

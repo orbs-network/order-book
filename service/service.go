@@ -3,6 +3,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 
 	"github.com/google/uuid"
@@ -10,24 +11,24 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type Store interface {
-	StoreOrder(order models.Order) error
-	RemoveOrder(orderId uuid.UUID) error
-	FindOrderByUserAndPrice(userId uuid.UUID, price decimal.Decimal) (*models.Order, error)
-	GetOrdersAtPrice(price decimal.Decimal) []models.Order
-	GetAllPrices() []decimal.Decimal
+type OrderBookStore interface {
+	StoreOrder(ctx context.Context, order models.Order) error
+	RemoveOrder(ctx context.Context, orderId uuid.UUID) error
+	FindOrder(ctx context.Context, input models.FindOrderInput) (*models.Order, error)
+	FindOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
+	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
 }
 
 // Service contains methods that implement the business logic for the application.
 type Service struct {
-	store Store
+	orderBookStore OrderBookStore
 }
 
 // New creates a new Service with injected dependencies.
-func New(store Store) (*Service, error) {
+func New(store OrderBookStore) (*Service, error) {
 	if store == nil {
 		return nil, errors.New("store cannot be nil")
 	}
 
-	return &Service{store: store}, nil
+	return &Service{orderBookStore: store}, nil
 }

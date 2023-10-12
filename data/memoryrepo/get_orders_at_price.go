@@ -1,24 +1,31 @@
 package memoryrepo
 
 import (
+	"context"
+	"fmt"
+
 	"github.com/orbs-network/order-book/models"
 	"github.com/shopspring/decimal"
 )
 
-func (r *inMemoryRepository) GetOrdersAtPrice(price decimal.Decimal) []models.Order {
+func (r *inMemoryRepository) GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	orders, exists := r.sellOrders[price.StringFixed(models.STR_PRECISION)]
+	priceStr := price.StringFixed(models.STR_PRECISION)
+	ordersAtPrice, exists := r.sellOrders[symbol][priceStr]
+
 	if !exists {
-		return nil
+		return nil, fmt.Errorf("no orders found for symbol %s at price %s", symbol, priceStr)
 	}
 
-	ordersSlice := make([]models.Order, orders.List.Len())
+	orders := make([]models.Order, ordersAtPrice.List.Len())
 	i := 0
-	for e := orders.List.Front(); e != nil; e = e.Next() {
-		ordersSlice[i] = *e.Value.(*models.Order)
+
+	for e := ordersAtPrice.List.Front(); e != nil; e = e.Next() {
+		orders[i] = e.Value.(models.Order)
 		i++
 	}
-	return ordersSlice
+
+	return orders, nil
 }

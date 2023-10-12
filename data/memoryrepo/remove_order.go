@@ -1,83 +1,65 @@
 package memoryrepo
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 )
 
-func (r *inMemoryRepository) RemoveOrder(orderId uuid.UUID) error {
+func (r *inMemoryRepository) RemoveOrder(ctx context.Context, orderId uuid.UUID) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
 	orderIdStr := orderId.String()
 
+	// Retrieve the order's element from the orderLocations map
 	element, exists := r.orderLocations[orderIdStr]
 	if !exists {
-		return fmt.Errorf("order not found for order ID %q", orderIdStr)
+		return fmt.Errorf("order with ID %s not found", orderIdStr)
 	}
 
 	order, ok := element.Value.(models.Order)
 	if !ok {
-		return fmt.Errorf("failed to cast order %q", orderIdStr)
+		return fmt.Errorf("failed to cast element to Order type")
 	}
 
 	priceStr := order.Price.StringFixed(models.STR_PRECISION)
 
-	orders := r.sellOrders[priceStr]
+	// Remove the order from the orders at this price for this symbol
+	ordersAtPrice := r.sellOrders[order.Symbol][priceStr]
+	if ordersAtPrice == nil {
+		return fmt.Errorf("no orders found at price %s for symbol %s", priceStr, order.Symbol)
+	}
 
-	orders.List.Remove(element)
-	orders.Sum = orders.Sum.Sub(order.Size)
+	ordersAtPrice.List.Remove(element)
+	ordersAtPrice.Sum = ordersAtPrice.Sum.Sub(order.Size)
 
-	// Remove the order from the orderLocations map
-	delete(r.orderLocations, order.Id.String())
+	// If no more orders at this price, remove the price entry
+	if ordersAtPrice.List.Len() == 0 {
+		delete(r.sellOrders[order.Symbol], priceStr)
+	}
 
-	// Remove the order from the userOrders map
-	delete(r.userOrders[order.UserId.String()], priceStr)
+	// Remove the order from the user's orders
+	if userOrders := r.userOrders[order.UserId.String()]; userOrders != nil {
+		if symbolOrders := userOrders[order.Symbol]; symbolOrders != nil {
+			delete(symbolOrders, priceStr)
+
+			// If no more orders at this symbol, remove the symbol entry
+			if len(symbolOrders) == 0 {
+				delete(userOrders, order.Symbol)
+			}
+		}
+
+		// If no more orders for this user, remove the user entry
+		if len(userOrders) == 0 {
+			delete(r.userOrders, order.UserId.String())
+		}
+	}
+
+	// Remove the order from orderLocations map
+	delete(r.orderLocations, orderIdStr)
 
 	return nil
 }
-
-// func (r *inMemoryRepository) RemoveAllOrdersForUser(userId uuid.UUID) error {
-// 	r.mu.Lock()
-// 	defer r.mu.Unlock()
-
-// 	userIdStr := userId.String()
-
-// 	// Get all orders for the user
-// 	orders := r.userOrders[userIdStr]
-
-// 	// Create a wait group to wait for all goroutines to complete
-// 	var wg sync.WaitGroup
-
-// 	// Remove all orders for the user
-// 	for price, element := range orders {
-// 		wg.Add(1)
-// 		go func(price decimal.Decimal, element *list.Element) {
-// 			defer wg.Done()
-
-// 			order, ok := element.Value.(models.Order)
-// 			if !ok {
-// 				log.Printf("failed to cast order %q", order.Id.String())
-// 				return
-// 			}
-
-// 			orders := r.sellOrders[price]
-
-// 			orders.List.Remove(element)
-// 			orders.Sum = orders.Sum.Sub(order.Size)
-
-// 			// Remove the order from the orderLocations map
-// 			delete(r.orderLocations, order.Id.String())
-// 		}(price, element)
-// 	}
-
-// 	// Wait for all goroutines to complete
-// 	wg.Wait()
-
-// 	// Remove the user from the userOrders map
-// 	delete(r.userOrders, userIdStr)
-
-// 	return nil
-// }

@@ -22,3 +22,7 @@ func StrToSymbol(s string) (Symbol, error) {
 		return "", ErrInvalidSymbol
 	}
 }
+
+func (s Symbol) String() string {
+	return string(s)
+}

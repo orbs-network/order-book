@@ -12,7 +12,11 @@ import (
 
 func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error) {
 
-	existingOrder, err := s.store.FindOrderByUserAndPrice(userId, price)
+	existingOrder, err := s.orderBookStore.FindOrder(ctx, models.FindOrderInput{
+		UserId: userId,
+		Price:  price,
+		Symbol: symbol,
+	})
 	if err != nil {
 		logctx.Error(ctx, "error occured when finding order", logger.Error(err))
 		return models.Order{}, err
@@ -32,10 +36,10 @@ func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.
 		Symbol:    symbol,
 		Size:      size,
 		Signature: nil,
-		Pending:   false,
+		Status:    models.STATUS_OPEN,
 	}
 
-	if err := s.store.StoreOrder(order); err != nil {
+	if err := s.orderBookStore.StoreOrder(ctx, order); err != nil {
 		logctx.Error(ctx, "failed to add order", logger.Error(err))
 		return models.Order{}, err
 	}
@@ -44,33 +48,25 @@ func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.
 	return order, nil
 }
 
-func (s *Service) CancelOrder(orderId uuid.UUID) {
-	// Additional business logic or validations can be placed here
-	s.store.RemoveOrder(orderId)
+func (s *Service) CancelOrder(ctx context.Context, orderId uuid.UUID) error {
 
-}
-
-func (s *Service) GetBestOffer() *models.Order {
-	prices := s.store.GetAllPrices()
-	if len(prices) == 0 {
-		return nil // or handle this case as appropriate for your application
+	order, err := s.orderBookStore.FindOrderById(ctx, orderId)
+	if err != nil {
+		logctx.Error(ctx, "error occured when finding order", logger.Error(err))
+		return err
 	}
 
-	bestPrice := prices[0]
-	orders := s.store.GetOrdersAtPrice(bestPrice)
-	if len(orders) == 0 {
-		return nil // or handle this as appropriate, though this case should theoretically not occur
+	if order == nil {
+		logctx.Warn(ctx, "order not found", logger.String("orderId", orderId.String()))
+		return models.ErrOrderNotFound
 	}
 
-	return &orders[0]
-}
-
-func (s *Service) GetVolumeAtLimit(price decimal.Decimal) decimal.Decimal {
-	// Additional business logic can be placed here
-	orders := s.store.GetOrdersAtPrice(price)
-	var totalVolume decimal.Decimal
-	for _, order := range orders {
-		totalVolume = totalVolume.Add(order.Size)
+	err = s.orderBookStore.RemoveOrder(ctx, orderId)
+	if err != nil {
+		logctx.Error(ctx, "error occured when removing order", logger.Error(err))
+		return err
 	}
-	return totalVolume
+
+	logctx.Info(ctx, "order removed", logger.String("orderId", orderId.String()))
+	return nil
 }
