@@ -14,6 +14,8 @@ func (h *Handler) Listen() {
 
 	// Create a new order
 	api.HandleFunc("/order", h.CreateOrder).Methods("POST")
+	// Cancel an existing order
+	api.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
 
 	logctx.Info(context.Background(), "starting server", logger.String("port", "8080"))
 	http.ListenAndServe(":8080", h.router)

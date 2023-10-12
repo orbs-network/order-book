@@ -4,7 +4,8 @@ import (
 	"log"
 
 	"github.com/gorilla/mux"
-	"github.com/orbs-network/order-book/data"
+
+	"github.com/orbs-network/order-book/data/memoryrepo"
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/transport/rest"
 )
@@ -14,7 +15,7 @@ func main() {
 }
 
 func setup() {
-	repository, err := data.NewMemoryRespository()
+	repository, err := memoryrepo.NewMemoryRepository()
 	if err != nil {
 		log.Fatalf("error creating repository: %v", err)
 	}

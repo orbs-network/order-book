@@ -1,4 +1,5 @@
 ## Pending Orders Sequence Diagram
+
 ```mermaid
 sequenceDiagram
 UC ->> DEX: getPrice(not related to us)
@@ -18,3 +19,16 @@ LH ->> WM: sendTx(MM-sig, USER-sig OB-sig, TTL...?)
 WM ->> LH: mined()
 LH ->> OB: txCompleted(auctionID)
 ```
+
+## Endpoints (MVP)
+
+### MM
+
+1. addOrder(order) POST - create a new order
+2. cancelOrder(orderId) DELETE - cancel an order
+3. orders() GET (returns Order[] for a given MM) - get all orders for a given MM
+
+### LH
+
+1. getQuote(amountIn, tokenIn, tokenOut) GET - get a quote for a given amountIn of tokenIn for tokenOut
+2. confirmSwap(orderId) POST - order can no longer be cancelled
