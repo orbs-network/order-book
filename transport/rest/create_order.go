@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -15,6 +16,9 @@ type CreateOrderRequest struct {
 	Size   string `json:"size"`
 	Symbol string `json:"symbol"`
 }
+
+// TODO: hardcoded userId for now
+var userId = uuid.MustParse("d577273e-12de-4acc-a4f8-de7fb5b86e37")
 
 func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var args CreateOrderRequest
@@ -42,7 +46,12 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := h.svc.AddOrder(r.Context(), decPrice, symbol, decSize)
+	order, err := h.svc.AddOrder(r.Context(), userId, decPrice, symbol, decSize)
+
+	if err == models.ErrOrderAlreadyExists {
+		http.Error(w, "Order already exists", http.StatusConflict)
+		return
+	}
 
 	if err != nil {
 		logctx.Error(r.Context(), "failed to create order", logger.Error(err))

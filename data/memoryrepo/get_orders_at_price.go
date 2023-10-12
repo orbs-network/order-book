@@ -9,7 +9,7 @@ func (r *inMemoryRepository) GetOrdersAtPrice(price decimal.Decimal) []models.Or
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	orders, exists := r.sellOrders[price]
+	orders, exists := r.sellOrders[price.StringFixed(models.STR_PRECISION)]
 	if !exists {
 		return nil
 	}

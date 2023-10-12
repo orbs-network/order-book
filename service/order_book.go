@@ -10,18 +10,24 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// type PairOrderBook struct {
-// 	repo memoryRepository.InMemoryRepository
-// }
+func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error) {
 
-// func NewPairOrderBook(repo data.Repository) *PairOrderBook {
-// 	return &PairOrderBook{repo: repo}
-// }
+	existingOrder, err := s.store.FindOrderByUserAndPrice(userId, price)
+	if err != nil {
+		logctx.Error(ctx, "error occured when finding order", logger.Error(err))
+		return models.Order{}, err
+	}
 
-func (s *Service) AddOrder(ctx context.Context, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error) {
+	if existingOrder != nil {
+		logctx.Warn(ctx, "user already has an order at this price", logger.String("userID", userId.String()), logger.String("price", price.String()))
+		return models.Order{}, models.ErrOrderAlreadyExists
+
+	}
+
 	id := uuid.New()
 	order := models.Order{
 		Id:        id,
+		UserId:    userId,
 		Price:     price,
 		Symbol:    symbol,
 		Size:      size,

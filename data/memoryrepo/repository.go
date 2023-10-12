@@ -9,11 +9,11 @@ import (
 
 type inMemoryRepository struct {
 	// Map of sell orders, keyed by price
-	sellOrders map[decimal.Decimal]*ordersAtPrice
+	sellOrders map[string]*ordersAtPrice
 	// Map of order IDs to their location in the sellOrders map
 	orderLocations map[string]*list.Element
 	// Map of orders, keyed by user id and price. Prevents duplicate orders
-	userOrders map[string]map[decimal.Decimal]*list.Element
+	userOrders map[string]map[string]*list.Element
 	// Mutex to protect concurrent access to the above maps
 	mu sync.RWMutex
 }
@@ -27,8 +27,8 @@ type ordersAtPrice struct {
 
 func NewMemoryRepository() (*inMemoryRepository, error) {
 	return &inMemoryRepository{
-		sellOrders:     make(map[decimal.Decimal]*ordersAtPrice),
+		sellOrders:     make(map[string]*ordersAtPrice),
 		orderLocations: make(map[string]*list.Element),
-		userOrders:     make(map[string]map[decimal.Decimal]*list.Element),
+		userOrders:     make(map[string]map[string]*list.Element),
 	}, nil
 }

@@ -23,7 +23,9 @@ func (r *inMemoryRepository) RemoveOrder(orderId uuid.UUID) error {
 		return fmt.Errorf("failed to cast order %q", orderIdStr)
 	}
 
-	orders := r.sellOrders[order.Price]
+	priceStr := order.Price.StringFixed(models.STR_PRECISION)
+
+	orders := r.sellOrders[priceStr]
 
 	orders.List.Remove(element)
 	orders.Sum = orders.Sum.Sub(order.Size)
@@ -32,7 +34,7 @@ func (r *inMemoryRepository) RemoveOrder(orderId uuid.UUID) error {
 	delete(r.orderLocations, order.Id.String())
 
 	// Remove the order from the userOrders map
-	delete(r.userOrders[order.UserId.String()], order.Price)
+	delete(r.userOrders[order.UserId.String()], priceStr)
 
 	return nil
 }

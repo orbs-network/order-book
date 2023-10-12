@@ -9,7 +9,7 @@ func (r *inMemoryRepository) GetAllPrices() []decimal.Decimal {
 	prices := make([]decimal.Decimal, len(r.sellOrders))
 	i := 0
 	for price := range r.sellOrders {
-		prices[i] = price
+		prices[i] = decimal.RequireFromString(price)
 		i++
 	}
 	return prices

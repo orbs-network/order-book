@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
 	"github.com/shopspring/decimal"
@@ -11,7 +12,7 @@ import (
 
 // Service represents the methods available on the service to handle the actual request.
 type Service interface {
-	AddOrder(ctx context.Context, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error)
+	AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error)
 }
 
 type Handler struct {

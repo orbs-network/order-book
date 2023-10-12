@@ -2,7 +2,6 @@ package memoryrepo
 
 import (
 	"container/list"
-	"fmt"
 
 	"github.com/orbs-network/order-book/models"
 	"github.com/shopspring/decimal"
@@ -13,16 +12,12 @@ func (r *inMemoryRepository) StoreOrder(order models.Order) error {
 	defer r.mu.Unlock()
 
 	userIdStr := order.UserId.String()
+	priceStr := order.Price.StringFixed(models.STR_PRECISION)
 
-	// Check if the user has already placed an order at this price
-	if r.userOrders[userIdStr][order.Price] != nil {
-		return fmt.Errorf("user %s already has an order at price %s", userIdStr, order.Price)
-	}
-
-	orders, exists := r.sellOrders[order.Price]
+	orders, exists := r.sellOrders[priceStr]
 	if !exists {
 		orders = &ordersAtPrice{List: list.New(), Sum: decimal.Zero}
-		r.sellOrders[order.Price] = orders
+		r.sellOrders[priceStr] = orders
 	}
 
 	element := orders.List.PushBack(order)
@@ -32,9 +27,10 @@ func (r *inMemoryRepository) StoreOrder(order models.Order) error {
 
 	// Record the order under the user's ID and price
 	if r.userOrders[userIdStr] == nil {
-		r.userOrders[userIdStr] = make(map[decimal.Decimal]*list.Element)
+		r.userOrders[userIdStr] = make(map[string]*list.Element)
 	}
-	r.userOrders[userIdStr][order.Price] = element
+
+	r.userOrders[userIdStr][priceStr] = element
 
 	return nil
 }

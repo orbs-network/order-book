@@ -13,6 +13,7 @@ import (
 type Store interface {
 	StoreOrder(order models.Order) error
 	RemoveOrder(orderId uuid.UUID) error
+	FindOrderByUserAndPrice(userId uuid.UUID, price decimal.Decimal) (*models.Order, error)
 	GetOrdersAtPrice(price decimal.Decimal) []models.Order
 	GetAllPrices() []decimal.Decimal
 }
