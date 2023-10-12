@@ -12,6 +12,7 @@ import (
 
 func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error) {
 
+	// TODO: this is wrong. It should increment the size of the order that is being added
 	existingOrder, err := s.orderBookStore.FindOrder(ctx, models.FindOrderInput{
 		UserId: userId,
 		Price:  price,
@@ -46,27 +47,4 @@ func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.
 
 	logctx.Info(ctx, "order added", logger.String("ID", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()))
 	return order, nil
-}
-
-func (s *Service) CancelOrder(ctx context.Context, orderId uuid.UUID) error {
-
-	order, err := s.orderBookStore.FindOrderById(ctx, orderId)
-	if err != nil {
-		logctx.Error(ctx, "error occured when finding order", logger.Error(err))
-		return err
-	}
-
-	if order == nil {
-		logctx.Warn(ctx, "order not found", logger.String("orderId", orderId.String()))
-		return models.ErrOrderNotFound
-	}
-
-	err = s.orderBookStore.RemoveOrder(ctx, orderId)
-	if err != nil {
-		logctx.Error(ctx, "error occured when removing order", logger.Error(err))
-		return err
-	}
-
-	logctx.Info(ctx, "order removed", logger.String("orderId", orderId.String()))
-	return nil
 }
