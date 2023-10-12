@@ -7,6 +7,7 @@ import (
 
 type Order struct {
 	Id        uuid.UUID
+	UserId    uuid.UUID
 	Price     decimal.Decimal
 	Symbol    Symbol
 	Size      decimal.Decimal

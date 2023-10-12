@@ -11,7 +11,7 @@ import (
 
 // Service represents the methods available on the service to handle the actual request.
 type Service interface {
-	CreateOrder(ctx context.Context, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error)
+	AddOrder(ctx context.Context, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error)
 }
 
 type Handler struct {

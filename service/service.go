@@ -3,14 +3,18 @@
 package service
 
 import (
-	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
+	"github.com/shopspring/decimal"
 )
 
 type Store interface {
-	AddOrder(ctx context.Context, order models.Order) (models.Order, error)
+	StoreOrder(order models.Order) error
+	RemoveOrder(orderId uuid.UUID) error
+	GetOrdersAtPrice(price decimal.Decimal) []models.Order
+	GetAllPrices() []decimal.Decimal
 }
 
 // Service contains methods that implement the business logic for the application.
