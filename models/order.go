@@ -14,6 +14,13 @@ const (
 	STATUS_CANCELED Status = "CANCELED"
 )
 
+type Side string
+
+const (
+	SIDE_BUY  Side = "BUY"
+	SIDE_SELL Side = "SELL"
+)
+
 type Order struct {
 	Id        uuid.UUID       `json:"id"`
 	UserId    uuid.UUID       `json:"userId"`
@@ -22,4 +29,5 @@ type Order struct {
 	Size      decimal.Decimal `json:"size"`
 	Signature *string         `json:"signature"` // EIP 712
 	Status    Status          `json:"status"`    // when order is pending, it should not be updateable
+	Side      Side            `json:"side"`
 }
