@@ -13,6 +13,7 @@ import (
 // Test that the order with the highest price is at the root of the heap.
 func TestBuyHeapOrdering(t *testing.T) {
 	h := buyHeap{}
+	heap.Init(&h)
 
 	order_one := &ordersAtPrice{Price: decimal.NewFromFloat(12.0), Orders: list.New()}
 	order_one.Orders.PushBack(models.Order{Price: decimal.NewFromFloat(12.0)})
@@ -23,13 +24,10 @@ func TestBuyHeapOrdering(t *testing.T) {
 	order_three := &ordersAtPrice{Price: decimal.NewFromFloat(1.0), Orders: list.New()}
 	order_three.Orders.PushBack(models.Order{Price: decimal.NewFromFloat(1.0)})
 
-	h.Push(order_one)
-	h.Push(order_two)
-	h.Push(order_three)
+	heap.Push(&h, order_one)
+	heap.Push(&h, order_two)
+	heap.Push(&h, order_three)
 
-	heap.Init(&h)
-
-	rootNode := *h[0]
-
-	assert.Equal(t, decimal.NewFromFloat(99.0), rootNode.Price, "Price should be 99.0 as buy orders are in descending order")
+	max := heap.Pop(&h).(*ordersAtPrice)
+	assert.Equal(t, decimal.NewFromFloat(99.0), max.Price, "Price should be 99.0 as buy orders are in descending order")
 }
