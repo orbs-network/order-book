@@ -10,13 +10,21 @@ import (
 
 func (h *Handler) Listen() {
 
+	/////////////////////////////////////////////////////////////////////
+	// Market maker side
 	api := h.router.PathPrefix("/api/v1").Subrouter()
-
 	// Create a new order
 	api.HandleFunc("/order", h.CreateOrder).Methods("POST")
 	// Cancel an existing order
 	api.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
 
+	/////////////////////////////////////////////////////////////////////
+	// LH side
+	lhApi := h.router.PathPrefix("/lh/v1").Subrouter()
+	lhApi.HandleFunc("/quote", h.amountOut).Methods("GET")
+	lhApi.HandleFunc("/approve_orders", h.approveOrders).Methods("GET")
+
+	// LISTEN
 	logctx.Info(context.Background(), "starting server", logger.String("port", "8080"))
 	http.ListenAndServe(":8080", h.router)
 }
