@@ -15,6 +15,7 @@ type Service interface {
 	// TODO: rename to ProcessOrder as sometimes an order will be immediately filled and not added at all to order book
 	AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error)
 	CancelOrder(ctx context.Context, orderId uuid.UUID) error
+	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
 }
 
 type Handler struct {

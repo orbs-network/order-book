@@ -22,4 +22,5 @@ type Order struct {
 	Size      decimal.Decimal `json:"size"`
 	Signature *string         `json:"signature"` // EIP 712
 	Status    Status          `json:"status"`    // when order is pending, it should not be updateable
+	Side      Side            `json:"side"`
 }
