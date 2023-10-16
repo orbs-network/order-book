@@ -15,6 +15,7 @@ type CreateOrderRequest struct {
 	Price  string `json:"price"`
 	Size   string `json:"size"`
 	Symbol string `json:"symbol"`
+	Side   string `json:"side"`
 }
 
 // TODO: hardcoded userId for now
@@ -28,11 +29,23 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if (args.Price == "") || (args.Size == "") || (args.Symbol == "") || (args.Side == "") {
+		http.Error(w, "missing required fields", http.StatusBadRequest)
+		return
+	}
+
 	decPrice, err := decimal.NewFromString(args.Price)
 	if err != nil {
 		http.Error(w, "'price' is not a valid number format", http.StatusBadRequest)
 		return
 	}
+	if decPrice.IsNegative() {
+		http.Error(w, "'price' must be positive", http.StatusBadRequest)
+		return
+	}
+
+	// TODO: Am I OK to always round?
+	roundedDecPrice := decPrice.Round(2)
 
 	decSize, err := decimal.NewFromString(args.Size)
 	if err != nil {
@@ -40,14 +53,30 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	symbol, err := models.StrToSymbol(args.Symbol)
-	if err != nil {
-		http.Error(w, "'symbol' is not a valid", http.StatusBadRequest)
+	if !decSize.IsInteger() {
+		http.Error(w, "'size' must be an integer", http.StatusBadRequest)
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to create order", logger.String("userId", userId.String()), logger.String("price", decPrice.String()), logger.String("size", decSize.String()))
-	order, err := h.svc.AddOrder(r.Context(), userId, decPrice, symbol, decSize)
+	if decSize.IsNegative() {
+		http.Error(w, "'size' must be positive", http.StatusBadRequest)
+		return
+	}
+
+	symbol, err := models.StrToSymbol(args.Symbol)
+	if err != nil {
+		http.Error(w, "'symbol' is not valid", http.StatusBadRequest)
+		return
+	}
+
+	side, err := models.StrToSide(args.Side)
+	if err != nil {
+		http.Error(w, "'side' is not valid", http.StatusBadRequest)
+		return
+	}
+
+	logctx.Info(r.Context(), "user trying to create order", logger.String("userId", userId.String()), logger.String("price", roundedDecPrice.String()), logger.String("size", decSize.String()))
+	order, err := h.svc.AddOrder(r.Context(), userId, decPrice, symbol, decSize, side)
 
 	if err == models.ErrOrderAlreadyExists {
 		http.Error(w, "Order already exists", http.StatusConflict)

@@ -1,0 +1,27 @@
+version: "3.8"
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - "80:8080"
+    volumes:
+      - .:/app
+    environment:
+      - REDIS_ADDRESS=db:6379
+      - REDIS_PASSWORD=secret
+      - REDIS_DB=0
+    depends_on:
+      - db
+  db:
+    image: redis:7.2.1-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - db:/data
+volumes:
+  db:
+    driver: local

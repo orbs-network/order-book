@@ -4,5 +4,14 @@ LOG_LEVEL ?= info
 export
 
 start:
-	@echo "Starting the application..."
-	@go run cmd/order-book/main.go
+	@echo "Starting server and db..."
+	@docker-compose up --build -d
+
+stop:
+	@echo "Stopping server and db..."
+	@docker-compose down
+
+restart: stop start
+
+logs: 
+	@docker-compose logs -f
