@@ -4,43 +4,54 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
-	"github.com/redis/go-redis/v9"
-	"github.com/shopspring/decimal"
+	"github.com/orbs-network/order-book/utils/logger"
+	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func (r *redisRepository) GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error) {
+func (r *redisRepository) GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (models.Order, error) {
 	var key string
-	var price float64
 	var err error
-	var prices []redis.Z
+	var orderIDs []string
 
 	if side == models.BUY {
 		key = CreateBuySidePricesKey(symbol)
 	} else if side == models.SELL {
 		key = CreateSellSidePricesKey(symbol)
 	} else {
-		return decimal.Zero, fmt.Errorf("invalid order side")
+		return models.Order{}, fmt.Errorf("invalid order side")
 	}
 
 	if side == models.BUY {
 		// Highest bid price for buying
-		prices, err = r.client.ZRevRangeWithScores(ctx, key, 0, 0).Result()
+		orderIDs, err = r.client.ZRevRange(ctx, key, 0, 0).Result()
 	} else {
 		// Lowest ask price for selling
-		prices, err = r.client.ZRangeWithScores(ctx, key, 0, 0).Result()
+		orderIDs, err = r.client.ZRange(ctx, key, 0, 0).Result()
 	}
 
 	if err != nil {
-		return decimal.Zero, err
+		return models.Order{}, err
 	}
 
-	if len(prices) == 0 {
-		return decimal.Zero, models.ErrOrderNotFound
+	if len(orderIDs) == 0 {
+		return models.Order{}, models.ErrOrderNotFound
 	}
 
-	price = prices[0].Score
+	orderIDStr := orderIDs[0]
 
-	decimalPrice := decimal.NewFromFloat(price)
-	return decimalPrice, nil
+	orderID, err := uuid.Parse(orderIDStr)
+	if err != nil {
+		return models.Order{}, err
+	}
+
+	order, err := r.FindOrderById(ctx, orderID)
+
+	if err != nil {
+		logctx.Error(ctx, "unexpected error when getting order for best price", logger.String("orderId", orderID.String()), logger.Error(err))
+		return models.Order{}, err
+	}
+
+	return *order, nil
 }

@@ -17,7 +17,7 @@ type OrderBookStore interface {
 	FindOrder(ctx context.Context, input models.FindOrderInput) (*models.Order, error)
 	FindOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
-	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
+	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (models.Order, error)
 }
 
 // Service contains methods that implement the business logic for the application.

@@ -14,14 +14,12 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 
 	orderMap := order.OrderToMap()
 
-	// --- Start transaction ---
+	// --- START TRANSACTION ---
 	transaction := r.client.TxPipeline()
 
-	// Price hash
-	priceKey := CreatePriceKey(order.Symbol, order.Price)
-	for k, v := range orderMap {
-		transaction.HSet(ctx, priceKey, k, v).Err()
-	}
+	// User orders hash
+	userOrdersKey := CreateUserOrdersKey(order.UserId)
+	transaction.SAdd(ctx, userOrdersKey, order.Id.String())
 
 	// Order ID hash
 	orderIDKey := CreateOrderIDKey(order.Id)
@@ -30,33 +28,30 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 	}
 
 	// Prices sorted set
-	r.updatePricesSortedSet(order)
-
-	_, err := transaction.Exec(ctx)
-	if err != nil {
-		return fmt.Errorf("transaction failed: %v", err)
-	}
-	// --- End transaction ---
-
-	logctx.Info(ctx, "stored order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
-	return nil
-}
-
-func (r *redisRepository) updatePricesSortedSet(order models.Order) {
-
-	float64Price, _ := order.Price.Float64()
+	f64Price, _ := order.Price.Float64()
+	timestamp := float64(order.Timestamp.UnixNano()) / 1e9
+	score := f64Price + (timestamp / 1e12) // Use a combination of price and scaled timestamp so that orders with the same price are sorted by time
 
 	if order.Side == models.BUY {
 		buyPricesKey := CreateBuySidePricesKey(order.Symbol)
-		r.client.ZAdd(context.Background(), buyPricesKey, redis.Z{
-			Score:  float64Price,
-			Member: order.Id,
+		transaction.ZAdd(context.Background(), buyPricesKey, redis.Z{
+			Score:  score,
+			Member: order.Id.String(),
 		})
 	} else {
 		sellPricesKey := CreateSellSidePricesKey(order.Symbol)
-		r.client.ZAdd(context.Background(), sellPricesKey, redis.Z{
-			Score:  float64Price,
-			Member: order.Id,
+		transaction.ZAdd(context.Background(), sellPricesKey, redis.Z{
+			Score:  score,
+			Member: order.Id.String(),
 		})
 	}
+
+	_, err := transaction.Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("transaction failed. Reason: %v", err)
+	}
+	// --- END TRANSACTION ---
+
+	logctx.Info(ctx, "stored order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
+	return nil
 }

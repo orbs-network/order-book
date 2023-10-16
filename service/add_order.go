@@ -10,7 +10,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error) {
+func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal, side models.Side) (models.Order, error) {
 
 	// TODO: this is wrong. It should increment the size of the order that is being added
 	// existingOrder, err := s.orderBookStore.FindOrder(ctx, models.FindOrderInput{
@@ -38,8 +38,7 @@ func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.
 		Size:      size,
 		Signature: "",
 		Status:    models.STATUS_OPEN,
-		// TODO: take from args
-		Side: models.SELL,
+		Side:      side,
 	}
 
 	if err := s.orderBookStore.StoreOrder(ctx, order); err != nil {

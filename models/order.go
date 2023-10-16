@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -16,6 +17,7 @@ type Order struct {
 	Signature string          `json:"signature"` // EIP 712
 	Status    Status          `json:"status"`    // when order is pending, it should not be updateable
 	Side      Side            `json:"side"`
+	Timestamp time.Time       `json:"timestamp"`
 }
 
 func (o *Order) OrderToMap() map[string]string {
