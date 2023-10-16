@@ -13,9 +13,11 @@ import (
 // Service represents the methods available on the service to handle the actual request.
 type Service interface {
 	// TODO: rename to ProcessOrder as sometimes an order will be immediately filled and not added at all to order book
-	AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error)
+	AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal, side models.Side) (models.Order, error)
 	CancelOrder(ctx context.Context, orderId uuid.UUID) error
 	GetAmountOut(ctx context.Context, symbol models.Symbol, sideSell bool, amountIn decimal.Decimal) error
+	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
+	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 }
 
 type Handler struct {
