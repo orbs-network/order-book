@@ -7,10 +7,10 @@ import (
 )
 
 type redisRepository struct {
-	client *redis.Client
+	client redis.Cmdable
 }
 
-func NewRedisRepository(client *redis.Client) (*redisRepository, error) {
+func NewRedisRepository(client redis.Cmdable) (*redisRepository, error) {
 	if client == nil {
 		return nil, fmt.Errorf("redis client cannot be nil")
 	}
