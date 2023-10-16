@@ -16,6 +16,7 @@ type Service interface {
 	AddOrder(ctx context.Context, userId uuid.UUID, price decimal.Decimal, symbol models.Symbol, size decimal.Decimal) (models.Order, error)
 	CancelOrder(ctx context.Context, orderId uuid.UUID) error
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
+	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 }
 
 type Handler struct {

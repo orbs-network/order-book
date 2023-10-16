@@ -36,7 +36,7 @@ func (s *Service) AddOrder(ctx context.Context, userId uuid.UUID, price decimal.
 		Price:     price,
 		Symbol:    symbol,
 		Size:      size,
-		Signature: nil,
+		Signature: "",
 		Status:    models.STATUS_OPEN,
 		// TODO: take from args
 		Side: models.SELL,

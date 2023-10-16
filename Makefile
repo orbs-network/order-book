@@ -12,3 +12,6 @@ stop:
 	@docker-compose down
 
 restart: stop start
+
+logs: 
+	@docker-compose logs -f

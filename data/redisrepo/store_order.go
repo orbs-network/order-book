@@ -2,7 +2,6 @@ package redisrepo
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/orbs-network/order-book/models"
@@ -13,32 +12,33 @@ import (
 
 func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) error {
 
-	orderJSON, err := json.Marshal(order)
-	if err != nil {
-		return fmt.Errorf("could not marshal order: %v", err)
-	}
+	orderMap := order.OrderToMap()
 
 	// --- Start transaction ---
-	pipeline := r.client.TxPipeline()
+	transaction := r.client.TxPipeline()
 
 	// Price hash
 	priceKey := CreatePriceKey(order.Symbol, order.Price)
-	pipeline.HSet(ctx, priceKey, order.Id, orderJSON)
+	for k, v := range orderMap {
+		transaction.HSet(ctx, priceKey, k, v).Err()
+	}
 
 	// Order ID hash
-	orderIDKey := CreateOrderIDKey(order.Symbol)
-	pipeline.HSet(ctx, orderIDKey, order.Id, orderJSON)
+	orderIDKey := CreateOrderIDKey(order.Id)
+	for k, v := range orderMap {
+		transaction.HSet(ctx, orderIDKey, k, v).Err()
+	}
 
 	// Prices sorted set
 	r.updatePricesSortedSet(order)
 
-	_, err = pipeline.Exec(ctx)
+	_, err := transaction.Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("transaction failed: %v", err)
 	}
 	// --- End transaction ---
 
-	logctx.Info(ctx, "stored order", logger.String("order", string(orderJSON)))
+	logctx.Info(ctx, "stored order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
 	return nil
 }
 

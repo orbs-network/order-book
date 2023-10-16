@@ -3,16 +3,17 @@ package redisrepo
 import (
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/shopspring/decimal"
 )
 
 func CreatePriceKey(symbol models.Symbol, price decimal.Decimal) string {
-	return fmt.Sprintf("%s:orders:%s", symbol, price)
+	return fmt.Sprintf("%s:bestPrice:%s", symbol, price)
 }
 
-func CreateOrderIDKey(symbol models.Symbol) string {
-	return fmt.Sprintf("%s:orderIDs", symbol)
+func CreateOrderIDKey(orderId uuid.UUID) string {
+	return fmt.Sprintf("%s:orderID", orderId)
 }
 
 func CreateBuySidePricesKey(symbol models.Symbol) string {
