@@ -29,7 +29,7 @@ func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//side = getSide
-	h.svc.GetAmountOut(nil, true, symbol, decSize)
+	h.svc.GetAmountOut(nil, symbol, true, decSize)
 
 }
 
