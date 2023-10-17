@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/orbs-network/order-book/models"
 	"github.com/shopspring/decimal"
@@ -28,8 +29,11 @@ func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//side = getSide
-	h.svc.GetAmountOut(nil, symbol, true, decSize)
+	side := models.BUY
+	if strings.EqualFold(args.Side, "SELL") {
+		side = models.SELL
+	}
+	h.svc.GetAmountOut(nil, symbol, side, decSize)
 
 }
 
