@@ -17,6 +17,7 @@ type Service interface {
 	CancelOrder(ctx context.Context, orderId uuid.UUID) error
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
 	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
+	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 }
 
 type Handler struct {

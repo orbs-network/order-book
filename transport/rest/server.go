@@ -20,6 +20,8 @@ func (h *Handler) Listen() {
 	api.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
 	// Get an order by id
 	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
+	// Get market depth
+	api.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
 
 	logctx.Info(context.Background(), "starting server", logger.String("port", "8080"))
 	http.ListenAndServe(":8080", h.router)
