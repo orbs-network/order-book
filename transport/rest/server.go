@@ -21,6 +21,8 @@ func (h *Handler) Listen() {
 	api.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
 	// Get an order by id
 	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
+	// Get market depth
+	api.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
 
 	/////////////////////////////////////////////////////////////////////
 	// LH side
