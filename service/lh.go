@@ -9,6 +9,7 @@ import (
 
 func (s *Service) GetAmountOut(ctx context.Context, symbol models.Symbol, sideSell bool, amountIn decimal.Decimal) error {
 	// get
+	//s.orderBookStore.RemoveOrder()
 
 	return nil
 }
