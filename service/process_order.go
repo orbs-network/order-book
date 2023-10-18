@@ -27,6 +27,8 @@ var (
 
 func (s *Service) ProcessOrder(ctx context.Context, input ProcessOrderInput) (models.Order, error) {
 
+	// TODO: logic for when order can be immediately filled and does not need to be added to the order book
+
 	existingOrder, err := s.orderBookStore.FindOrderById(ctx, input.ClientOrderID)
 
 	if err != nil && err != models.ErrOrderNotFound {
