@@ -18,6 +18,8 @@ type OrderBookStore interface {
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
+	GetMinAsk(ctx context.Context, symbol models.Symbol) OrderIter
+	GetMaxBid(ctx context.Context, symbol models.Symbol) OrderIter
 }
 
 // Service contains methods that implement the business logic for the application.
