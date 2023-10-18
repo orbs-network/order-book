@@ -17,115 +17,88 @@ func TestService_ProcessOrder(t *testing.T) {
 	ctx := context.Background()
 
 	symbol, _ := models.StrToSymbol("USDC-ETH")
-
 	userId := uuid.MustParse("a577273e-12de-4acc-a4f8-de7fb5b86e37")
 	price := decimal.NewFromFloat(10.0)
-
 	orderId := uuid.MustParse("e577273e-12de-4acc-a4f8-de7fb5b86e37")
-	clientOrderId := uuid.MustParse("d577273e-12de-4acc-a4f8-de7fb5b86e37")
+	size := decimal.NewFromFloat(1000.00)
 
-	order := models.Order{
-		Id:            orderId,
-		UserId:        userId,
-		Price:         price,
-		Symbol:        symbol,
-		Size:          decimal.NewFromFloat(1.0),
-		Signature:     "",
-		Status:        models.STATUS_OPEN,
-		Side:          models.SELL,
-		ClientOrderID: clientOrderId,
-	}
-
-	t.Run("new order with clientOrderId", func(t *testing.T) {
+	t.Run("unexpected error from store - should return `ErrUnexpectedError` error", func(t *testing.T) {
 		input := ProcessOrderInput{
 			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
-			Size:          decimal.NewFromFloat(1.0),
-			Side:          models.SELL,
-			ClientOrderID: &clientOrderId,
-		}
-
-		svc, _ := New(&mocks.MockOrderBookStore{Order: order})
-
-		order, err := svc.ProcessOrder(ctx, input)
-
-		assert.NoError(t, err)
-		assert.Equal(t, userId, order.UserId)
-		assert.Equal(t, price, order.Price)
-		assert.Equal(t, symbol, order.Symbol)
-		assert.Equal(t, decimal.NewFromFloat(1.0), order.Size)
-		assert.Equal(t, models.SELL, order.Side)
-		assert.NotEqual(t, uuid.Nil, order.Id)
-		assert.Equal(t, models.STATUS_OPEN, order.Status)
-		assert.Equal(t, clientOrderId, order.ClientOrderID)
-	})
-
-	t.Run("new order without ClientOrderID - orderId and clientOrderId should be set to the same ID", func(t *testing.T) {
-		input := ProcessOrderInput{
-			UserId:        userId,
-			Price:         price,
-			Symbol:        symbol,
-			Size:          decimal.NewFromFloat(1.0),
-			Side:          models.SELL,
-			ClientOrderID: nil,
-		}
-
-		orderWithSameIds := models.Order{
-			Id:            orderId,
-			UserId:        userId,
-			Price:         price,
-			Symbol:        symbol,
-			Size:          decimal.NewFromFloat(1.0),
-			Signature:     "",
-			Status:        models.STATUS_OPEN,
+			Size:          size,
 			Side:          models.SELL,
 			ClientOrderID: orderId,
-		}
-
-		svc, _ := New(&mocks.MockOrderBookStore{Order: orderWithSameIds})
-
-		order, err := svc.ProcessOrder(ctx, input)
-
-		assert.NoError(t, err)
-		assert.Equal(t, userId, order.UserId)
-		assert.Equal(t, price, order.Price)
-		assert.Equal(t, symbol, order.Symbol)
-		assert.Equal(t, decimal.NewFromFloat(1.0), order.Size)
-		assert.Equal(t, models.SELL, order.Side)
-		assert.NotEqual(t, uuid.Nil, order.Id)
-		assert.Equal(t, models.STATUS_OPEN, order.Status)
-		assert.Equal(t, order.Id, order.ClientOrderID)
-	})
-
-	t.Run("process order with error from store", func(t *testing.T) {
-		input := ProcessOrderInput{
-			UserId:        userId,
-			Price:         price,
-			Symbol:        symbol,
-			Size:          decimal.NewFromFloat(1.0),
-			Side:          models.SELL,
-			ClientOrderID: nil,
 		}
 
 		svc, _ := New(&mocks.MockOrderBookStore{Error: assert.AnError})
 
 		order, err := svc.ProcessOrder(ctx, input)
 
-		assert.ErrorIs(t, err, assert.AnError)
+		assert.ErrorIs(t, err, models.ErrUnexpectedError)
 		assert.Equal(t, models.Order{}, order)
 	})
-}
 
-func TestGenerateClientOrderId(t *testing.T) {
-	orderId := uuid.New()
-	clientOrderId := uuid.New()
+	t.Run("no previous order - should create new order", func(t *testing.T) {
+		input := ProcessOrderInput{
+			UserId:        userId,
+			Price:         price,
+			Symbol:        symbol,
+			Size:          size,
+			Side:          models.SELL,
+			ClientOrderID: orderId,
+		}
 
-	// Case 1: clientOrderId is nil
-	result := generateClientOrderId(nil, orderId)
-	assert.Equal(t, orderId, result, "no clientOrderId passed so should be the same as order ID")
+		svc, _ := New(&mocks.MockOrderBookStore{Order: nil})
 
-	// Case 2: clientOrderId is not nil
-	result = generateClientOrderId(&clientOrderId, orderId)
-	assert.Equal(t, clientOrderId, result, "clientOrderId passed so should use that")
+		newOrder, err := svc.ProcessOrder(ctx, input)
+
+		assert.NoError(t, err)
+		// TODO: I am not asserting against the full order as timestamp is always different
+		assert.Equal(t, newOrder.Id, orderId)
+		assert.Equal(t, newOrder.UserId, userId)
+		assert.Equal(t, newOrder.Price, price)
+		assert.Equal(t, newOrder.Symbol, symbol)
+		assert.Equal(t, newOrder.Size, size)
+		assert.Equal(t, newOrder.Signature, "")
+		assert.Equal(t, newOrder.Status, models.STATUS_OPEN)
+		assert.Equal(t, newOrder.Side, models.SELL)
+	})
+
+	t.Run("existing order with different userId - should return `ErrClashingOrderId` error", func(t *testing.T) {
+		input := ProcessOrderInput{
+			UserId:        userId,
+			Price:         price,
+			Symbol:        symbol,
+			Size:          size,
+			Side:          models.SELL,
+			ClientOrderID: orderId,
+		}
+
+		svc, _ := New(&mocks.MockOrderBookStore{Order: &models.Order{UserId: uuid.MustParse("b577273e-12de-4acc-a4f8-de7fb5b86e37")}})
+
+		order, err := svc.ProcessOrder(ctx, input)
+
+		assert.ErrorIs(t, err, ErrClashingOrderId)
+		assert.Equal(t, models.Order{}, order)
+	})
+
+	t.Run("existing order with same clientOrderId - should return `ErrOrderAlreadyExists` error", func(t *testing.T) {
+		input := ProcessOrderInput{
+			UserId:        userId,
+			Price:         price,
+			Symbol:        symbol,
+			Size:          size,
+			Side:          models.SELL,
+			ClientOrderID: orderId,
+		}
+
+		svc, _ := New(&mocks.MockOrderBookStore{Order: &models.Order{Id: orderId, UserId: userId}})
+
+		order, err := svc.ProcessOrder(ctx, input)
+
+		assert.ErrorIs(t, err, models.ErrOrderAlreadyExists)
+		assert.Equal(t, models.Order{}, order)
+	})
 }

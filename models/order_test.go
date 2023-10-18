@@ -15,29 +15,27 @@ var userId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 func TestOrder_OrderToMap(t *testing.T) {
 	timestamp, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
 	order := Order{
-		Id:            id,
-		UserId:        userId,
-		Price:         decimal.NewFromFloat(10.99),
-		Symbol:        "USDC-ETH",
-		Size:          decimal.NewFromInt(1000),
-		Signature:     "signature",
-		Status:        STATUS_OPEN,
-		Side:          BUY,
-		Timestamp:     timestamp,
-		ClientOrderID: id,
+		Id:        id,
+		UserId:    userId,
+		Price:     decimal.NewFromFloat(10.99),
+		Symbol:    "USDC-ETH",
+		Size:      decimal.NewFromInt(1000),
+		Signature: "signature",
+		Status:    STATUS_OPEN,
+		Side:      BUY,
+		Timestamp: timestamp,
 	}
 
 	expectedMap := map[string]string{
-		"id":            order.Id.String(),
-		"userId":        order.UserId.String(),
-		"price":         order.Price.String(),
-		"symbol":        order.Symbol.String(),
-		"size":          order.Size.String(),
-		"signature":     order.Signature,
-		"status":        order.Status.String(),
-		"side":          order.Side.String(),
-		"timestamp":     order.Timestamp.String(),
-		"clientOrderId": order.ClientOrderID.String(),
+		"id":        order.Id.String(),
+		"userId":    order.UserId.String(),
+		"price":     order.Price.String(),
+		"symbol":    order.Symbol.String(),
+		"size":      order.Size.String(),
+		"signature": order.Signature,
+		"status":    order.Status.String(),
+		"side":      order.Side.String(),
+		"timestamp": order.Timestamp.Format(time.RFC3339),
 	}
 
 	actualMap := order.OrderToMap()
@@ -77,7 +75,6 @@ func TestOrder_MapToOrder(t *testing.T) {
 		assert.Equal(t, "OPEN", order.Status.String())
 		assert.Equal(t, "buy", order.Side.String())
 		assert.Equal(t, "2021-01-01 00:00:00 +0000 UTC", order.Timestamp.String())
-		assert.Equal(t, data["clientOrderId"], order.ClientOrderID.String())
 	})
 
 	t.Run("when some data is missing", func(t *testing.T) {

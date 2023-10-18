@@ -24,7 +24,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"5000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\"\n}",
+					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"a577273e-12de-4acc-a4f8-de7fb5b86e37\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -105,6 +105,33 @@
 						"v1",
 						"order",
 						"005bb52d-a54d-46f9-b42b-64e263a4de1e"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get market depth",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/api/v1/orderbook/BTC-ETH?limit=20",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"api",
+						"v1",
+						"orderbook",
+						"BTC-ETH"
+					],
+					"query": [
+						{
+							"key": "limit",
+							"value": "20"
+						}
 					]
 				}
 			},

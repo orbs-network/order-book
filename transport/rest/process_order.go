@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
-	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
@@ -79,19 +78,13 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	clientOrderIdStr := args.ClientOrderId
-	var clientOrderId *uuid.UUID
-
-	if clientOrderIdStr != "" {
-		_clientOrderId, err := uuid.Parse(clientOrderIdStr)
-		if err != nil {
-			http.Error(w, "'clientOrderId' is not valid", http.StatusBadRequest)
-			return
-		}
-		clientOrderId = &_clientOrderId
+	clientOrderId, err := uuid.Parse(args.ClientOrderId)
+	if err != nil {
+		http.Error(w, "'clientOrderId' is not valid", http.StatusBadRequest)
+		return
 	}
 
-	logctx.Info(r.Context(), "user trying to create order", logger.String("userId", userId.String()), logger.String("price", roundedDecPrice.String()), logger.String("size", decSize.String()), logger.String("clientOrderId", utils.SafeUUIDToString(clientOrderId)))
+	logctx.Info(r.Context(), "user trying to create order", logger.String("userId", userId.String()), logger.String("price", roundedDecPrice.String()), logger.String("size", decSize.String()), logger.String("clientOrderId", clientOrderId.String()))
 	order, err := h.svc.ProcessOrder(r.Context(), service.ProcessOrderInput{
 		UserId:        userId,
 		Price:         roundedDecPrice,
@@ -102,7 +95,12 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err == models.ErrOrderAlreadyExists {
-		http.Error(w, "Order already exists", http.StatusConflict)
+		http.Error(w, "Order already exists. You must first cancel existing order", http.StatusConflict)
+		return
+	}
+
+	if err == service.ErrClashingOrderId {
+		http.Error(w, "Clashing 'clientOrderId'. Retry with a different UUID", http.StatusConflict)
 		return
 	}
 
@@ -137,6 +135,9 @@ func handleValidateRequiredFields(args CreateOrderRequest) error {
 
 	case args.Side == "":
 		return fmt.Errorf("missing required field 'side'")
+
+	case args.ClientOrderId == "":
+		return fmt.Errorf("missing required field 'clientOrderId'")
 
 	default:
 		return nil

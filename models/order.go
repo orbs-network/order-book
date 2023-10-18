@@ -9,30 +9,28 @@ import (
 )
 
 type Order struct {
-	Id            uuid.UUID       `json:"-"`
-	UserId        uuid.UUID       `json:"userId"`
-	Price         decimal.Decimal `json:"price"`
-	Symbol        Symbol          `json:"symbol"`
-	Size          decimal.Decimal `json:"size"`
-	Signature     string          `json:"-" ` // EIP 712
-	Status        Status          `json:"-"`  // when order is pending, it should not be updateable
-	Side          Side            `json:"side"`
-	Timestamp     time.Time       `json:"timestamp"`
-	ClientOrderID uuid.UUID       `json:"clientOrderId"`
+	Id        uuid.UUID       `json:"clientOrderId"`
+	UserId    uuid.UUID       `json:"userId"`
+	Price     decimal.Decimal `json:"price"`
+	Symbol    Symbol          `json:"symbol"`
+	Size      decimal.Decimal `json:"size"`
+	Signature string          `json:"-" ` // EIP 712
+	Status    Status          `json:"-"`  // when order is pending, it should not be updateable
+	Side      Side            `json:"side"`
+	Timestamp time.Time       `json:"timestamp"`
 }
 
 func (o *Order) OrderToMap() map[string]string {
 	return map[string]string{
-		"id":            o.Id.String(),
-		"userId":        o.UserId.String(),
-		"price":         o.Price.String(),
-		"symbol":        o.Symbol.String(),
-		"size":          o.Size.String(),
-		"signature":     o.Signature,
-		"status":        o.Status.String(),
-		"side":          o.Side.String(),
-		"timestamp":     o.Timestamp.String(),
-		"clientOrderId": o.ClientOrderID.String(),
+		"id":        o.Id.String(),
+		"userId":    o.UserId.String(),
+		"price":     o.Price.String(),
+		"symbol":    o.Symbol.String(),
+		"size":      o.Size.String(),
+		"signature": o.Signature,
+		"status":    o.Status.String(),
+		"side":      o.Side.String(),
+		"timestamp": o.Timestamp.Format(time.RFC3339),
 	}
 }
 
@@ -86,11 +84,6 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("no timestamp provided")
 	}
 
-	clientOrderIdStr, exists := data["clientOrderId"]
-	if !exists {
-		return fmt.Errorf("no clientOrderId provided")
-	}
-
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return fmt.Errorf("invalid id: %v", err)
@@ -131,11 +124,6 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("invalid timestamp: %v", err)
 	}
 
-	clientOrderId, err := uuid.Parse(clientOrderIdStr)
-	if err != nil {
-		return fmt.Errorf("invalid clientOrderId: %v", err)
-	}
-
 	o.Id = id
 	o.UserId = userId
 	o.Price = price
@@ -145,7 +133,6 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	o.Status = status
 	o.Side = side
 	o.Timestamp = timestamp
-	o.ClientOrderID = clientOrderId
 
 	return nil
 }

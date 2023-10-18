@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -11,30 +13,58 @@ import (
 )
 
 type ProcessOrderInput struct {
-	UserId uuid.UUID
-	Price  decimal.Decimal
-	Symbol models.Symbol
-	Size   decimal.Decimal
-	Side   models.Side
-	// Optional user provided order ID. We still generate a seperate ID for the order
-	ClientOrderID *uuid.UUID
+	UserId        uuid.UUID
+	Price         decimal.Decimal
+	Symbol        models.Symbol
+	Size          decimal.Decimal
+	Side          models.Side
+	ClientOrderID uuid.UUID
 }
+
+var (
+	ErrClashingOrderId = errors.New("order with that ID already exists")
+)
 
 func (s *Service) ProcessOrder(ctx context.Context, input ProcessOrderInput) (models.Order, error) {
 
-	// TODO: add to existing order if possible
+	existingOrder, err := s.orderBookStore.FindOrderById(ctx, input.ClientOrderID)
 
-	id := uuid.New()
+	if err != nil && err != models.ErrOrderNotFound {
+		logctx.Error(ctx, "unexpected error when finding order by clientOrderId", logger.Error(err))
+		return models.Order{}, models.ErrUnexpectedError
+	}
+
+	if existingOrder == nil {
+		logctx.Info(ctx, "no existing order with same orderId. Trying to create new order", logger.String("clientOrderId", input.ClientOrderID.String()))
+		return s.createNewOrder(ctx, input, input.ClientOrderID)
+	}
+
+	if existingOrder.UserId != input.UserId {
+		logctx.Warn(ctx, "order already exists with different userId", logger.Error(err))
+		return models.Order{}, ErrClashingOrderId
+	}
+
+	if existingOrder.Id == input.ClientOrderID {
+		logctx.Warn(ctx, "order already exists with same clientOrderId", logger.Error(err), logger.String("clientOrderId", input.ClientOrderID.String()))
+		return models.Order{}, models.ErrOrderAlreadyExists
+	}
+
+	logctx.Error(ctx, "did not follow any cases when processing order", logger.String("clientOrderId", input.ClientOrderID.String()), logger.String("userId", input.UserId.String()), logger.String("price", input.Price.String()), logger.String("size", input.Size.String()), logger.String("symbol", input.Symbol.String()), logger.String("side", input.Side.String()))
+	return models.Order{}, models.ErrUnexpectedError
+
+}
+
+func (s *Service) createNewOrder(ctx context.Context, input ProcessOrderInput, orderId uuid.UUID) (models.Order, error) {
 	order := models.Order{
-		Id:            id,
-		UserId:        input.UserId,
-		Price:         input.Price,
-		Symbol:        input.Symbol,
-		Size:          input.Size,
-		Signature:     "",
-		Status:        models.STATUS_OPEN,
-		Side:          input.Side,
-		ClientOrderID: generateClientOrderId(input.ClientOrderID, id),
+		Id:        orderId,
+		UserId:    input.UserId,
+		Price:     input.Price,
+		Symbol:    input.Symbol,
+		Size:      input.Size,
+		Signature: "",
+		Status:    models.STATUS_OPEN,
+		Side:      input.Side,
+		Timestamp: time.Now().UTC(),
 	}
 
 	if err := s.orderBookStore.StoreOrder(ctx, order); err != nil {
@@ -42,14 +72,6 @@ func (s *Service) ProcessOrder(ctx context.Context, input ProcessOrderInput) (mo
 		return models.Order{}, err
 	}
 
-	logctx.Info(ctx, "order added", logger.String("ID", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()))
+	logctx.Info(ctx, "new order created", logger.String("ID", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()))
 	return order, nil
-}
-
-func generateClientOrderId(clientOrderId *uuid.UUID, orderId uuid.UUID) uuid.UUID {
-	if clientOrderId == nil {
-		return orderId
-	}
-
-	return *clientOrderId
 }
