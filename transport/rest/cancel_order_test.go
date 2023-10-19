@@ -40,6 +40,27 @@ func TestHandler_CancelOrder(t *testing.T) {
 
 	})
 
+	t.Run("no user in context - should return `http.StatusUnauthorized`", func(t *testing.T) {
+		mockService := &mocks.MockOrderBookService{Error: models.ErrNoUserInContext}
+		router := mux.NewRouter()
+
+		h, _ := rest.NewHandler(mockService, router)
+
+		req, err := http.NewRequest("DELETE", fmt.Sprintf("/order/%s", orderId.String()), nil)
+
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+		router.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
+
+		router.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rr.Code)
+		assert.Equal(t, "User not found\n", rr.Body.String())
+	})
+
 	t.Run("order not found - should return `http.StatusNotFound`", func(t *testing.T) {
 		mockService := &mocks.MockOrderBookService{Error: models.ErrOrderNotFound}
 		router := mux.NewRouter()

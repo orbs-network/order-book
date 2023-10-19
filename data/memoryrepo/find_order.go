@@ -4,13 +4,21 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
+	"github.com/shopspring/decimal"
 )
 
+type FindOrderInput struct {
+	UserId uuid.UUID
+	Price  decimal.Decimal
+	Symbol models.Symbol
+}
+
 // FindOrder returns the order (if any) for the given user, symbol and price
-func (r *inMemoryRepository) FindOrder(ctx context.Context, input models.FindOrderInput) (*models.Order, error) {
+func (r *inMemoryRepository) FindOrder(ctx context.Context, input FindOrderInput) (*models.Order, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
