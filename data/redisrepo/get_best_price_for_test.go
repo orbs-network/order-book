@@ -2,11 +2,9 @@ package redisrepo
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/go-redis/redismock/v9"
@@ -19,20 +17,24 @@ var symbol, _ = models.StrToSymbol("USDC-ETH")
 var price = decimal.NewFromFloat(10.0)
 
 var buyOrder = models.Order{
-	Id:     uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+	Id:     uuid.MustParse("00000000-0000-0000-0000-000000000000"),
+	UserId: uuid.MustParse("00000000-0000-0000-0000-000000000000"),
 	Price:  price,
-	Side:   models.BUY,
+	Size:   decimal.NewFromFloat(1212312.0),
 	Symbol: symbol,
+	Side:   models.BUY,
+	Status: models.STATUS_OPEN,
 }
 
 var sellOrder = models.Order{
-	Id:     uuid.MustParse("00000000-0000-0000-0000-000000000001"),
+	Id:     uuid.MustParse("00000000-0000-0000-0000-000000000000"),
+	UserId: uuid.MustParse("00000000-0000-0000-0000-000000000000"),
 	Price:  price,
-	Side:   models.SELL,
+	Size:   decimal.NewFromFloat(1212312.0),
 	Symbol: symbol,
+	Side:   models.SELL,
+	Status: models.STATUS_OPEN,
 }
-
-var float64Price, _ = price.Float64()
 
 func TestRedisRepository_GetBestPriceFor(t *testing.T) {
 	ctx := context.Background()
@@ -46,71 +48,62 @@ func TestRedisRepository_GetBestPriceFor(t *testing.T) {
 	t.Run("BUY side - existing orders - order should be returned", func(t *testing.T) {
 
 		buyPricesKey := CreateBuySidePricesKey(buyOrder.Symbol)
+		mock.ExpectZRevRange(buyPricesKey, 0, 0).SetVal([]string{buyOrder.Id.String()})
+		mock.ExpectHGetAll(CreateOrderIDKey(buyOrder.Id)).SetVal(buyOrder.OrderToMap())
 
-		mock.ExpectZRevRangeWithScores(buyPricesKey, 0, 0).SetVal([]redis.Z{{
-			Score:  float64Price,
-			Member: buyOrder.Id,
-		}})
-
-		bestPrice, err := repo.GetBestPriceFor(ctx, symbol, models.BUY)
+		order, err := repo.GetBestPriceFor(ctx, symbol, models.BUY)
 
 		assert.NoError(t, err, "error should be nil")
-		assert.Equal(t, buyOrder.Price, bestPrice, "prices should match")
+		assert.Equal(t, buyOrder.Price.String(), order.Price.String(), "prices should match")
 	})
 
 	t.Run("BUY side - no orders - zero should be returned with error", func(t *testing.T) {
 		buyPricesKey := CreateBuySidePricesKey(buyOrder.Symbol)
 
-		mock.ExpectZRevRangeWithScores(buyPricesKey, 0, 0).SetVal([]redis.Z{})
-
-		bestPrice, err := repo.GetBestPriceFor(ctx, symbol, models.BUY)
+		mock.ExpectZRevRange(buyPricesKey, 0, 0).SetVal([]string{})
+		order, err := repo.GetBestPriceFor(ctx, symbol, models.BUY)
 
 		assert.Error(t, err, models.ErrOrderNotFound, "error should be ErrOrderNotFound")
-		assert.Equal(t, decimal.Zero, bestPrice, "should be zero")
+		assert.Equal(t, models.Order{}, order, "should be zero")
 	})
 
 	t.Run("SELL side - existing orders - order should be returned", func(t *testing.T) {
 		sellPricesKey := CreateSellSidePricesKey(sellOrder.Symbol)
+		mock.ExpectZRange(sellPricesKey, 0, 0).SetVal([]string{sellOrder.Id.String()})
+		mock.ExpectHGetAll(CreateOrderIDKey(sellOrder.Id)).SetVal(sellOrder.OrderToMap())
 
-		mock.ExpectZRangeWithScores(sellPricesKey, 0, 0).SetVal([]redis.Z{{
-			Score:  float64Price,
-			Member: sellOrder.Id,
-		}})
-
-		bestPrice, err := repo.GetBestPriceFor(ctx, symbol, models.SELL)
+		order, err := repo.GetBestPriceFor(ctx, symbol, models.SELL)
 
 		assert.NoError(t, err, "error should be nil")
-		assert.Equal(t, sellOrder.Price, bestPrice, "prices should match")
+		assert.Equal(t, sellOrder.Price.String(), order.Price.String(), "prices should match")
 	})
 
 	t.Run("SELL side - no orders - zero should be returned with error", func(t *testing.T) {
 		sellPricesKey := CreateSellSidePricesKey(sellOrder.Symbol)
 
-		mock.ExpectZRangeWithScores(sellPricesKey, 0, 0).SetVal([]redis.Z{})
-		bestPrice, err := repo.GetBestPriceFor(ctx, symbol, models.SELL)
+		mock.ExpectZRange(sellPricesKey, 0, 0).SetVal([]string{})
+		order, err := repo.GetBestPriceFor(ctx, symbol, models.SELL)
 
 		assert.Error(t, err, models.ErrOrderNotFound, "error should be ErrOrderNotFound")
-		assert.Equal(t, decimal.Zero, bestPrice, "should be zero")
+		assert.Equal(t, models.Order{}, order, "should be zero")
 	})
 
 	t.Run("error with redis query - zero should be returned with error", func(t *testing.T) {
 		sellPricesKey := CreateSellSidePricesKey(sellOrder.Symbol)
 
-		someError := fmt.Errorf("something unexpected happened")
+		mock.ExpectZRange(sellPricesKey, 0, 0).SetErr(assert.AnError)
+		order, err := repo.GetBestPriceFor(ctx, symbol, models.SELL)
 
-		mock.ExpectZRangeWithScores(sellPricesKey, 0, 0).SetErr(someError)
-		bestPrice, err := repo.GetBestPriceFor(ctx, symbol, models.SELL)
-
-		assert.Error(t, err, someError, "should be someError")
-		assert.Equal(t, decimal.Zero, bestPrice, "should be zero")
+		assert.Error(t, err, assert.AnError, "should have errored")
+		assert.Equal(t, models.Order{}, order, "should be zero value")
 	})
 
 	t.Run("invalid side - zero should be returned with error", func(t *testing.T) {
 
-		bestPrice, err := repo.GetBestPriceFor(ctx, symbol, models.Side("invalid"))
+		order, err := repo.GetBestPriceFor(ctx, symbol, models.Side("invalid"))
 
-		assert.Error(t, err, "error should be returned")
-		assert.Equal(t, decimal.Zero, bestPrice, "should be zero")
+		assert.ErrorIs(t, err, ErrInvalidOrderSide)
+		assert.Equal(t, models.Order{}, order, "should be zero value")
 	})
 
 }
