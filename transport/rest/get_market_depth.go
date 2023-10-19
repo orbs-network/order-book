@@ -22,7 +22,6 @@ const DEFAULT_LIMIT int = 10
 
 func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fmt.Printf("vars: %#v\n", vars)
 	symbolStr, ok := vars["symbol"]
 	if !ok {
 		http.Error(w, "Symbol is required", http.StatusBadRequest)

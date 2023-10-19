@@ -13,7 +13,7 @@ func (h *Handler) Listen() {
 	api := h.router.PathPrefix("/api/v1").Subrouter()
 
 	// Create a new order
-	api.HandleFunc("/order", h.CreateOrder).Methods("POST")
+	api.HandleFunc("/order", h.ProcessOrder).Methods("POST")
 	// Cancel an existing order
 	api.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
 	// Get the best price for a symbol and side
