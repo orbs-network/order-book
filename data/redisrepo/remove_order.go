@@ -2,7 +2,6 @@ package redisrepo
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
@@ -10,7 +9,7 @@ import (
 )
 
 // Removes an order from the order book.
-// Order is removed from the prices sorted set, user's orders set and order hash is updated to `status: CANCELED`
+// Order is removed from the prices sorted set, user's order set and order hash is updated to `status: CANCELED`
 // SHOULD ONLY BE USED WHEN ORDER STATUS IS STILL `OPEN`
 func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) error {
 
@@ -34,13 +33,13 @@ func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) e
 
 	// update order status to CANCELED
 	orderIDKey := CreateOrderIDKey(order.Id)
-	transaction.HSet(ctx, orderIDKey, "status", models.STATUS_CANCELED.String()).Result()
+	transaction.HSet(ctx, orderIDKey, "status", models.STATUS_CANCELLED.String()).Result()
 
 	_, err := transaction.Exec(ctx)
 
 	if err != nil {
 		logctx.Error(ctx, "failed to remove order from Redis", logger.Error(err), logger.String("orderId", order.Id.String()))
-		return fmt.Errorf("transaction failed. Reason: %v", err)
+		return models.ErrTransactionFailed
 	}
 	// --- END TRANSACTION ---
 

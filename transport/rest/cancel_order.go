@@ -44,7 +44,20 @@ func (h *Handler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err == models.ErrOrderNotFound {
+		logctx.Warn(userCtx, "order not found", logger.String("orderId", orderId.String()))
 		http.Error(w, "Order not found", http.StatusNotFound)
+		return
+	}
+
+	if err == models.ErrOrderNotOpen {
+		logctx.Warn(userCtx, "user trying to cancel order that is not open", logger.String("orderId", orderId.String()))
+		http.Error(w, "Order not found", http.StatusNotFound)
+		return
+	}
+
+	if err == models.ErrUnauthorized {
+		logctx.Warn(userCtx, "user not authorized to cancel order", logger.String("orderId", orderId.String()))
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
 		return
 	}
 

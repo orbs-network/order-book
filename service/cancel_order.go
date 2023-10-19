@@ -29,6 +29,11 @@ func (s *Service) CancelOrder(ctx context.Context, orderId uuid.UUID) error {
 		return models.ErrOrderNotFound
 	}
 
+	if order.Status != models.STATUS_OPEN {
+		logctx.Warn(ctx, "trying to cancel order that is not open", logger.String("orderId", orderId.String()), logger.String("status", order.Status.String()))
+		return models.ErrOrderNotOpen
+	}
+
 	if user.ID != order.UserId {
 		logctx.Warn(ctx, "user trying to cancel another user's order", logger.String("orderId", orderId.String()), logger.String("requestUserId", user.ID.String()), logger.String("orderUserId", order.UserId.String()))
 		return models.ErrUnauthorized

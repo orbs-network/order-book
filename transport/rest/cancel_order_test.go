@@ -14,114 +14,81 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var orderId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
-
 func TestHandler_CancelOrder(t *testing.T) {
+	var orderId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
-	t.Run("invalid orderId - should return `http.StatusBadRequest`", func(t *testing.T) {
-		mockService := &mocks.MockOrderBookService{}
-		router := mux.NewRouter()
+	tests := []struct {
+		name         string
+		mockService  *mocks.MockOrderBookService
+		url          string
+		expectedCode int
+		expectedBody string
+	}{
+		{
+			"invalid orderId",
+			&mocks.MockOrderBookService{},
+			"/order/invalid",
+			http.StatusBadRequest,
+			"invalid order ID\n",
+		},
+		{
+			"no user in context",
+			&mocks.MockOrderBookService{Error: models.ErrNoUserInContext},
+			fmt.Sprintf("/order/%s", orderId.String()),
+			http.StatusUnauthorized,
+			"User not found\n",
+		},
+		{
+			"order not found",
+			&mocks.MockOrderBookService{Error: models.ErrOrderNotFound},
+			fmt.Sprintf("/order/%s", orderId.String()),
+			http.StatusNotFound,
+			"Order not found\n",
+		},
+		{
+			"trying to cancel order that is not open",
+			&mocks.MockOrderBookService{Error: models.ErrOrderNotOpen},
+			fmt.Sprintf("/order/%s", orderId.String()),
+			http.StatusNotFound,
+			"Order not found\n",
+		},
+		{
+			"unexpected error from service",
+			&mocks.MockOrderBookService{Error: assert.AnError},
+			fmt.Sprintf("/order/%s", orderId.String()),
+			http.StatusInternalServerError,
+			"Error cancelling order. Try again later\n",
+		},
+		{
+			"successful cancel",
+			&mocks.MockOrderBookService{},
+			fmt.Sprintf("/order/%s", orderId.String()),
+			http.StatusOK,
+			fmt.Sprintf("{\"orderId\":\"%s\"}", orderId.String()),
+		},
+	}
 
-		h, _ := rest.NewHandler(mockService, router)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 
-		req, err := http.NewRequest("DELETE", "/order/invalid", nil)
+			fmt.Println(test.name)
 
-		if err != nil {
-			t.Fatal(err)
-		}
+			router := mux.NewRouter()
 
-		rr := httptest.NewRecorder()
-		router.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
+			h, _ := rest.NewHandler(test.mockService, router)
 
-		router.ServeHTTP(rr, req)
+			req, err := http.NewRequest("DELETE", test.url, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-		assert.Equal(t, http.StatusBadRequest, rr.Code)
-		assert.Equal(t, "invalid order ID\n", rr.Body.String())
+			rr := httptest.NewRecorder()
+			router.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
 
-	})
+			router.ServeHTTP(rr, req)
 
-	t.Run("no user in context - should return `http.StatusUnauthorized`", func(t *testing.T) {
-		mockService := &mocks.MockOrderBookService{Error: models.ErrNoUserInContext}
-		router := mux.NewRouter()
-
-		h, _ := rest.NewHandler(mockService, router)
-
-		req, err := http.NewRequest("DELETE", fmt.Sprintf("/order/%s", orderId.String()), nil)
-
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		rr := httptest.NewRecorder()
-		router.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
-
-		router.ServeHTTP(rr, req)
-
-		assert.Equal(t, http.StatusUnauthorized, rr.Code)
-		assert.Equal(t, "User not found\n", rr.Body.String())
-	})
-
-	t.Run("order not found - should return `http.StatusNotFound`", func(t *testing.T) {
-		mockService := &mocks.MockOrderBookService{Error: models.ErrOrderNotFound}
-		router := mux.NewRouter()
-
-		h, _ := rest.NewHandler(mockService, router)
-
-		req, err := http.NewRequest("DELETE", fmt.Sprintf("/order/%s", orderId.String()), nil)
-
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		rr := httptest.NewRecorder()
-		router.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
-
-		router.ServeHTTP(rr, req)
-
-		assert.Equal(t, http.StatusNotFound, rr.Code)
-		assert.Equal(t, "Order not found\n", rr.Body.String())
-	})
-
-	t.Run("unexpected error from service - should return `http.StatusInternalServerError`", func(t *testing.T) {
-		mockService := &mocks.MockOrderBookService{Error: assert.AnError}
-		router := mux.NewRouter()
-
-		h, _ := rest.NewHandler(mockService, router)
-
-		req, err := http.NewRequest("DELETE", fmt.Sprintf("/order/%s", orderId.String()), nil)
-
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		rr := httptest.NewRecorder()
-		router.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
-
-		router.ServeHTTP(rr, req)
-
-		assert.Equal(t, http.StatusInternalServerError, rr.Code)
-		assert.Equal(t, "Error cancelling order. Try again later\n", rr.Body.String())
-	})
-
-	t.Run("successful cancel - should return `http.StatusOK`", func(t *testing.T) {
-		mockService := &mocks.MockOrderBookService{}
-		router := mux.NewRouter()
-
-		h, _ := rest.NewHandler(mockService, router)
-
-		req, err := http.NewRequest("DELETE", fmt.Sprintf("/order/%s", orderId.String()), nil)
-
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		rr := httptest.NewRecorder()
-		router.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
-
-		router.ServeHTTP(rr, req)
-
-		assert.Equal(t, http.StatusOK, rr.Code)
-		assert.Equal(t, "{\"orderId\":\"00000000-0000-0000-0000-000000000001\"}", rr.Body.String())
-	})
-
+			assert.Equal(t, test.expectedCode, rr.Code)
+			assert.Equal(t, test.expectedBody, rr.Body.String())
+		})
+	}
 }
