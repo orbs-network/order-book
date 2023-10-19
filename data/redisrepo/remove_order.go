@@ -13,6 +13,12 @@ import (
 // Order is removed from the prices sorted set, user's orders set and order hash is updated to `status: CANCELED`
 // SHOULD ONLY BE USED WHEN ORDER STATUS IS STILL `OPEN`
 func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) error {
+
+	if order.Status != models.STATUS_OPEN {
+		logctx.Error(ctx, "trying to remove order that is not open", logger.String("orderId", order.Id.String()), logger.String("status", order.Status.String()))
+		return models.ErrOrderNotOpen
+	}
+
 	// --- START TRANSACTION ---
 	transaction := r.client.TxPipeline()
 	if order.Side == models.BUY {
@@ -26,7 +32,7 @@ func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) e
 	userOrdersKey := CreateUserOrdersKey(order.UserId)
 	transaction.SRem(ctx, userOrdersKey, order.Id.String()).Result()
 
-	// 3. Set order status to cancelled
+	// update order status to CANCELED
 	orderIDKey := CreateOrderIDKey(order.Id)
 	transaction.HSet(ctx, orderIDKey, "status", models.STATUS_CANCELED.String()).Result()
 
