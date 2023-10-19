@@ -10,6 +10,8 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
+var ErrInvalidOrderSide = fmt.Errorf("invalid order side")
+
 func (r *redisRepository) GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (models.Order, error) {
 	var key string
 	var err error
@@ -20,7 +22,7 @@ func (r *redisRepository) GetBestPriceFor(ctx context.Context, symbol models.Sym
 	} else if side == models.SELL {
 		key = CreateSellSidePricesKey(symbol)
 	} else {
-		return models.Order{}, fmt.Errorf("invalid order side")
+		return models.Order{}, ErrInvalidOrderSide
 	}
 
 	if side == models.BUY {
