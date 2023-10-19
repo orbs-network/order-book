@@ -20,7 +20,7 @@ func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order)
 	return m.Error
 }
 
-func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, orderId uuid.UUID) error {
+func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order) error {
 	return m.Error
 }
 

@@ -34,7 +34,7 @@ func (s *Service) CancelOrder(ctx context.Context, orderId uuid.UUID) error {
 		return models.ErrUnauthorized
 	}
 
-	err = s.orderBookStore.RemoveOrder(ctx, orderId)
+	err = s.orderBookStore.RemoveOrder(ctx, *order)
 	if err != nil {
 		logctx.Error(ctx, "error occured when removing order", logger.Error(err))
 		return err
