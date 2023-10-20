@@ -11,6 +11,10 @@ stop:
 	@echo "Stopping server and db..."
 	@docker-compose down
 
+watch: start
+	@echo "Watching for file changes..."
+	@docker-compose watch
+
 restart: stop start
 
 logs: 
