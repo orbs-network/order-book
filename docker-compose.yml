@@ -1,19 +1,25 @@
 version: "3.8"
 services:
-  app:
+  server:
     build:
       dockerfile: Dockerfile
       context: .
     ports:
       - "80:8080"
-    volumes:
-      - .:/app
     environment:
       - REDIS_ADDRESS=db:6379
       - REDIS_PASSWORD=secret
       - REDIS_DB=0
     depends_on:
       - db
+    develop:
+      watch:
+        - action: rebuild
+          files:
+            - ./**/*.go
+            - ./go.mod
+            - ./go.sum
+
   db:
     image: redis:7.2.1-alpine
     restart: always
