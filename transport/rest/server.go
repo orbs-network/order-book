@@ -27,7 +27,7 @@ func (h *Handler) Listen() {
 	/////////////////////////////////////////////////////////////////////
 	// LH side
 	lhApi := h.router.PathPrefix("/lh/v1").Subrouter()
-	lhApi.HandleFunc("/quote", h.amountOut).Methods("GET")
+	lhApi.HandleFunc("/quote", h.amountOut).Methods("POST")
 	lhApi.HandleFunc("/approve_orders", h.approveOrders).Methods("GET")
 
 	// LISTEN

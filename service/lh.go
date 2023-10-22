@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/orbs-network/order-book/models"
@@ -13,93 +14,80 @@ type Order interface {
 	GetNextOrder() *models.Order
 }
 
-func (s *Service) GetAmountOut(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (decimal.Decimal, error) {
+// type fillStatus struct {
+// 	OrderId string `json:"OrderId"`
+// 	Fill    string `json:"Fill"`
+// 	Symbol  string `json:"symbol"`
+// 	Side    string `json:"side"`
+// }
+
+// orderID->amount bought or sold in A token always
+type AmountOutRes struct {
+	AmountOut  string            `json:"AmountOut"`
+	FillOrders map[string]string `json:"FillOrders"`
+}
+
+func (s *Service) GetAmountOut(ctx context.Context, auctionID string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (*AmountOutRes, error) {
 
 	var it OrderIter
+	var res *AmountOutRes
+	var err error
 	if side == models.BUY {
 		it = s.orderBookStore.GetMinAsk(ctx, symbol)
-		return getAmountOutInAToken(it, amountIn)
+		res, err = getAmountOutInAToken(it, amountIn)
 
 	} else { // SELL
 		it = s.orderBookStore.GetMaxBid(ctx, symbol)
-		return getAmountOutInBToken(it, amountIn)
+		res, err = getAmountOutInBToken(it, amountIn)
 	}
+	if err != nil {
+		return nil, err
+	}
+	s.orderBookStore.StoreAuction(ctx, auctionID, res.FillOrders)
+	return res, nil
 }
-
-// func getAmountOutInAToken(it OrderIter, amountIn decimal.Decimal) (decimal.Decimal, error) {
-// 	// buy 2 eth for 2000 usd
-// 	// amount In = 2000, price = 1000
-// 	amountOut := decimal.NewFromInt(0)
-// 	var order *models.Order
-// 	for it.HasNext() && amountIn.IsPositive() {
-// 		fmt.Printf("it %v", &it)
-// 		order = it.Next()
-
-// 		fmt.Printf("orderPrice:\t", order.Price.String())
-// 		fmt.Printf("orderSize:\t", order.Size.String())
-// 		fmt.Printf(order.Size.String())
-
-// 		// max buy
-// 		maxBuySize := amountIn.Div(order.Price)
-// 		fmt.Printf("maxBuySize Out")
-// 		fmt.Printf(maxBuySize.String())
-
-// 		minBuySize := decimal.Min(maxBuySize, order.Size)
-// 		fmt.Printf("minBuySize Out")
-// 		fmt.Printf(minBuySize.String())
-
-// 		spent := minBuySize.Mul(order.Price)
-// 		fmt.Printf("spent amount In")
-// 		fmt.Printf(spent.String())
-
-// 		amountIn = amountIn.Sub(spent)
-// 		amountOut = amountOut.Add(minBuySize)
-// 	}
-// 	return amountOut, nil
-// }
 
 // PAIR/SYMBOL A-B (ETH-USDC)
 // amount in B token (USD)
 // amount out A token (ETH)
-func getAmountOutInAToken(it OrderIter, amountInB decimal.Decimal) (decimal.Decimal, error) {
+func getAmountOutInAToken(it OrderIter, amountInB decimal.Decimal) (*AmountOutRes, error) {
 	amountOutA := decimal.NewFromInt(0)
+	fillOrders := make(map[string]string)
 	var order *models.Order
 	for it.HasNext() && amountInB.IsPositive() {
 		order = it.Next()
-		fmt.Println("amountInB:\t", amountInB.String())
-		fmt.Println("orderPrice:\t", order.Price.String())
-		fmt.Println("orderSize:\t", order.Size.String())
-
 		// max Spend in B token  for this order
 		orderSizeB := order.Price.Mul(order.Size)
-		fmt.Println("orderSizeB ", orderSizeB.String())
-
 		// spend the min of orderSizeB/amountInB
 		spendB := decimal.Min(orderSizeB, amountInB)
-		fmt.Println("spendB ", spendB.String())
+
 		// Gain
 		gainA := spendB.Div(order.Price)
-		fmt.Println("gainA ", gainA.String())
 
+		// sub-add
 		amountInB = amountInB.Sub(spendB)
-		fmt.Println("amountInB ", amountInB.String())
 		amountOutA = amountOutA.Add(gainA)
-		fmt.Println("amountOutA ", gainA.String())
+
+		// res
+		fillOrders[order.Id.String()] = gainA.String()
 	}
-	return amountOutA, nil
+	// not all is Spent - error
+	if amountInB.IsPositive() {
+		return nil, errors.New("not enough liquidity in book to sutisfy amountIn")
+	}
+
+	return &AmountOutRes{AmountOut: amountOutA.String(), FillOrders: fillOrders}, nil
 }
 
 // PAIR/SYMBOL A-B (ETH-USDC)
 // amount in A token (ETH)
 // amount out B token (USD)
-func getAmountOutInBToken(it OrderIter, amountInA decimal.Decimal) (decimal.Decimal, error) {
+func getAmountOutInBToken(it OrderIter, amountInA decimal.Decimal) (*AmountOutRes, error) {
 	amountOutB := decimal.NewFromInt(0)
 	var order *models.Order
+	fillOrders := make(map[string]string)
 	for it.HasNext() && amountInA.IsPositive() {
 		order = it.Next()
-
-		fmt.Println("orderPrice:\t", order.Price.String())
-		fmt.Println("orderSize:\t", order.Size.String())
 
 		// Spend
 		spendA := decimal.Min(order.Size, amountInA)
@@ -109,8 +97,16 @@ func getAmountOutInBToken(it OrderIter, amountInA decimal.Decimal) (decimal.Deci
 		gainB := order.Price.Mul(spendA)
 		fmt.Println("gainB ", gainB.String())
 
+		// sub-add
 		amountInA = amountInA.Sub(spendA)
 		amountOutB = amountOutB.Add(gainB)
+
+		// res
+		fillOrders[order.Id.String()] = spendA.String()
 	}
-	return amountOutB, nil
+	if amountInA.IsPositive() {
+		return nil, errors.New("not enough liquidity in book to sutisfy amountIn")
+	}
+	//return amountOutB, nil
+	return &AmountOutRes{AmountOut: amountOutB.String(), FillOrders: fillOrders}, nil
 }

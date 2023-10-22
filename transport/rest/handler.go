@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/service"
 	"github.com/shopspring/decimal"
 )
 
@@ -18,7 +19,7 @@ type Service interface {
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
 	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
-	GetAmountOut(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (decimal.Decimal, error)
+	GetAmountOut(ctx context.Context, auctionID string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (*service.AmountOutRes, error)
 }
 
 type Handler struct {

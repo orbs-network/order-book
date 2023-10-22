@@ -4,9 +4,11 @@ import (
 	"context"
 	"log"
 
+	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/data/redisrepo"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
+	"github.com/orbs-network/order-book/transport/rest"
 	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
 )
@@ -50,25 +52,34 @@ func setup() {
 
 	// Amount for ask
 	amountIn := 1000 + 1001 + 1001 + 1002 + 1002 + 501
-	amountOut, err := s.GetAmountOut(ctx, symbol, models.BUY, decimal.NewFromInt(int64(amountIn)))
+	res, err := s.GetAmountOut(ctx, "auctionID123", symbol, models.BUY, decimal.NewFromInt(int64(amountIn)))
 	if err != nil {
 		log.Fatalf("error GetAmountOut: %v", err)
 	}
 	// should get 5.5
-	log.Printf("Amount out is: %s", amountOut.String())
+	log.Printf("Amount out is: %s", res.AmountOut)
 
 	// Amount for ask bids
 	amountIn = 1 + 1
-	amountOut, err = s.GetAmountOut(ctx, symbol, models.SELL, decimal.NewFromInt(int64(amountIn)))
+	res, err = s.GetAmountOut(ctx, "auctionID345", symbol, models.SELL, decimal.NewFromInt(int64(amountIn)))
 	if err != nil {
 		log.Fatalf("error GetAmountOut: %v", err)
 	}
 	// should get 900 + 800 =1700
-	log.Printf("Amount out is: %s", amountOut.String())
+	log.Printf("Amount out is: %s", res.AmountOut)
 
 	// Not working...
 	// s.CancelOrder(ctx, id1)
 	// s.CancelOrder(ctx, id2)
 	// s.CancelOrder(ctx, id3)
 
+	// start server
+	router := mux.NewRouter()
+
+	handler, err := rest.NewHandler(s, router)
+	if err != nil {
+		log.Fatalf("error creating handler: %v", err)
+	}
+
+	handler.Listen()
 }

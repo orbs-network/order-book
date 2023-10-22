@@ -9,6 +9,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+func (r *inMemoryRepository) StoreAuction(ctx context.Context, auctionID string, fillOrders map[string]string) error {
+	return nil
+}
 func (r *inMemoryRepository) StoreOrder(ctx context.Context, order models.Order) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()

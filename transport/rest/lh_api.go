@@ -6,12 +6,21 @@ import (
 	"strings"
 
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/utils/logger"
+	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
 )
 
+type AmountOutRequest struct {
+	AuctionID string `json:"auctionID"`
+	AmountIn  string `json:"amountIn"`
+	Symbol    string `json:"symbol"`
+	Side      string `json:"side"`
+}
+
 func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 
-	var args CreateOrderRequest
+	var args AmountOutRequest
 	err := json.NewDecoder(r.Body).Decode(&args)
 	if err != nil {
 		http.Error(w, "invalid JSON body", http.StatusBadRequest)
@@ -23,7 +32,7 @@ func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "'symbol' is not a valid", http.StatusBadRequest)
 		return
 	}
-	decSize, err := decimal.NewFromString(args.Size)
+	amountIn, err := decimal.NewFromString(args.AmountIn)
 	if err != nil {
 		http.Error(w, "'size' is not a valid number format", http.StatusBadRequest)
 		return
@@ -33,7 +42,22 @@ func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 	if strings.EqualFold(args.Side, "SELL") {
 		side = models.SELL
 	}
-	h.svc.GetAmountOut(nil, symbol, side, decSize)
+	amountOutRes, err := h.svc.GetAmountOut(r.Context(), args.AuctionID, symbol, side, amountIn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	resp, err := json.Marshal(amountOutRes)
+	if err != nil {
+		logctx.Error(r.Context(), "failed to marshal amountOutRes", logger.Error(err))
+		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
 
 }
 
