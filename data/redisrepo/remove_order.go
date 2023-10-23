@@ -22,18 +22,18 @@ func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) e
 	transaction := r.client.TxPipeline()
 	if order.Side == models.BUY {
 		buyPricesKey := CreateBuySidePricesKey(order.Symbol)
-		transaction.ZRem(ctx, buyPricesKey, order.Id.String()).Result()
+		transaction.ZRem(ctx, buyPricesKey, order.Id.String())
 	} else {
 		sellPricesKey := CreateSellSidePricesKey(order.Symbol)
-		transaction.ZRem(ctx, sellPricesKey, order.Id.String()).Result()
+		transaction.ZRem(ctx, sellPricesKey, order.Id.String())
 	}
 
 	userOrdersKey := CreateUserOrdersKey(order.UserId)
-	transaction.SRem(ctx, userOrdersKey, order.Id.String()).Result()
+	transaction.SRem(ctx, userOrdersKey, order.Id.String())
 
 	// update order status to CANCELED
 	orderIDKey := CreateOrderIDKey(order.Id)
-	transaction.HSet(ctx, orderIDKey, "status", models.STATUS_CANCELLED.String()).Result()
+	transaction.HSet(ctx, orderIDKey, "status", models.STATUS_CANCELLED.String())
 
 	_, err := transaction.Exec(ctx)
 

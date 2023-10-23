@@ -80,5 +80,10 @@ func (h *Handler) CancelOrder(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+
+	if _, err := w.Write(resp); err != nil {
+		logctx.Error(userCtx, "failed to write response", logger.Error(err), logger.String("orderId", orderId.String()))
+		http.Error(w, "Error cancelling order. Try again later", http.StatusInternalServerError)
+	}
+
 }

@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/orbs-network/order-book/utils/logger"
@@ -23,6 +24,9 @@ func (h *Handler) Listen() {
 	// Get market depth
 	api.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
 
-	logctx.Info(context.Background(), "starting server", logger.String("port", "8080"))
-	http.ListenAndServe(":8080", h.router)
+	logctx.Info(context.TODO(), "starting server", logger.String("port", "8080"))
+
+	if err := http.ListenAndServe(":8080", h.router); err != nil {
+		log.Fatalf("error starting http listener: %v", err)
+	}
 }
