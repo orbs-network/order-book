@@ -12,7 +12,7 @@ import (
 )
 
 type AmountOutRequest struct {
-	AuctionID string `json:"auctionID"`
+	AuctionId string `json:"auctionId"`
 	AmountIn  string `json:"amountIn"`
 	Symbol    string `json:"symbol"`
 	Side      string `json:"side"`
@@ -42,7 +42,7 @@ func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 	if strings.EqualFold(args.Side, "SELL") {
 		side = models.SELL
 	}
-	amountOutRes, err := h.svc.GetAmountOut(r.Context(), args.AuctionID, symbol, side, amountIn)
+	amountOutRes, err := h.svc.GetAmountOut(r.Context(), args.AuctionId, symbol, side, amountIn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

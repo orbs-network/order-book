@@ -2,35 +2,18 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/orbs-network/order-book/models"
 	"github.com/shopspring/decimal"
 )
 
-type Order interface {
-	GetMinPriceOrder() *models.Order
-	GetNextOrder() *models.Order
-}
-
-// type fillStatus struct {
-// 	OrderId string `json:"OrderId"`
-// 	Fill    string `json:"Fill"`
-// 	Symbol  string `json:"symbol"`
-// 	Side    string `json:"side"`
-// }
-
 // orderID->amount bought or sold in A token always
-type AmountOutRes struct {
-	AmountOut  string            `json:"AmountOut"`
-	FillOrders map[string]string `json:"FillOrders"`
-}
 
-func (s *Service) GetAmountOut(ctx context.Context, auctionID string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (*AmountOutRes, error) {
+func (s *Service) GetAmountOut(ctx context.Context, auctionId string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 
-	var it OrderIter
-	var res *AmountOutRes
+	var it models.OrderIter
+	var res models.AmountOut
 	var err error
 	if side == models.BUY {
 		it = s.orderBookStore.GetMinAsk(ctx, symbol)
@@ -41,18 +24,18 @@ func (s *Service) GetAmountOut(ctx context.Context, auctionID string, symbol mod
 		res, err = getAmountOutInBToken(it, amountIn)
 	}
 	if err != nil {
-		return nil, err
+		return models.AmountOut{}, err
 	}
-	s.orderBookStore.StoreAuction(ctx, auctionID, res.FillOrders)
+	s.orderBookStore.StoreAuction(ctx, auctionId, res.FillOrders)
 	return res, nil
 }
 
 // PAIR/SYMBOL A-B (ETH-USDC)
 // amount in B token (USD)
 // amount out A token (ETH)
-func getAmountOutInAToken(it OrderIter, amountInB decimal.Decimal) (*AmountOutRes, error) {
+func getAmountOutInAToken(it models.OrderIter, amountInB decimal.Decimal) (models.AmountOut, error) {
 	amountOutA := decimal.NewFromInt(0)
-	fillOrders := make(map[string]string)
+	var fillOrders []models.FilledOrder
 	var order *models.Order
 	for it.HasNext() && amountInB.IsPositive() {
 		order = it.Next()
@@ -69,23 +52,23 @@ func getAmountOutInAToken(it OrderIter, amountInB decimal.Decimal) (*AmountOutRe
 		amountOutA = amountOutA.Add(gainA)
 
 		// res
-		fillOrders[order.Id.String()] = gainA.String()
+		fillOrders = append(fillOrders, models.FilledOrder{OrderId: order.Id, Amount: gainA})
 	}
 	// not all is Spent - error
 	if amountInB.IsPositive() {
-		return nil, errors.New("not enough liquidity in book to sutisfy amountIn")
+		return models.AmountOut{}, models.ErrInsufficientLiquity
 	}
 
-	return &AmountOutRes{AmountOut: amountOutA.String(), FillOrders: fillOrders}, nil
+	return models.AmountOut{AmountOut: amountOutA, FillOrders: fillOrders}, nil
 }
 
 // PAIR/SYMBOL A-B (ETH-USDC)
 // amount in A token (ETH)
 // amount out B token (USD)
-func getAmountOutInBToken(it OrderIter, amountInA decimal.Decimal) (*AmountOutRes, error) {
+func getAmountOutInBToken(it models.OrderIter, amountInA decimal.Decimal) (models.AmountOut, error) {
 	amountOutB := decimal.NewFromInt(0)
 	var order *models.Order
-	fillOrders := make(map[string]string)
+	var fillOrders []models.FilledOrder
 	for it.HasNext() && amountInA.IsPositive() {
 		order = it.Next()
 
@@ -102,11 +85,11 @@ func getAmountOutInBToken(it OrderIter, amountInA decimal.Decimal) (*AmountOutRe
 		amountOutB = amountOutB.Add(gainB)
 
 		// res
-		fillOrders[order.Id.String()] = spendA.String()
+		fillOrders = append(fillOrders, models.FilledOrder{OrderId: order.Id, Amount: spendA})
 	}
 	if amountInA.IsPositive() {
-		return nil, errors.New("not enough liquidity in book to sutisfy amountIn")
+		return models.AmountOut{}, models.ErrInsufficientLiquity
 	}
-	//return amountOutB, nil
-	return &AmountOutRes{AmountOut: amountOutB.String(), FillOrders: fillOrders}, nil
+
+	return models.AmountOut{AmountOut: amountOutB, FillOrders: fillOrders}, nil
 }

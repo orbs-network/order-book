@@ -1,7 +1,12 @@
 package redisrepo
 
-import "context"
+import (
+	"context"
 
-func (r *redisRepository) StoreAuction(ctx context.Context, auctionID string, fillOrders map[string]string) error {
-	return nil
+	"github.com/orbs-network/order-book/models"
+)
+
+func (r *redisRepository) StoreAuction(ctx context.Context, auctionID string, fillOrders []models.FilledOrder) error {
+	// auctionId:<ID>: [{orderID: <ID>, filledAmount: <amount>}, ...}]
+	panic("not implemented")
 }

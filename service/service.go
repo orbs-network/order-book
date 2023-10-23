@@ -20,9 +20,9 @@ type OrderBookStore interface {
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	// LH side
-	StoreAuction(ctx context.Context, auctionID string, fillOrders map[string]string) error
-	GetMinAsk(ctx context.Context, symbol models.Symbol) OrderIter
-	GetMaxBid(ctx context.Context, symbol models.Symbol) OrderIter
+	StoreAuction(ctx context.Context, auctionID string, fillOrders []models.FilledOrder) error
+	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
+	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
 }
 
 // Service contains methods that implement the business logic for the application.

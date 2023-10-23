@@ -14,6 +14,7 @@ type MockOrderBookStore struct {
 	Order       *models.Order
 	Orders      []models.Order
 	MarketDepth models.MarketDepth
+	OrderIter   models.OrderIter
 }
 
 func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order) error {
@@ -50,4 +51,16 @@ func (m *MockOrderBookStore) GetMarketDepth(ctx context.Context, symbol models.S
 		return models.MarketDepth{}, m.Error
 	}
 	return m.MarketDepth, nil
+}
+
+func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID string, fillOrders []models.FilledOrder) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {
+	return m.OrderIter
+}
+
+func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
+	return m.OrderIter
 }

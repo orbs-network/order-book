@@ -5,12 +5,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
-	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-//////////////////////////////////////////////////
+// ////////////////////////////////////////////////
 type OrderIter struct {
 	index int
 	ids   []string
@@ -46,8 +45,8 @@ func (i *OrderIter) HasNext() bool {
 	return i.index < (len(i.ids) - 1)
 }
 
-//////////////////////////////////////////////////
-func (r *redisRepository) GetMinAsk(ctx context.Context, symbol models.Symbol) service.OrderIter {
+// ////////////////////////////////////////////////
+func (r *redisRepository) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {
 	key := CreateSellSidePricesKey(symbol)
 
 	// Min ask price for selling
@@ -64,8 +63,8 @@ func (r *redisRepository) GetMinAsk(ctx context.Context, symbol models.Symbol) s
 
 }
 
-//////////////////////////////////////////////////
-func (r *redisRepository) GetMaxBid(ctx context.Context, symbol models.Symbol) service.OrderIter {
+// ////////////////////////////////////////////////
+func (r *redisRepository) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
 	key := CreateBuySidePricesKey(symbol)
 
 	// Min ask price for selling
