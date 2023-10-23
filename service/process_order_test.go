@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/service"
 
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
@@ -23,7 +24,7 @@ func TestService_ProcessOrder(t *testing.T) {
 	size := decimal.NewFromFloat(1000.00)
 
 	t.Run("unexpected error from store - should return `ErrUnexpectedError` error", func(t *testing.T) {
-		input := ProcessOrderInput{
+		input := service.ProcessOrderInput{
 			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
@@ -32,7 +33,7 @@ func TestService_ProcessOrder(t *testing.T) {
 			ClientOrderID: orderId,
 		}
 
-		svc, _ := New(&mocks.MockOrderBookStore{Error: assert.AnError})
+		svc, _ := service.New(&mocks.MockOrderBookStore{Error: assert.AnError})
 
 		order, err := svc.ProcessOrder(ctx, input)
 
@@ -41,7 +42,7 @@ func TestService_ProcessOrder(t *testing.T) {
 	})
 
 	t.Run("no previous order - should create new order", func(t *testing.T) {
-		input := ProcessOrderInput{
+		input := service.ProcessOrderInput{
 			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
@@ -50,7 +51,7 @@ func TestService_ProcessOrder(t *testing.T) {
 			ClientOrderID: orderId,
 		}
 
-		svc, _ := New(&mocks.MockOrderBookStore{Order: nil})
+		svc, _ := service.New(&mocks.MockOrderBookStore{Order: nil})
 
 		newOrder, err := svc.ProcessOrder(ctx, input)
 
@@ -67,7 +68,7 @@ func TestService_ProcessOrder(t *testing.T) {
 	})
 
 	t.Run("existing order with different userId - should return `ErrClashingOrderId` error", func(t *testing.T) {
-		input := ProcessOrderInput{
+		input := service.ProcessOrderInput{
 			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
@@ -76,16 +77,16 @@ func TestService_ProcessOrder(t *testing.T) {
 			ClientOrderID: orderId,
 		}
 
-		svc, _ := New(&mocks.MockOrderBookStore{Order: &models.Order{UserId: uuid.MustParse("b577273e-12de-4acc-a4f8-de7fb5b86e37")}})
+		svc, _ := service.New(&mocks.MockOrderBookStore{Order: &models.Order{UserId: uuid.MustParse("b577273e-12de-4acc-a4f8-de7fb5b86e37")}})
 
 		order, err := svc.ProcessOrder(ctx, input)
 
-		assert.ErrorIs(t, err, ErrClashingOrderId)
+		assert.ErrorIs(t, err, service.ErrClashingOrderId)
 		assert.Equal(t, models.Order{}, order)
 	})
 
 	t.Run("existing order with same clientOrderId - should return `ErrOrderAlreadyExists` error", func(t *testing.T) {
-		input := ProcessOrderInput{
+		input := service.ProcessOrderInput{
 			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
@@ -94,7 +95,7 @@ func TestService_ProcessOrder(t *testing.T) {
 			ClientOrderID: orderId,
 		}
 
-		svc, _ := New(&mocks.MockOrderBookStore{Order: &models.Order{Id: orderId, UserId: userId}})
+		svc, _ := service.New(&mocks.MockOrderBookStore{Order: &models.Order{Id: orderId, UserId: userId}})
 
 		order, err := svc.ProcessOrder(ctx, input)
 

@@ -48,6 +48,7 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 
 	_, err := transaction.Exec(ctx)
 	if err != nil {
+		logctx.Error(ctx, "failed to store order in Redis", logger.Error(err), logger.String("orderId", order.Id.String()))
 		return fmt.Errorf("transaction failed. Reason: %v", err)
 	}
 	// --- END TRANSACTION ---
