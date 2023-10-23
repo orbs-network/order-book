@@ -119,7 +119,11 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	w.Write(resp)
+
+	if _, err := w.Write(resp); err != nil {
+		logctx.Error(r.Context(), "failed to write response", logger.Error(err), logger.String("orderId", clientOrderId.String()))
+		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
+	}
 }
 
 func handleValidateRequiredFields(args CreateOrderRequest) error {

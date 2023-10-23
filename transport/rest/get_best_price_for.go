@@ -63,5 +63,9 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+
+	if _, err := w.Write(resp); err != nil {
+		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
+		http.Error(w, "Error getting best price. Try again later", http.StatusInternalServerError)
+	}
 }
