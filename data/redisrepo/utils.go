@@ -17,6 +17,11 @@ func CreateOrderIDKey(orderId uuid.UUID) string {
 	return fmt.Sprintf("orderID:%s", orderId)
 }
 
+// CreateClientOIDKey creates a Redis key for a single client order ID
+func CreateClientOIDKey(clientOId uuid.UUID) string {
+	return fmt.Sprintf("clientOId:%s", clientOId)
+}
+
 // CreateBuySidePricesKey creates a Redis key for storing the buy side (bid) prices
 func CreateBuySidePricesKey(symbol models.Symbol) string {
 	return fmt.Sprintf("%s:buy:prices", symbol)

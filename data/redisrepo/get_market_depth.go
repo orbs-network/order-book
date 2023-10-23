@@ -38,7 +38,7 @@ func (r *redisRepository) GetMarketDepth(ctx context.Context, symbol models.Symb
 				logctx.Error(ctx, "Error parsing ask order id", logger.Error(err))
 				continue
 			}
-			order, err := r.FindOrderById(ctx, orderId)
+			order, err := r.FindOrderById(ctx, orderId, false)
 			if err != nil {
 				logctx.Error(ctx, "Error fetching order", logger.Error(err))
 				continue
@@ -64,7 +64,7 @@ func (r *redisRepository) GetMarketDepth(ctx context.Context, symbol models.Symb
 				logctx.Error(ctx, "Error parsing bid order id", logger.Error(err))
 				continue
 			}
-			order, err := r.FindOrderById(ctx, orderId)
+			order, err := r.FindOrderById(ctx, orderId, false)
 			if err != nil {
 				logctx.Error(ctx, "Error fetching order", logger.Error(err))
 				continue

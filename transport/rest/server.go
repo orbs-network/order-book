@@ -16,11 +16,15 @@ func (h *Handler) Listen() {
 	api := h.router.PathPrefix("/api/v1").Subrouter()
 	// Create a new order
 	api.HandleFunc("/order", h.ProcessOrder).Methods("POST")
-	// Cancel an existing order
-	api.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
+	// Get an order by client order ID
+	api.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId).Methods("GET")
+	// Cancel an existing order by client order ID
+	api.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
+	// Cancel an existing order by order ID
+	api.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
 	// Get the best price for a symbol and side
 	api.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
-	// Get an order by id
+	// Get an order by ID
 	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
 	// Get market depth
 	api.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")

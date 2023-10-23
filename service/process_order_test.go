@@ -57,7 +57,8 @@ func TestService_ProcessOrder(t *testing.T) {
 
 		assert.NoError(t, err)
 		// TODO: I am not asserting against the full order as timestamp is always different
-		assert.Equal(t, newOrder.Id, orderId)
+		assert.NotEqual(t, newOrder.Id, orderId)
+		assert.Equal(t, newOrder.ClientOId, orderId)
 		assert.Equal(t, newOrder.UserId, userId)
 		assert.Equal(t, newOrder.Price, price)
 		assert.Equal(t, newOrder.Symbol, symbol)
@@ -95,7 +96,7 @@ func TestService_ProcessOrder(t *testing.T) {
 			ClientOrderID: orderId,
 		}
 
-		svc, _ := service.New(&mocks.MockOrderBookStore{Order: &models.Order{Id: orderId, UserId: userId}})
+		svc, _ := service.New(&mocks.MockOrderBookStore{Order: &models.Order{ClientOId: orderId, UserId: userId}})
 
 		order, err := svc.ProcessOrder(ctx, input)
 

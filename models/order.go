@@ -9,7 +9,8 @@ import (
 )
 
 type Order struct {
-	Id        uuid.UUID       `json:"clientOrderId"`
+	Id        uuid.UUID       `json:"orderId"`
+	ClientOId uuid.UUID       `json:"clientOrderId"`
 	UserId    uuid.UUID       `json:"userId"`
 	Price     decimal.Decimal `json:"price"`
 	Symbol    Symbol          `json:"symbol"`
@@ -23,6 +24,7 @@ type Order struct {
 func (o *Order) OrderToMap() map[string]string {
 	return map[string]string{
 		"id":        o.Id.String(),
+		"clientOId": o.ClientOId.String(),
 		"userId":    o.UserId.String(),
 		"price":     o.Price.String(),
 		"symbol":    o.Symbol.String(),
@@ -42,6 +44,11 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	idStr, exists := data["id"]
 	if !exists {
 		return fmt.Errorf("no id provided")
+	}
+
+	clientOIdStr, exists := data["clientOId"]
+	if !exists {
+		return fmt.Errorf("no clientOId provided")
 	}
 
 	userIdStr, exists := data["userId"]
@@ -89,6 +96,11 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("invalid id: %v", err)
 	}
 
+	clientOId, err := uuid.Parse(clientOIdStr)
+	if err != nil {
+		return fmt.Errorf("invalid clientOId: %v", err)
+	}
+
 	userId, err := uuid.Parse(userIdStr)
 	if err != nil {
 		return fmt.Errorf("invalid userId: %v", err)
@@ -125,6 +137,7 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	}
 
 	o.Id = id
+	o.ClientOId = clientOId
 	o.UserId = userId
 	o.Price = price
 	o.Symbol = symbol

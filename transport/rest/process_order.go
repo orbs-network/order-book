@@ -21,6 +21,10 @@ type CreateOrderRequest struct {
 	ClientOrderId string `json:"clientOrderId"`
 }
 
+type CreateOrderResponse struct {
+	OrderId string `json:"orderId"`
+}
+
 // TODO: hardcoded userId for now
 var userId = uuid.MustParse("d577273e-12de-4acc-a4f8-de7fb5b86e37")
 
@@ -110,7 +114,10 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := json.Marshal(order)
+	resp, err := json.Marshal(CreateOrderResponse{
+		OrderId: order.Id.String(),
+	})
+
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal created order", logger.Error(err))
 		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
