@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	"github.com/orbs-network/order-book/utils/logger"
@@ -14,7 +15,7 @@ func (h *Handler) Listen() {
 	// Market maker side
 	api := h.router.PathPrefix("/api/v1").Subrouter()
 	// Create a new order
-	api.HandleFunc("/order", h.CreateOrder).Methods("POST")
+	api.HandleFunc("/order", h.ProcessOrder).Methods("POST")
 	// Cancel an existing order
 	api.HandleFunc("/order/{orderId}", h.CancelOrder).Methods("DELETE")
 	// Get the best price for a symbol and side
@@ -31,6 +32,9 @@ func (h *Handler) Listen() {
 	lhApi.HandleFunc("/approve_orders", h.approveOrders).Methods("GET")
 
 	// LISTEN
-	logctx.Info(context.Background(), "starting server", logger.String("port", "8080"))
-	http.ListenAndServe(":8080", h.router)
+	logctx.Info(context.TODO(), "starting server", logger.String("port", "8080"))
+
+	if err := http.ListenAndServe(":8080", h.router); err != nil {
+		log.Fatalf("error starting http listener: %v", err)
+	}
 }

@@ -2,6 +2,7 @@ package models
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -11,19 +12,52 @@ import (
 var id = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var userId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 
+func TestOrder_OrderToMap(t *testing.T) {
+	timestamp, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
+	order := Order{
+		Id:        id,
+		UserId:    userId,
+		Price:     decimal.NewFromFloat(10.99),
+		Symbol:    "USDC-ETH",
+		Size:      decimal.NewFromInt(1000),
+		Signature: "signature",
+		Status:    STATUS_OPEN,
+		Side:      BUY,
+		Timestamp: timestamp,
+	}
+
+	expectedMap := map[string]string{
+		"id":        order.Id.String(),
+		"userId":    order.UserId.String(),
+		"price":     order.Price.String(),
+		"symbol":    order.Symbol.String(),
+		"size":      order.Size.String(),
+		"signature": order.Signature,
+		"status":    order.Status.String(),
+		"side":      order.Side.String(),
+		"timestamp": order.Timestamp.Format(time.RFC3339),
+	}
+
+	actualMap := order.OrderToMap()
+
+	assert.Equal(t, expectedMap, actualMap)
+}
+
 func TestOrder_MapToOrder(t *testing.T) {
 	order := Order{}
 
 	t.Run("when all data is provided", func(t *testing.T) {
 		data := map[string]string{
-			"id":        id.String(),
-			"userId":    userId.String(),
-			"price":     "10.99",
-			"symbol":    "USDC-ETH",
-			"size":      "1000",
-			"signature": "signature",
-			"status":    "OPEN",
-			"side":      "buy",
+			"id":            id.String(),
+			"userId":        userId.String(),
+			"price":         "10.99",
+			"symbol":        "USDC-ETH",
+			"size":          "1000",
+			"signature":     "signature",
+			"status":        "OPEN",
+			"side":          "buy",
+			"timestamp":     "2021-01-01T00:00:00Z",
+			"clientOrderId": id.String(),
 		}
 
 		err := order.MapToOrder(data)
@@ -40,6 +74,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 		assert.Equal(t, "signature", order.Signature)
 		assert.Equal(t, "OPEN", order.Status.String())
 		assert.Equal(t, "buy", order.Side.String())
+		assert.Equal(t, "2021-01-01 00:00:00 +0000 UTC", order.Timestamp.String())
 	})
 
 	t.Run("when some data is missing", func(t *testing.T) {

@@ -24,7 +24,7 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 	// Order ID hash
 	orderIDKey := CreateOrderIDKey(order.Id)
 	for k, v := range orderMap {
-		transaction.HSet(ctx, orderIDKey, k, v).Err()
+		transaction.HSet(ctx, orderIDKey, k, v)
 	}
 
 	// Prices sorted set
@@ -34,13 +34,13 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 
 	if order.Side == models.BUY {
 		buyPricesKey := CreateBuySidePricesKey(order.Symbol)
-		transaction.ZAdd(context.Background(), buyPricesKey, redis.Z{
+		transaction.ZAdd(ctx, buyPricesKey, redis.Z{
 			Score:  score,
 			Member: order.Id.String(),
 		})
 	} else {
 		sellPricesKey := CreateSellSidePricesKey(order.Symbol)
-		transaction.ZAdd(context.Background(), sellPricesKey, redis.Z{
+		transaction.ZAdd(ctx, sellPricesKey, redis.Z{
 			Score:  score,
 			Member: order.Id.String(),
 		})
@@ -48,6 +48,7 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 
 	_, err := transaction.Exec(ctx)
 	if err != nil {
+		logctx.Error(ctx, "failed to store order in Redis", logger.Error(err), logger.String("orderId", order.Id.String()))
 		return fmt.Errorf("transaction failed. Reason: %v", err)
 	}
 	// --- END TRANSACTION ---

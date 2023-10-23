@@ -22,7 +22,6 @@ const DEFAULT_LIMIT int = 10
 
 func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fmt.Printf("vars: %#v\n", vars)
 	symbolStr, ok := vars["symbol"]
 	if !ok {
 		http.Error(w, "Symbol is required", http.StatusBadRequest)
@@ -73,5 +72,9 @@ func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+
+	if _, err := w.Write(resp); err != nil {
+		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
+		http.Error(w, "Error getting market depth", http.StatusInternalServerError)
+	}
 }
