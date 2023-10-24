@@ -57,7 +57,12 @@ func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(resp)
+	_, err = w.Write(resp)
+	if err != nil {
+		logctx.Error(r.Context(), "failed to write amountOutRes response", logger.Error(err))
+		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		return
+	}
 
 }
 

@@ -26,7 +26,10 @@ func (s *Service) GetAmountOut(ctx context.Context, auctionId string, symbol mod
 	if err != nil {
 		return models.AmountOut{}, err
 	}
-	s.orderBookStore.StoreAuction(ctx, auctionId, res.FillOrders)
+	err = s.orderBookStore.StoreAuction(ctx, auctionId, res.FillOrders)
+	if err != nil {
+		return models.AmountOut{}, err
+	}
 	return res, nil
 }
 
