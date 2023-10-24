@@ -15,6 +15,7 @@ type MockOrderBookService struct {
 	Order       *models.Order
 	Orders      []models.Order
 	MarketDepth models.MarketDepth
+	AmountOut   models.AmountOut
 }
 
 func (m *MockOrderBookService) ProcessOrder(ctx context.Context, input service.ProcessOrderInput) (models.Order, error) {
@@ -35,4 +36,8 @@ func (m *MockOrderBookService) GetOrderById(ctx context.Context, orderId uuid.UU
 
 func (m *MockOrderBookService) GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error) {
 	return m.MarketDepth, m.Error
+}
+
+func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
+	return m.AmountOut, m.Error
 }

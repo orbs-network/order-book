@@ -18,6 +18,7 @@ type Service interface {
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
 	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
+	GetAmountOut(ctx context.Context, auctionID string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 }
 
 type Handler struct {
