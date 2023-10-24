@@ -1,6 +1,10 @@
 package mocks
 
-import "github.com/orbs-network/order-book/models"
+import (
+	"context"
+
+	"github.com/orbs-network/order-book/models"
+)
 
 type OrderIter struct {
 	Error          error
@@ -12,6 +16,6 @@ func (o *OrderIter) HasNext() bool {
 	return o.ShouldHaveNext
 }
 
-func (o *OrderIter) Next() *models.Order {
+func (o *OrderIter) Next(ctx context.Context) *models.Order {
 	return o.Order
 }

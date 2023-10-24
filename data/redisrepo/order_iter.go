@@ -16,8 +16,8 @@ type OrderIter struct {
 	redis *redisRepository
 }
 
-func (i *OrderIter) Next() *models.Order {
-	ctx := context.Background()
+func (i *OrderIter) Next(ctx context.Context) *models.Order {
+	//ctx := context.Background()
 
 	if i.index >= len(i.ids) {
 		logctx.Error(ctx, "Error iterator reached last element")

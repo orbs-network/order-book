@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"testing"
 
 	"github.com/orbs-network/order-book/models"
@@ -18,7 +19,7 @@ type iter struct {
 func (i *iter) HasNext() bool {
 	return i.index < (len(i.orders) - 1)
 }
-func (i *iter) Next() *models.Order {
+func (i *iter) Next(ctx context.Context) *models.Order {
 	// increment index
 	i.index = i.index + 1
 

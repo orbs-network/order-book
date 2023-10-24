@@ -1,6 +1,8 @@
 package models
 
+import "context"
+
 type OrderIter interface {
 	HasNext() bool
-	Next() *Order
+	Next(ctx context.Context) *Order
 }
