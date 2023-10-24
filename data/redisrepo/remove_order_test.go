@@ -13,6 +13,7 @@ import (
 
 var ctx = context.Background()
 var orderId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 var size, _ = decimal.NewFromString("10000324.123456789")
 
 var order = models.Order{
@@ -66,10 +67,12 @@ func TestRedisRepository_RemoveOrder(t *testing.T) {
 		buyPricesKey := CreateBuySidePricesKey(order.Symbol)
 		userOrdersKey := CreateUserOrdersKey(order.UserId)
 		orderIDKey := CreateOrderIDKey(order.Id)
+		clientOIdKey := CreateClientOIDKey(order.ClientOId)
 
 		mock.ExpectTxPipeline()
 		mock.ExpectZRem(buyPricesKey, order.Id.String()).SetVal(1)
 		mock.ExpectSRem(userOrdersKey, order.Id.String()).SetVal(1)
+		mock.ExpectDel(clientOIdKey, order.ClientOId.String()).SetVal(1)
 		mock.ExpectHSet(orderIDKey, "status", models.STATUS_CANCELLED.String()).SetVal(1)
 		mock.ExpectTxPipelineExec()
 

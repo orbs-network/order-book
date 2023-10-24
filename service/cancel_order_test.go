@@ -16,28 +16,34 @@ func TestService_CancelOrder(t *testing.T) {
 
 	userId := uuid.MustParse("a577273e-12de-4acc-a4f8-de7fb5b86e37")
 	orderId := uuid.MustParse("e577273e-12de-4acc-a4f8-de7fb5b86e37")
-	order := &models.Order{UserId: userId, Status: models.STATUS_OPEN}
+	clientOId := uuid.MustParse("f577273e-12de-4acc-a4f8-de7fb5b86e37")
+	order := &models.Order{Id: orderId, UserId: userId, Status: models.STATUS_OPEN, ClientOId: clientOId}
 
 	t.Run("no user in context - returns `ErrNoUserInContext` error", func(t *testing.T) {
 		svc, _ := service.New(&mocks.MockOrderBookStore{})
 
-		err := svc.CancelOrder(context.Background(), orderId)
+		orderId, err := svc.CancelOrder(context.Background(), orderId, false)
+		assert.Nil(t, orderId)
 		assert.Equal(t, models.ErrNoUserInContext, err)
 
 	})
 
 	testCases := []struct {
-		name        string
-		order       *models.Order
-		err         error
-		expectedErr error
+		name            string
+		order           *models.Order
+		isClientOId     bool
+		err             error
+		expectedOrderId *uuid.UUID
+		expectedErr     error
 	}{
-		{name: "unexpected error when finding order - returns error", err: models.ErrOrderNotFound, expectedErr: models.ErrOrderNotFound},
-		{name: "order not found - returns `ErrOrderNotFound` error", order: nil, err: nil, expectedErr: models.ErrOrderNotFound},
-		{name: "trying to cancel order that is not open - returns `ErrOrderNotOpen` error", order: &models.Order{Status: models.STATUS_PENDING}, err: nil, expectedErr: models.ErrOrderNotOpen},
-		{name: "user trying to cancel another user's order - returns `ErrUnauthorized` error", order: &models.Order{UserId: uuid.MustParse("00000000-0000-0000-0000-000000000009"), Status: models.STATUS_OPEN}, expectedErr: models.ErrUnauthorized},
-		{name: "unexpected error when removing order - returns error", order: order, err: assert.AnError, expectedErr: assert.AnError},
-		{name: "order removed successfully - returns nil", order: order, err: nil, expectedErr: nil},
+		{name: "unexpected error when finding order by orderId - returns error", isClientOId: false, err: assert.AnError, expectedOrderId: nil, expectedErr: assert.AnError},
+		{name: "unexpected error when finding order by clientOId - returns error", isClientOId: true, err: assert.AnError, expectedOrderId: nil, expectedErr: assert.AnError},
+		{name: "order not found - returns `ErrOrderNotFound` error", isClientOId: false, order: nil, err: nil, expectedOrderId: nil, expectedErr: models.ErrOrderNotFound},
+		{name: "trying to cancel order that is not open - returns `ErrOrderNotOpen` error", isClientOId: false, order: &models.Order{Status: models.STATUS_PENDING}, err: nil, expectedOrderId: nil, expectedErr: models.ErrOrderNotOpen},
+		{name: "user trying to cancel another user's order - returns `ErrUnauthorized` error", isClientOId: false, order: &models.Order{UserId: uuid.MustParse("00000000-0000-0000-0000-000000000009"), Status: models.STATUS_OPEN}, expectedOrderId: nil, expectedErr: models.ErrUnauthorized},
+		{name: "unexpected error when removing order - returns error", isClientOId: false, order: order, err: assert.AnError, expectedOrderId: nil, expectedErr: assert.AnError},
+		{name: "order removed successfully by orderId - returns cancelled orderId", isClientOId: false, order: order, err: nil, expectedOrderId: &orderId, expectedErr: nil},
+		{name: "order removed successfully by clientOId - returns cancelled orderId", isClientOId: true, order: order, err: nil, expectedOrderId: &orderId, expectedErr: nil},
 	}
 
 	for _, c := range testCases {
@@ -47,7 +53,8 @@ func TestService_CancelOrder(t *testing.T) {
 
 			userCtx := mocks.AddUserToCtx(&models.User{ID: userId, Type: models.MARKET_MAKER})
 
-			err := svc.CancelOrder(userCtx, orderId)
+			orderId, err := svc.CancelOrder(userCtx, orderId, false)
+			assert.Equal(t, c.expectedOrderId, orderId)
 			assert.Equal(t, c.expectedErr, err)
 		})
 	}

@@ -11,11 +11,13 @@ import (
 
 var id = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var userId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
+var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000003")
 
 func TestOrder_OrderToMap(t *testing.T) {
 	timestamp, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
 	order := Order{
 		Id:        id,
+		ClientOId: clientOId,
 		UserId:    userId,
 		Price:     decimal.NewFromFloat(10.99),
 		Symbol:    "USDC-ETH",
@@ -28,6 +30,7 @@ func TestOrder_OrderToMap(t *testing.T) {
 
 	expectedMap := map[string]string{
 		"id":        order.Id.String(),
+		"clientOId": order.ClientOId.String(),
 		"userId":    order.UserId.String(),
 		"price":     order.Price.String(),
 		"symbol":    order.Symbol.String(),
@@ -49,6 +52,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 	t.Run("when all data is provided", func(t *testing.T) {
 		data := map[string]string{
 			"id":            id.String(),
+			"clientOId":     clientOId.String(),
 			"userId":        userId.String(),
 			"price":         "10.99",
 			"symbol":        "USDC-ETH",
@@ -67,6 +71,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, data["id"], order.Id.String())
+		assert.Equal(t, data["clientOId"], order.ClientOId.String())
 		assert.Equal(t, data["userId"], order.UserId.String())
 		assert.Equal(t, priceDec, order.Price)
 		assert.Equal(t, "USDC-ETH", order.Symbol.String())

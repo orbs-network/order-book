@@ -48,7 +48,7 @@ func (r *redisRepository) GetBestPriceFor(ctx context.Context, symbol models.Sym
 		return models.Order{}, err
 	}
 
-	order, err := r.FindOrderById(ctx, orderID)
+	order, err := r.FindOrderById(ctx, orderID, false)
 
 	if err != nil {
 		logctx.Error(ctx, "unexpected error when getting order for best price", logger.String("orderId", orderID.String()), logger.Error(err))

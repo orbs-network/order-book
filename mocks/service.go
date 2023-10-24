@@ -25,7 +25,7 @@ func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order
 	return m.Error
 }
 
-func (m *MockOrderBookStore) FindOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error) {
+func (m *MockOrderBookStore) FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}

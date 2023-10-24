@@ -22,8 +22,16 @@ func (m *MockOrderBookService) ProcessOrder(ctx context.Context, input service.P
 	return *m.Order, m.Error
 }
 
-func (m *MockOrderBookService) CancelOrder(ctx context.Context, orderId uuid.UUID) error {
-	return m.Error
+func (m *MockOrderBookService) CancelOrder(ctx context.Context, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error) {
+	if m.Error != nil {
+		return nil, m.Error
+	}
+
+	if m.Order == nil {
+		return nil, nil
+	}
+
+	return &m.Order.Id, m.Error
 }
 
 func (m *MockOrderBookService) GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error) {
@@ -31,6 +39,10 @@ func (m *MockOrderBookService) GetBestPriceFor(ctx context.Context, symbol model
 }
 
 func (m *MockOrderBookService) GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error) {
+	return m.Order, m.Error
+}
+
+func (m *MockOrderBookService) GetOrderByClientOId(ctx context.Context, clientOId uuid.UUID) (*models.Order, error) {
 	return m.Order, m.Error
 }
 

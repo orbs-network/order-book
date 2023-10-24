@@ -37,7 +37,7 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(order)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal order", logger.Error(err))
-		http.Error(w, "Error getting order price", http.StatusInternalServerError)
+		http.Error(w, "Error getting order by ID", http.StatusInternalServerError)
 		return
 	}
 

@@ -24,7 +24,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"a577273e-12de-4acc-a4f8-de7fb5b86e37\"\n}",
+					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"d577273e-12de-4acc-a4f8-de7fb5b86e37\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -47,12 +47,12 @@
 			"response": []
 		},
 		{
-			"name": "Cancel order",
+			"name": "Cancel order by orderId",
 			"request": {
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/order/88b7d432-0a74-4c5b-bc2b-512179c648a1",
+					"raw": "http://localhost/api/v1/order/b0c4356e-365e-4dbf-955c-ad4bce211523",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -61,7 +61,29 @@
 						"api",
 						"v1",
 						"order",
-						"88b7d432-0a74-4c5b-bc2b-512179c648a1"
+						"b0c4356e-365e-4dbf-955c-ad4bce211523"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cancel order by clientOId",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/api/v1/order/client-order/d577273e-12de-4acc-a4f8-de7fb5b86e37",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"api",
+						"v1",
+						"order",
+						"client-order",
+						"d577273e-12de-4acc-a4f8-de7fb5b86e37"
 					]
 				}
 			},
@@ -95,7 +117,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/order/005bb52d-a54d-46f9-b42b-64e263a4de1e",
+					"raw": "http://localhost/api/v1/order/fc592291-a8df-4607-a604-8a562d836621",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -104,7 +126,29 @@
 						"api",
 						"v1",
 						"order",
-						"005bb52d-a54d-46f9-b42b-64e263a4de1e"
+						"fc592291-a8df-4607-a604-8a562d836621"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get order by client order ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/api/v1/order/client-order/d577273e-12de-4acc-a4f8-de7fb5b86e37",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"api",
+						"v1",
+						"order",
+						"client-order",
+						"d577273e-12de-4acc-a4f8-de7fb5b86e37"
 					]
 				}
 			},
