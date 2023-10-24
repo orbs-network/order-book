@@ -17,20 +17,22 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 	// --- START TRANSACTION ---
 	transaction := r.client.TxPipeline()
 
-	// User orders hash
+	// Keep track of that user's orders
 	userOrdersKey := CreateUserOrdersKey(order.UserId)
 	transaction.SAdd(ctx, userOrdersKey, order.Id.String())
 
-	// Order ID hash
+	// Store order details by order ID
 	orderIDKey := CreateOrderIDKey(order.Id)
-	for k, v := range orderMap {
-		transaction.HSet(ctx, orderIDKey, k, v)
-	}
+	transaction.HSet(ctx, orderIDKey, orderMap)
 
-	// Prices sorted set
+	// Store client order ID
+	clientOIDKey := CreateClientOIDKey(order.ClientOId)
+	transaction.Set(ctx, clientOIDKey, order.Id.String(), 0)
+
+	// Add order to the sorted set for that token pair
 	f64Price, _ := order.Price.Float64()
-	timestamp := float64(order.Timestamp.UnixNano()) / 1e9
-	score := f64Price + (timestamp / 1e12) // Use a combination of price and scaled timestamp so that orders with the same price are sorted by time
+	timestamp := float64(order.Timestamp.UTC().UnixNano()) / 1e9
+	score := f64Price + (timestamp / 1e12) // Use a combination of price and scaled timestamp so that orders with the same price are sorted by time. This should not be used for price comparison.
 
 	if order.Side == models.BUY {
 		buyPricesKey := CreateBuySidePricesKey(order.Symbol)

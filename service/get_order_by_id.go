@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Service) GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error) {
-	order, err := s.orderBookStore.FindOrderById(ctx, orderId)
+	order, err := s.orderBookStore.FindOrderById(ctx, orderId, false)
 
 	if err == models.ErrOrderNotFound {
 		logctx.Info(ctx, "order not found", logger.String("orderId", orderId.String()))

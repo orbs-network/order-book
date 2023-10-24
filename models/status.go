@@ -25,7 +25,7 @@ func StrToStatus(s string) (Status, error) {
 		return STATUS_PENDING, nil
 	case "FILLED":
 		return STATUS_FILLED, nil
-	case "CANCELED":
+	case "CANCELLED":
 		return STATUS_CANCELLED, nil
 	default:
 		return "", ErrInvalidStatus
