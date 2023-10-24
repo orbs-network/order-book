@@ -64,3 +64,7 @@ func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol
 func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
 	return m.OrderIter
 }
+
+// func (m *MockOrderBookStore) ConfirmAuction(ctx context.Context, auctionId string) (error, service.ConfirmOrderRes) {
+// 	return nil, service.ConfirmOrderRes{}
+// }

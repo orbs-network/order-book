@@ -53,3 +53,6 @@ func (m *MockOrderBookService) GetMarketDepth(ctx context.Context, symbol models
 func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 	return m.AmountOut, m.Error
 }
+func (m *MockOrderBookService) ConfirmAuction(ctx context.Context, auctionId string) (service.ConfirmOrderRes, error) {
+	return service.ConfirmOrderRes{}, nil
+}

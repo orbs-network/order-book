@@ -20,6 +20,7 @@ type Service interface {
 	GetOrderByClientOId(ctx context.Context, clientOId uuid.UUID) (*models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	GetAmountOut(ctx context.Context, auctionID string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
+	ConfirmAuction(ctx context.Context, auctionId string) (service.ConfirmOrderRes, error)
 }
 
 type Handler struct {
