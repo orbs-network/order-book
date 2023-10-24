@@ -19,7 +19,11 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 
 	// Keep track of that user's orders
 	userOrdersKey := CreateUserOrdersKey(order.UserId)
-	transaction.SAdd(ctx, userOrdersKey, order.Id.String())
+	userOrdersScore := float64(order.Timestamp.UTC().UnixNano())
+	transaction.ZAdd(ctx, userOrdersKey, redis.Z{
+		Score:  userOrdersScore,
+		Member: order.Id.String(),
+	})
 
 	// Store order details by order ID
 	orderIDKey := CreateOrderIDKey(order.Id)
