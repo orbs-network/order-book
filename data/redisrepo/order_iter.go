@@ -30,7 +30,7 @@ func (i *OrderIter) Next(ctx context.Context) *models.Order {
 		logctx.Error(ctx, "Error parsing bid order id", logger.Error(err))
 		return nil
 	}
-	order, err := i.redis.FindOrderById(ctx, orderId)
+	order, err := i.redis.FindOrderById(ctx, orderId, false)
 	if err != nil {
 		logctx.Error(ctx, "Error fetching order", logger.Error(err))
 		return nil
