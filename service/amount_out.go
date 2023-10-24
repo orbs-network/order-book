@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/utils/logger"
+	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
 )
 
@@ -24,10 +26,12 @@ func (s *Service) GetAmountOut(ctx context.Context, auctionId string, symbol mod
 		res, err = getAmountOutInBToken(ctx, it, amountIn)
 	}
 	if err != nil {
+		logctx.Error(ctx, "getAmountOutIn failed", logger.Error(err))
 		return models.AmountOut{}, err
 	}
 	err = s.orderBookStore.StoreAuction(ctx, auctionId, res.FillOrders)
 	if err != nil {
+		logctx.Error(ctx, "StoreAuction failed", logger.Error(err))
 		return models.AmountOut{}, err
 	}
 	return res, nil
@@ -52,16 +56,20 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 
 		// sub-add
 		amountInB = amountInB.Sub(spendB)
+		logctx.Info(ctx, "StoreAuction failed")
 		amountOutA = amountOutA.Add(gainA)
 
 		// res
+		logctx.Info(ctx, fmt.Sprintf("append FilledOrder gainA: %s", gainA.String()))
+		logctx.Info(ctx, fmt.Sprintf("append FilledOrder spendB: %s", spendB.String()))
 		fillOrders = append(fillOrders, models.FilledOrder{OrderId: order.Id, Amount: gainA})
 	}
 	// not all is Spent - error
 	if amountInB.IsPositive() {
+		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
 		return models.AmountOut{}, models.ErrInsufficientLiquity
 	}
-
+	logctx.Info(ctx, fmt.Sprintf("append FilledOrder amountOutA: %s", amountOutA.String()))
 	return models.AmountOut{AmountOut: amountOutA, FillOrders: fillOrders}, nil
 }
 
@@ -88,11 +96,14 @@ func getAmountOutInBToken(ctx context.Context, it models.OrderIter, amountInA de
 		amountOutB = amountOutB.Add(gainB)
 
 		// res
+		logctx.Info(ctx, fmt.Sprintf("append FilledOrder spendA: %s", spendA.String()))
+		logctx.Info(ctx, fmt.Sprintf("append FilledOrder gainB: %s", gainB.String()))
 		fillOrders = append(fillOrders, models.FilledOrder{OrderId: order.Id, Amount: spendA})
 	}
 	if amountInA.IsPositive() {
+		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
 		return models.AmountOut{}, models.ErrInsufficientLiquity
 	}
-
+	logctx.Info(ctx, fmt.Sprintf("append FilledOrder amountOutB: %s", amountOutB.String()))
 	return models.AmountOut{AmountOut: amountOutB, FillOrders: fillOrders}, nil
 }

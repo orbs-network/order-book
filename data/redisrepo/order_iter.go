@@ -17,8 +17,6 @@ type OrderIter struct {
 }
 
 func (i *OrderIter) Next(ctx context.Context) *models.Order {
-	//ctx := context.Background()
-
 	if i.index >= len(i.ids) {
 		logctx.Error(ctx, "Error iterator reached last element")
 		return nil
