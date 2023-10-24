@@ -35,13 +35,9 @@ func newOrder(price, size int64) models.Order {
 		Price: decimal.NewFromInt(price),
 		Size:  decimal.NewFromInt(size),
 	}
-
 }
-
-// /////////////////////////////////////////////////////////////////
-func TestService_getAmountOutInAToken(t *testing.T) {
-	// create order book
-	itAsk := iter{
+func newAsks() models.OrderIter {
+	return &iter{
 		orders: []models.Order{
 			newOrder(1000, 1),
 			newOrder(1001, 2),
@@ -49,7 +45,9 @@ func TestService_getAmountOutInAToken(t *testing.T) {
 		},
 		index: -1,
 	}
-	itBid := iter{
+}
+func newBids() models.OrderIter {
+	return &iter{
 		orders: []models.Order{
 			newOrder(900, 1),
 			newOrder(800, 2),
@@ -57,37 +55,42 @@ func TestService_getAmountOutInAToken(t *testing.T) {
 		},
 		index: -1,
 	}
+}
+
+// /////////////////////////////////////////////////////////////////
+func TestService_getAmountOutInAToken(t *testing.T) {
+
 	t.Run("getAmountOutInAToken- happy path", func(t *testing.T) {
-		res, err := getAmountOutInAToken(&itAsk, decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)))
+		res, err := getAmountOutInAToken(newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)))
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat(1+2+3).String())
 	})
 	t.Run("getAmountOutInAToken- Partial fill", func(t *testing.T) {
-		res, err := getAmountOutInAToken(&itAsk, decimal.NewFromFloat(501))
+		res, err := getAmountOutInAToken(newAsks(), decimal.NewFromFloat(501))
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat(0.501).String())
 	})
 
 	t.Run("getAmountOutInAToken- liquidity insufiicinet", func(t *testing.T) {
-		_, err := getAmountOutInAToken(&itAsk, decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)+1))
+		_, err := getAmountOutInAToken(newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)+1))
 		assert.Equal(t, err, models.ErrInsufficientLiquity)
 	})
 
 	t.Run("getAmountOutInBToken- happy path", func(t *testing.T) {
-		res, err := getAmountOutInBToken(&itBid, decimal.NewFromFloat(1+2+3))
+		res, err := getAmountOutInBToken(newBids(), decimal.NewFromFloat(1+2+3))
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat((900*1)+(800*2)+(700*3)).String())
 	})
 
 	t.Run("getAmountOutInBToken- Partial fill", func(t *testing.T) {
 		fract := 0.501
-		res, err := getAmountOutInBToken(&itBid, decimal.NewFromFloat(fract))
+		res, err := getAmountOutInBToken(newBids(), decimal.NewFromFloat(fract))
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat(900*fract).String())
 	})
 
 	t.Run("getAmountOutInBToken- liquidity insufiicinet", func(t *testing.T) {
-		_, err := getAmountOutInBToken(&itBid, decimal.NewFromFloat(1+2+3+1))
+		_, err := getAmountOutInBToken(newBids(), decimal.NewFromFloat(1+2+3+1))
 		assert.Equal(t, err, models.ErrInsufficientLiquity)
 	})
 }
