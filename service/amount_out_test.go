@@ -60,38 +60,38 @@ func newBids() models.OrderIter {
 
 // /////////////////////////////////////////////////////////////////
 func TestService_getAmountOutInAToken(t *testing.T) {
-
+	ctx := context.Background()
 	t.Run("getAmountOutInAToken- happy path", func(t *testing.T) {
-		res, err := getAmountOutInAToken(newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)))
+		res, err := getAmountOutInAToken(ctx, newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)))
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat(1+2+3).String())
 	})
 	t.Run("getAmountOutInAToken- Partial fill", func(t *testing.T) {
-		res, err := getAmountOutInAToken(newAsks(), decimal.NewFromFloat(501))
+		res, err := getAmountOutInAToken(ctx, newAsks(), decimal.NewFromFloat(501))
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat(0.501).String())
 	})
 
 	t.Run("getAmountOutInAToken- liquidity insufiicinet", func(t *testing.T) {
-		_, err := getAmountOutInAToken(newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)+1))
+		_, err := getAmountOutInAToken(ctx, newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)+1))
 		assert.Equal(t, err, models.ErrInsufficientLiquity)
 	})
 
 	t.Run("getAmountOutInBToken- happy path", func(t *testing.T) {
-		res, err := getAmountOutInBToken(newBids(), decimal.NewFromFloat(1+2+3))
+		res, err := getAmountOutInBToken(ctx, newBids(), decimal.NewFromFloat(1+2+3))
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat((900*1)+(800*2)+(700*3)).String())
 	})
 
 	t.Run("getAmountOutInBToken- Partial fill", func(t *testing.T) {
 		fract := 0.501
-		res, err := getAmountOutInBToken(newBids(), decimal.NewFromFloat(fract))
+		res, err := getAmountOutInBToken(ctx, newBids(), decimal.NewFromFloat(fract))
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat(900*fract).String())
 	})
 
 	t.Run("getAmountOutInBToken- liquidity insufiicinet", func(t *testing.T) {
-		_, err := getAmountOutInBToken(newBids(), decimal.NewFromFloat(1+2+3+1))
+		_, err := getAmountOutInBToken(ctx, newBids(), decimal.NewFromFloat(1+2+3+1))
 		assert.Equal(t, err, models.ErrInsufficientLiquity)
 	})
 }
