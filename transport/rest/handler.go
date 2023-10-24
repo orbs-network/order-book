@@ -19,6 +19,7 @@ type Service interface {
 	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 	GetOrderByClientOId(ctx context.Context, clientOId uuid.UUID) (*models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
+	GetSymbols(ctx context.Context) ([]models.Symbol, error)
 	GetAmountOut(ctx context.Context, auctionID string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 }
 
