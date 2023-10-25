@@ -10,11 +10,12 @@ import (
 
 // Mock store methods for service layer testing
 type MockOrderBookStore struct {
-	Error       error
-	Order       *models.Order
-	Orders      []models.Order
-	MarketDepth models.MarketDepth
-	OrderIter   models.OrderIter
+	Error        error
+	Order        *models.Order
+	Orders       []models.Order
+	MarketDepth  models.MarketDepth
+	OrderIter    models.OrderIter
+	FilledOrders []models.FilledOrder
 }
 
 func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order) error {
@@ -55,6 +56,13 @@ func (m *MockOrderBookStore) GetMarketDepth(ctx context.Context, symbol models.S
 
 func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UUID, fillOrders []models.FilledOrder) error {
 	return m.Error
+}
+
+func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.FilledOrder, error) {
+	if m.Error != nil {
+		return nil, m.Error
+	}
+	return m.FilledOrders, nil
 }
 
 func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {

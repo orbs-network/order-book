@@ -19,7 +19,7 @@ func (r *redisRepository) StoreAuction(ctx context.Context, auctionID uuid.UUID,
 
 	auctionKey := CreateAuctionKey(auctionID)
 
-	_, err = r.client.SAdd(ctx, auctionKey, auctionJson).Result()
+	_, err = r.client.RPush(ctx, auctionKey, auctionJson).Result()
 	if err != nil {
 		logctx.Error(ctx, "failed to store auction", logger.String("auctionID", auctionID.String()), logger.Error(err))
 		return models.ErrUnexpectedError

@@ -34,7 +34,7 @@ func TestRedisRepository_StoreAuction(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectSAdd(CreateAuctionKey(auctionID), auctionJson).SetVal(1)
+		mock.ExpectRPush(CreateAuctionKey(auctionID), auctionJson).SetVal(1)
 
 		err := repo.StoreAuction(ctx, auctionID, auction)
 		assert.NoError(t, err)

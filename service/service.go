@@ -21,6 +21,7 @@ type OrderBookStore interface {
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	// LH side
 	StoreAuction(ctx context.Context, auctionID uuid.UUID, fillOrders []models.FilledOrder) error
+	GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.FilledOrder, error)
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
 }
