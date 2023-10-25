@@ -53,7 +53,7 @@ func (m *MockOrderBookStore) GetMarketDepth(ctx context.Context, symbol models.S
 	return m.MarketDepth, nil
 }
 
-func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID string, fillOrders []models.FilledOrder) error {
+func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UUID, fillOrders []models.FilledOrder) error {
 	return m.Error
 }
 

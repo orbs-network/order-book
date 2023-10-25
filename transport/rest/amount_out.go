@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -27,6 +28,12 @@ func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	auctionId, err := uuid.Parse(args.AuctionId)
+	if err != nil {
+		http.Error(w, "'auctionId' is not a valid UUID", http.StatusBadRequest)
+		return
+	}
+
 	symbol, err := models.StrToSymbol(args.Symbol)
 	if err != nil {
 		http.Error(w, "'symbol' is not a valid", http.StatusBadRequest)
@@ -38,11 +45,13 @@ func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	side := models.BUY
-	if strings.EqualFold(args.Side, "SELL") {
-		side = models.SELL
+	side, err := models.StrToSide(strings.ToLower(args.Side))
+	if err != nil {
+		http.Error(w, "'side' is not a valid", http.StatusBadRequest)
+		return
 	}
-	amountOutRes, err := h.svc.GetAmountOut(r.Context(), args.AuctionId, symbol, side, amountIn)
+
+	amountOutRes, err := h.svc.GetAmountOut(r.Context(), auctionId, symbol, side, amountIn)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

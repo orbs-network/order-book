@@ -55,6 +55,6 @@ func (m *MockOrderBookService) GetSymbols(ctx context.Context) ([]models.Symbol,
 	return m.Symbols, m.Error
 }
 
-func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
+func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 	return m.AmountOut, m.Error
 }
