@@ -71,7 +71,7 @@ func TestRedisRepository_RemoveOrder(t *testing.T) {
 
 		mock.ExpectTxPipeline()
 		mock.ExpectZRem(buyPricesKey, order.Id.String()).SetVal(1)
-		mock.ExpectSRem(userOrdersKey, order.Id.String()).SetVal(1)
+		mock.ExpectZRem(userOrdersKey, order.Id.String()).SetVal(1)
 		mock.ExpectDel(clientOIdKey, order.ClientOId.String()).SetVal(1)
 		mock.ExpectHSet(orderIDKey, "status", models.STATUS_CANCELLED.String()).SetVal(1)
 		mock.ExpectTxPipelineExec()

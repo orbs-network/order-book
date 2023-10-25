@@ -29,7 +29,7 @@ func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) e
 	}
 
 	userOrdersKey := CreateUserOrdersKey(order.UserId)
-	transaction.SRem(ctx, userOrdersKey, order.Id.String())
+	transaction.ZRem(ctx, userOrdersKey, order.Id.String())
 
 	clientOIdKey := CreateClientOIDKey(order.ClientOId)
 	transaction.Del(ctx, clientOIdKey, order.ClientOId.String())
