@@ -18,6 +18,13 @@ type AmountOutRequest struct {
 	Side      string `json:"side"`
 }
 
+type AmountOutResponse struct {
+	AuctionId string `json:"auctionId"`
+	// AmountIn  string `json:"amountIn"`
+	// Symbol    string `json:"symbol"`
+	// Side      string `json:"side"`
+}
+
 func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 
 	var args AmountOutRequest

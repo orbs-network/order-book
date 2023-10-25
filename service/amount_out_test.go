@@ -61,6 +61,7 @@ func newBids() models.OrderIter {
 // /////////////////////////////////////////////////////////////////
 func TestService_getAmountOutInAToken(t *testing.T) {
 	ctx := context.Background()
+
 	t.Run("getAmountOutInAToken- happy path", func(t *testing.T) {
 		res, err := getAmountOutInAToken(ctx, newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)))
 		assert.Equal(t, err, nil)

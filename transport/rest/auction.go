@@ -9,6 +9,17 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
+type FillOrder struct {
+	OrderID        string `json:"orderID"`
+	OrderSignatrue string `json:"orderSignatrue"`
+	AmountOut      string `json:"amountOut"`
+}
+type ConfirmAuctionResponse struct {
+	AuctionId     string      `json:"auctionId"`
+	BookSignature string      `json:"bookSignature"`
+	FillOrders    []FillOrder `json:"fillOrders"`
+}
+
 func (h *Handler) confirmAuction(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
@@ -38,6 +49,16 @@ func (h *Handler) confirmAuction(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logctx.Error(r.Context(), "failed to write confirmAuction response", logger.Error(err))
 		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) removeAuction(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	auctionId := vars["auctionId"]
+	if auctionId == "" {
+		http.Error(w, "auctionId is empty", http.StatusBadRequest)
 		return
 	}
 
