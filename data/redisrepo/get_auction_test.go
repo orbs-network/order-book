@@ -37,7 +37,7 @@ func TestRedisRepository_GetAuction(t *testing.T) {
 
 		auction, err := repo.GetAuction(ctx, auctionID)
 		assert.NoError(t, err)
-		assert.Equal(t, 3, len(auction))
+		assert.Len(t, auction, 3, "Should have 3 orders in the auction")
 		assert.ElementsMatch(t, []models.FilledOrder{
 			{OrderId: uuid1, Amount: amount1},
 			{OrderId: uuid2, Amount: amount2},
