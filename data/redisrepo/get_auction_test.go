@@ -33,7 +33,6 @@ func TestRedisRepository_GetAuction(t *testing.T) {
 			client: db,
 		}
 
-		// mock.ExpectSMembers(CreateAuctionKey(auctionID)).SetVal(auctionJson)
 		mock.ExpectLRange(CreateAuctionKey(auctionID), 0, -1).SetVal(auctionJson)
 
 		auction, err := repo.GetAuction(ctx, auctionID)
