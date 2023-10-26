@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/service"
 	"github.com/stretchr/testify/assert"
@@ -68,7 +69,9 @@ func TestService_ConfirmAuction(t *testing.T) {
 	//svc, _ := &mocks.MockOrderBookService{Error: models.ErrNoUserInContext},
 
 	t.Run("ConfirmAuction- happy path", func(t *testing.T) {
-		res, err := svc.ConfirmAuction(ctx, "a123")
+
+		uuid, _ := uuid.NewUUID()
+		res, err := svc.ConfirmAuction(ctx, uuid)
 		fmt.Sprintf("%v", res)
 		assert.Equal(t, err, nil)
 		// assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat(1+2+3).String())

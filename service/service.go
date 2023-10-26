@@ -24,6 +24,7 @@ type OrderBookStore interface {
 	GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.FilledOrder, error)
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
+	SetOrderPending(ctx context.Context, order *models.Order, size decimal.Decimal) error
 }
 
 // Service contains methods that implement the business logic for the application.

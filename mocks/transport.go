@@ -58,9 +58,9 @@ func (m *MockOrderBookService) GetSymbols(ctx context.Context) ([]models.Symbol,
 func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 	return m.AmountOut, m.Error
 }
-func (m *MockOrderBookService) ConfirmAuction(ctx context.Context, auctionId string) (service.ConfirmAuctionRes, error) {
+func (m *MockOrderBookService) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (service.ConfirmAuctionRes, error) {
 	return service.ConfirmAuctionRes{}, nil
 }
-func (m *MockOrderBookService) RemoveAuction(ctx context.Context, auctionId string) error {
+func (m *MockOrderBookService) RemoveAuction(ctx context.Context, auctionId uuid.UUID) error {
 	return nil
 }

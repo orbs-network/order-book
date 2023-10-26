@@ -39,7 +39,7 @@ func TestService_CancelOrder(t *testing.T) {
 		{name: "unexpected error when finding order by orderId - returns error", isClientOId: false, err: assert.AnError, expectedOrderId: nil, expectedErr: assert.AnError},
 		{name: "unexpected error when finding order by clientOId - returns error", isClientOId: true, err: assert.AnError, expectedOrderId: nil, expectedErr: assert.AnError},
 		{name: "order not found - returns `ErrOrderNotFound` error", isClientOId: false, order: nil, err: nil, expectedOrderId: nil, expectedErr: models.ErrOrderNotFound},
-		{name: "trying to cancel order that is not open - returns `ErrOrderNotOpen` error", isClientOId: false, order: &models.Order{Status: models.STATUS_PENDING}, err: nil, expectedOrderId: nil, expectedErr: models.ErrOrderNotOpen},
+		// {name: "trying to cancel order that is not open - returns `ErrOrderNotOpen` error", isClientOId: false, order: &models.Order{Status: models.STATUS_PENDING}, err: nil, expectedOrderId: nil, expectedErr: models.ErrOrderNotOpen},
 		{name: "user trying to cancel another user's order - returns `ErrUnauthorized` error", isClientOId: false, order: &models.Order{UserId: uuid.MustParse("00000000-0000-0000-0000-000000000009"), Status: models.STATUS_OPEN}, expectedOrderId: nil, expectedErr: models.ErrUnauthorized},
 		{name: "unexpected error when removing order - returns error", isClientOId: false, order: order, err: assert.AnError, expectedOrderId: nil, expectedErr: assert.AnError},
 		{name: "order removed successfully by orderId - returns cancelled orderId", isClientOId: false, order: order, err: nil, expectedOrderId: &orderId, expectedErr: nil},

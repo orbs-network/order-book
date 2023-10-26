@@ -72,3 +72,7 @@ func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol
 func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
 	return m.OrderIter
 }
+
+func (m *MockOrderBookStore) SetOrderPending(ctx context.Context, order *models.Order, size decimal.Decimal) error {
+	return nil
+}

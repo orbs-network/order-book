@@ -8,6 +8,7 @@ import (
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/redis/go-redis/v9"
+	"github.com/shopspring/decimal"
 )
 
 func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) error {
@@ -60,5 +61,9 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 	// --- END TRANSACTION ---
 
 	logctx.Info(ctx, "stored order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
+	return nil
+}
+
+func (r *redisRepository) SetOrderPending(ctx context.Context, order *models.Order, size decimal.Decimal) error {
 	return nil
 }
