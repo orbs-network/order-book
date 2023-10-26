@@ -22,6 +22,7 @@ type Service interface {
 	GetAmountOut(ctx context.Context, auctionID string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 	ConfirmAuction(ctx context.Context, auctionId string) (service.ConfirmAuctionRes, error)
 	RemoveAuction(ctx context.Context, auctionId string) error
+	GetSymbols(ctx context.Context) ([]models.Symbol, error)
 }
 
 type Handler struct {

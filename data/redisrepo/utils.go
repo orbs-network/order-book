@@ -31,3 +31,8 @@ func CreateBuySidePricesKey(symbol models.Symbol) string {
 func CreateSellSidePricesKey(symbol models.Symbol) string {
 	return fmt.Sprintf("%s:sell:prices", symbol)
 }
+
+// CreateAuctionKey creates a Redis key for storing the auction data
+func CreateAuctionKey(auctionID uuid.UUID) string {
+	return fmt.Sprintf("auctionId:%s", auctionID)
+}

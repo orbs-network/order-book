@@ -34,7 +34,10 @@ func TestRedisRepository_StoreOrder(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectSAdd(CreateUserOrdersKey(buyOrder.UserId), buyOrder.Id.String()).SetVal(1)
+		mock.ExpectZAdd(CreateUserOrdersKey(buyOrder.UserId), redis.Z{
+			Score:  float64(timestamp.UnixNano()),
+			Member: buyOrder.Id.String(),
+		}).SetVal(1)
 		mock.ExpectHSet(CreateOrderIDKey(buyOrder.Id), buyOrder.OrderToMap()).SetVal(1)
 		mock.ExpectSet(CreateClientOIDKey(buyOrder.ClientOId), buyOrder.Id.String(), 0).SetVal("OK")
 		mock.ExpectZAdd(CreateBuySidePricesKey(buyOrder.Symbol), redis.Z{
@@ -49,7 +52,7 @@ func TestRedisRepository_StoreOrder(t *testing.T) {
 	})
 
 	t.Run("store order success (sell side) - should set user orders set, order ID hash, sell prices sorted set", func(t *testing.T) {
-		var buyOrder = models.Order{
+		var sellOrder = models.Order{
 			Id:        orderId,
 			ClientOId: clientOId,
 			Price:     price,
@@ -67,16 +70,19 @@ func TestRedisRepository_StoreOrder(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectSAdd(CreateUserOrdersKey(buyOrder.UserId), buyOrder.Id.String()).SetVal(1)
-		mock.ExpectHSet(CreateOrderIDKey(buyOrder.Id), buyOrder.OrderToMap()).SetVal(1)
-		mock.ExpectSet(CreateClientOIDKey(buyOrder.ClientOId), buyOrder.Id.String(), 0).SetVal("OK")
-		mock.ExpectZAdd(CreateSellSidePricesKey(buyOrder.Symbol), redis.Z{
+		mock.ExpectZAdd(CreateUserOrdersKey(sellOrder.UserId), redis.Z{
+			Score:  float64(timestamp.UnixNano()),
+			Member: sellOrder.Id.String(),
+		}).SetVal(1)
+		mock.ExpectHSet(CreateOrderIDKey(sellOrder.Id), sellOrder.OrderToMap()).SetVal(1)
+		mock.ExpectSet(CreateClientOIDKey(sellOrder.ClientOId), sellOrder.Id.String(), 0).SetVal("OK")
+		mock.ExpectZAdd(CreateSellSidePricesKey(sellOrder.Symbol), redis.Z{
 			Score:  10.0016969392,
-			Member: buyOrder.Id.String(),
+			Member: sellOrder.Id.String(),
 		}).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
-		err := repo.StoreOrder(ctx, buyOrder)
+		err := repo.StoreOrder(ctx, sellOrder)
 
 		assert.NoError(t, err, "should not return error")
 	})
@@ -90,9 +96,12 @@ func TestRedisRepository_StoreOrder(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectSAdd(CreateUserOrdersKey(order.UserId), order.Id.String()).SetErr(assert.AnError)
-		mock.ExpectHSet(CreateOrderIDKey(buyOrder.Id), order.OrderToMap()).SetErr(assert.AnError)
-		mock.ExpectSet(CreateClientOIDKey(buyOrder.ClientOId), buyOrder.Id.String(), 0).SetVal("OK")
+		mock.ExpectZAdd(CreateUserOrdersKey(order.UserId), redis.Z{
+			Score:  float64(order.Timestamp.UnixNano()),
+			Member: order.Id.String(),
+		}).SetErr(assert.AnError)
+		mock.ExpectHSet(CreateOrderIDKey(order.Id), order.OrderToMap()).SetErr(assert.AnError)
+		mock.ExpectSet(CreateClientOIDKey(order.ClientOId), order.Id.String(), 0).SetVal("OK")
 		mock.ExpectZAdd(CreateSellSidePricesKey(order.Symbol), redis.Z{
 			Score:  10.0016969392,
 			Member: order.Id.String(),

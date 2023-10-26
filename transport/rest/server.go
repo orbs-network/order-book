@@ -14,20 +14,28 @@ func (h *Handler) Listen() {
 	/////////////////////////////////////////////////////////////////////
 	// Market maker side
 	api := h.router.PathPrefix("/api/v1").Subrouter()
-	// Create a new order
+
+	// ------- CREATE -------
+	// Place a new order
 	api.HandleFunc("/order", h.ProcessOrder).Methods("POST")
+
+	// ------- READ -------
 	// Get an order by client order ID
 	api.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId).Methods("GET")
-	// Cancel an existing order by client order ID
-	api.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
-	// Cancel an existing order by order ID
-	api.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
 	// Get the best price for a symbol and side
 	api.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
 	// Get an order by ID
 	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
+	// Get all symbols
+	api.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth
 	api.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
+
+	// ------- DELETE -------
+	// Cancel an existing order by client order ID
+	api.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
+	// Cancel an existing order by order ID
+	api.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
 
 	/////////////////////////////////////////////////////////////////////
 	// LH side
