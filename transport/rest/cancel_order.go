@@ -29,7 +29,7 @@ func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: don't hardcode user
 	user := models.User{
-		ID:   userId,
+		Id:   userId,
 		Type: models.MARKET_MAKER,
 	}
 
@@ -52,7 +52,7 @@ func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request)
 
 	// TODO: don't hardcode user
 	user := models.User{
-		ID:   userId,
+		Id:   userId,
 		Type: models.MARKET_MAKER,
 	}
 

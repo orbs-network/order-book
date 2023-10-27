@@ -230,6 +230,32 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Cancel all orders",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost/api/v1/orders",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"api",
+						"v1",
+						"orders"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
