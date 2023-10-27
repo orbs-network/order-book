@@ -13,7 +13,7 @@ func AddUserToCtx(user *models.User) context.Context {
 	c := context.Background()
 
 	if user != nil {
-		return utils.WithUser(c, user)
+		return utils.WithUserCtx(c, user)
 	}
 
 	_user := models.User{
@@ -21,5 +21,5 @@ func AddUserToCtx(user *models.User) context.Context {
 		Type: models.MARKET_MAKER,
 	}
 
-	return utils.WithUser(c, &_user)
+	return utils.WithUserCtx(c, &_user)
 }

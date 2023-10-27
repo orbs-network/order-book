@@ -33,7 +33,7 @@ func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 		Type: models.MARKET_MAKER,
 	}
 
-	userCtx := utils.WithUser(r.Context(), &user)
+	userCtx := utils.WithUserCtx(r.Context(), &user)
 
 	logctx.Info(userCtx, "user trying to cancel order by orderID", logger.String("userId", userId.String()), logger.String("orderId", orderId.String()))
 
@@ -56,7 +56,7 @@ func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request)
 		Type: models.MARKET_MAKER,
 	}
 
-	userCtx := utils.WithUser(r.Context(), &user)
+	userCtx := utils.WithUserCtx(r.Context(), &user)
 
 	logctx.Info(userCtx, "user trying to cancel order by clientOId", logger.String("userId", userId.String()), logger.String("clientOId", clientOId.String()))
 

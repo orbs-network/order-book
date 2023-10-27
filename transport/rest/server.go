@@ -26,6 +26,8 @@ func (h *Handler) Listen() {
 	api.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
 	// Get an order by ID
 	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
+	// Get all orders for a user
+	api.HandleFunc("/orders", PaginationMiddleware(h.GetOrdersForUser)).Methods("GET")
 	// Get all symbols
 	api.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth

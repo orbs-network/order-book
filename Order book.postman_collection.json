@@ -7,7 +7,7 @@
 	},
 	"item": [
 		{
-			"name": "Create order",
+			"name": "Place order",
 			"event": [
 				{
 					"listen": "test",
@@ -24,7 +24,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"d577273e-12de-4acc-a4f8-de7fb5b86e37\"\n}",
+					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"f677273e-12de-4acc-a4f8-de7fb5b86e37\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -52,7 +52,7 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/order/b0c4356e-365e-4dbf-955c-ad4bce211523",
+					"raw": "http://localhost/api/v1/order/36143369-f9b4-4daf-b8d1-6b80a5b0842e",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -61,7 +61,7 @@
 						"api",
 						"v1",
 						"order",
-						"b0c4356e-365e-4dbf-955c-ad4bce211523"
+						"36143369-f9b4-4daf-b8d1-6b80a5b0842e"
 					]
 				}
 			},
@@ -112,12 +112,32 @@
 			"response": []
 		},
 		{
+			"name": "Get symbols",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/api/v1/symbols",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"api",
+						"v1",
+						"symbols"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "Get order by ID",
 			"request": {
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/order/fc592291-a8df-4607-a604-8a562d836621",
+					"raw": "http://localhost/api/v1/order/36143369-f9b4-4daf-b8d1-6b80a5b0842e",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -126,7 +146,7 @@
 						"api",
 						"v1",
 						"order",
-						"fc592291-a8df-4607-a604-8a562d836621"
+						"36143369-f9b4-4daf-b8d1-6b80a5b0842e"
 					]
 				}
 			},
@@ -175,6 +195,36 @@
 						{
 							"key": "limit",
 							"value": "20"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get orders for user",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost/api/v1/orders?page=1&pageSize=10",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"api",
+						"v1",
+						"orders"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "pageSize",
+							"value": "10"
 						}
 					]
 				}
