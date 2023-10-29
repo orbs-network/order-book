@@ -12,11 +12,11 @@ import (
 
 type ConfirmAuctionRes struct {
 	Orders        []*models.Order
-	FillReqs      []*models.OrderFrag
+	Fragments     []*models.OrderFrag
 	BookSignature []byte
 }
 
-func validateFillReq(fillReq models.OrderFrag, order *models.Order) bool {
+func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 
 	// check if order is still open
 	if order.Status != models.STATUS_OPEN {
@@ -24,7 +24,7 @@ func validateFillReq(fillReq models.OrderFrag, order *models.Order) bool {
 	}
 	// order.size - (Order.filled + prder.pending) >= fillOrder.amount
 	orderLockedSum := order.SizeFilled.Sub(order.SizePending)
-	return order.Size.Sub(orderLockedSum).GreaterThanOrEqual(fillReq.Amount)
+	return order.Size.Sub(orderLockedSum).GreaterThanOrEqual(frag.Size)
 }
 
 func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error) {
@@ -38,9 +38,9 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	res := ConfirmAuctionRes{}
 
 	// validate all orders of auction
-	for _, fillReq := range frags {
+	for _, frag := range frags {
 		// get order by ID
-		order, err := s.orderBookStore.FindOrderById(ctx, fillReq.OrderId, false)
+		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		if order == nil {
 			// cancel auction
 			s.RemoveAuction(ctx, auctionId)
@@ -48,7 +48,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 			// return empty
 			logctx.Warn(ctx, err.Error())
 			return ConfirmAuctionRes{}, models.ErrOrderNotFound
-		} else if !validateFillReq(fillReq, order) {
+		} else if !validateOrderFrag(frag, order) {
 			// cancel auction
 			s.RemoveAuction(ctx, auctionId)
 
@@ -58,7 +58,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 		} else {
 			// success- append
 			res.Orders = append(res.Orders, order)
-			res.FillReqs = append(res.FillReqs, &fillReq)
+			res.Fragments = append(res.Fragments, &frag)
 
 			// later s.orderBookStore.FillOrder()
 
@@ -66,14 +66,14 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	}
 	// process all fill requests
 	for i := 0; i < len(res.Orders); i++ {
-		// lock fillReq.Amount as pending per order - no STATUS_PENDING is needed
-		//s.orderBookStore.SetPendingOrders(ctx, res.Orders[i], res.FillReqs[i].Amount)
-		res.Orders[i].SizePending = res.FillReqs[i].Amount
+		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
+		//s.orderBookStore.SetPendingOrders(ctx, res.Orders[i], res.Fragments[i].Amount)
+		res.Orders[i].SizePending = res.Fragments[i].Size
 
 		// s.ProcessOrder(ctx, ProcessOrderInput{
 		// 	UserId:        uuid.UUID{},
 		// 	Price:         res.Orders[i].Price,
-		// 	Size:          res.FillReqs[i].Amount,
+		// 	Size:          res.Fragments[i].Amount,
 		// 	Side:          res.Orders[i].Side,
 		// 	ClientOrderID: res.Orders[i].ClientOId,
 		// })

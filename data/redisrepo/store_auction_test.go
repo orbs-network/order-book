@@ -14,12 +14,12 @@ func TestRedisRepository_StoreAuction(t *testing.T) {
 
 	matchOne := models.OrderFrag{
 		OrderId: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
-		Amount:  decimal.NewFromFloat(200.0),
+		Size:    decimal.NewFromFloat(200.0),
 	}
 
 	matchTwo := models.OrderFrag{
 		OrderId: uuid.MustParse("00000000-0000-0000-0000-000000000002"),
-		Amount:  decimal.NewFromFloat(300.0),
+		Size:    decimal.NewFromFloat(300.0),
 	}
 
 	auctionID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")

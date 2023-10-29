@@ -21,8 +21,8 @@ func TestRedisRepository_GetAuction(t *testing.T) {
 	amount3 := decimal.NewFromFloat(7.8)
 
 	auctionJson := []string{
-		`[{"orderId":"550e8400-e29b-41d4-a716-446655440000","amount":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","amount":"5.3"}]`,
-		`[{"orderId":"550e8400-e29b-41d4-a716-446655440002","amount":"7.8"}]`,
+		`[{"orderId":"550e8400-e29b-41d4-a716-446655440000","size":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","size":"5.3"}]`,
+		`[{"orderId":"550e8400-e29b-41d4-a716-446655440002","size":"7.8"}]`,
 	}
 
 	auctionID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
@@ -39,9 +39,9 @@ func TestRedisRepository_GetAuction(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, auction, 3, "Should have 3 orders in the auction")
 		assert.ElementsMatch(t, []models.OrderFrag{
-			{OrderId: uuid1, Amount: amount1},
-			{OrderId: uuid2, Amount: amount2},
-			{OrderId: uuid3, Amount: amount3},
+			{OrderId: uuid1, Size: amount1},
+			{OrderId: uuid2, Size: amount2},
+			{OrderId: uuid3, Size: amount3},
 		}, auction, "The auction contents do not match expected")
 	})
 

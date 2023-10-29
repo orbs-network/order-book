@@ -11,16 +11,16 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-type FillOrder struct {
-	OrderID        string `json:"orderID"`
-	OrderSignatrue string `json:"orderSignatrue"`
-	AmountOut      string `json:"amountOut"`
-	Source         string `json:"source"` // 0xPubKey
-}
+//	type FillOrder struct {
+//		OrderID        string `json:"orderID"`
+//		OrderSignatrue string `json:"orderSignatrue"`
+//		AmountOut      string `json:"amountOut"`
+//		Source         string `json:"source"` // 0xPubKey
+//	}
 type ConfirmAuctionResponse struct {
-	AuctionId     string      `json:"auctionId"`
-	BookSignature string      `json:"bookSignature"`
-	FillOrders    []FillOrder `json:"fillOrders"`
+	AuctionId     string `json:"auctionId"`
+	BookSignature string `json:"bookSignature"`
+	//FillOrders    []FillOrder `json:"fillOrders"`
 }
 
 func (h *Handler) confirmAuction(w http.ResponseWriter, r *http.Request) {

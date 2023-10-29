@@ -14,13 +14,13 @@ type AmountOut struct {
 
 type OrderFrag struct {
 	OrderId uuid.UUID
-	Amount  decimal.Decimal
+	Size    decimal.Decimal
 }
 
 func (f *OrderFrag) ToMap() map[string]string {
 	return map[string]string{
 		"orderId": f.OrderId.String(),
-		"amount":  f.Amount.String(),
+		"size":    f.Size.String(),
 	}
 }
 
@@ -34,7 +34,7 @@ func (f *OrderFrag) ToOrderFrag(data map[string]string) error {
 		return nil
 	}
 
-	amountStr, exists := data["amount"]
+	amountStr, exists := data["size"]
 	if !exists {
 		return nil
 	}
@@ -50,7 +50,7 @@ func (f *OrderFrag) ToOrderFrag(data map[string]string) error {
 	}
 
 	f.OrderId = orderId
-	f.Amount = amount
+	f.Size = amount
 
 	return nil
 }
