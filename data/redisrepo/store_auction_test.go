@@ -12,20 +12,20 @@ import (
 
 func TestRedisRepository_StoreAuction(t *testing.T) {
 
-	matchOne := models.FilledOrder{
+	matchOne := models.OrderFrag{
 		OrderId: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 		Amount:  decimal.NewFromFloat(200.0),
 	}
 
-	matchTwo := models.FilledOrder{
+	matchTwo := models.OrderFrag{
 		OrderId: uuid.MustParse("00000000-0000-0000-0000-000000000002"),
 		Amount:  decimal.NewFromFloat(300.0),
 	}
 
 	auctionID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
-	auction := []models.FilledOrder{matchOne, matchTwo}
+	auction := []models.OrderFrag{matchOne, matchTwo}
 
-	auctionJson, _ := models.MarshalFilledOrders(auction)
+	auctionJson, _ := models.MarshalOrderFrags(auction)
 
 	t.Run("should store auction", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()

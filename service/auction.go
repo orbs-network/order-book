@@ -12,11 +12,11 @@ import (
 
 type ConfirmAuctionRes struct {
 	Orders        []*models.Order
-	FillReqs      []*models.FilledOrder
+	FillReqs      []*models.OrderFrag
 	BookSignature []byte
 }
 
-func validateFillReq(fillReq models.FilledOrder, order *models.Order) bool {
+func validateFillReq(fillReq models.OrderFrag, order *models.Order) bool {
 
 	// check if order is still open
 	if order.Status != models.STATUS_OPEN {
@@ -29,7 +29,7 @@ func validateFillReq(fillReq models.FilledOrder, order *models.Order) bool {
 
 func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error) {
 	// get auction from store
-	arrOfFillOrders, err := s.orderBookStore.GetAuction(ctx, auctionId)
+	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
 	if err != nil {
 		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
 		return ConfirmAuctionRes{}, models.ErrInsufficientLiquity
@@ -38,7 +38,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	res := ConfirmAuctionRes{}
 
 	// validate all orders of auction
-	for _, fillReq := range arrOfFillOrders {
+	for _, fillReq := range frags {
 		// get order by ID
 		order, err := s.orderBookStore.FindOrderById(ctx, fillReq.OrderId, false)
 		if order == nil {

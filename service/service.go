@@ -21,8 +21,8 @@ type OrderBookStore interface {
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	// LH side
-	StoreAuction(ctx context.Context, auctionID uuid.UUID, fillOrders []models.FilledOrder) error
-	GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.FilledOrder, error)
+	StoreAuction(ctx context.Context, auctionID uuid.UUID, fillOrders []models.OrderFrag) error
+	GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error)
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
 }

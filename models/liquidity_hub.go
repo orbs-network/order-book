@@ -9,22 +9,22 @@ import (
 
 type AmountOut struct {
 	AmountOut  decimal.Decimal
-	FillOrders []FilledOrder
+	OrderFrags []OrderFrag
 }
 
-type FilledOrder struct {
+type OrderFrag struct {
 	OrderId uuid.UUID
 	Amount  decimal.Decimal
 }
 
-func (f *FilledOrder) FilledOrderToMap() map[string]string {
+func (f *OrderFrag) ToMap() map[string]string {
 	return map[string]string{
 		"orderId": f.OrderId.String(),
 		"amount":  f.Amount.String(),
 	}
 }
 
-func (f *FilledOrder) MapToFilledOrder(data map[string]string) error {
+func (f *OrderFrag) ToOrderFrag(data map[string]string) error {
 	if len(data) == 0 {
 		return nil
 	}
@@ -55,10 +55,10 @@ func (f *FilledOrder) MapToFilledOrder(data map[string]string) error {
 	return nil
 }
 
-func MarshalFilledOrders(fillOrders []FilledOrder) ([]byte, error) {
-	auctionMap := make([]map[string]string, len(fillOrders))
-	for i, fillOrder := range fillOrders {
-		auctionMap[i] = fillOrder.FilledOrderToMap()
+func MarshalOrderFrags(orderFrags []OrderFrag) ([]byte, error) {
+	auctionMap := make([]map[string]string, len(orderFrags))
+	for i, frag := range orderFrags {
+		auctionMap[i] = frag.ToMap()
 	}
 
 	return json.Marshal(auctionMap)

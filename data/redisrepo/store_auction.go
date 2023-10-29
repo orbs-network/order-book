@@ -9,9 +9,9 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func (r *redisRepository) StoreAuction(ctx context.Context, auctionID uuid.UUID, fillOrders []models.FilledOrder) error {
+func (r *redisRepository) StoreAuction(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error {
 
-	auctionJson, err := models.MarshalFilledOrders(fillOrders)
+	auctionJson, err := models.MarshalOrderFrags(frags)
 	if err != nil {
 		logctx.Error(ctx, "failed to marshal auction", logger.String("auctionID", auctionID.String()), logger.Error(err))
 		return models.ErrMarshalError
