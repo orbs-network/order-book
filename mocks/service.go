@@ -22,6 +22,10 @@ func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order)
 	return m.Error
 }
 
+func (m *MockOrderBookStore) StoreOrders(ctx context.Context, orders []*models.Order) error {
+	return m.Error
+}
+
 func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order) error {
 	return m.Error
 }
@@ -71,8 +75,4 @@ func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol
 
 func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
 	return m.OrderIter
-}
-
-func (m *MockOrderBookStore) SetOrderPending(ctx context.Context, order *models.Order, size decimal.Decimal) error {
-	return nil
 }

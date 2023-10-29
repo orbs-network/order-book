@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
-	"github.com/shopspring/decimal"
 )
 
 // orderID->amount bought or sold in A token always
@@ -23,9 +22,9 @@ func validateFillReq(fillReq models.FilledOrder, order *models.Order) bool {
 	if order.Status != models.STATUS_OPEN {
 		return false
 	}
-	// order.size - Order.filled >= fillOrder.amount
-	orderSizeFilled := decimal.NewFromInt(0) // todo: add this filled to ORDER
-	return order.Size.Sub(orderSizeFilled).GreaterThanOrEqual(fillReq.Amount)
+	// order.size - (Order.filled + prder.pending) >= fillOrder.amount
+	orderLockedSum := order.SizeFilled.Sub(order.SizePending)
+	return order.Size.Sub(orderLockedSum).GreaterThanOrEqual(fillReq.Amount)
 }
 
 func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error) {
@@ -68,7 +67,8 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	// process all fill requests
 	for i := 0; i < len(res.Orders); i++ {
 		// lock fillReq.Amount as pending per order - no STATUS_PENDING is needed
-		s.orderBookStore.SetOrderPending(ctx, res.Orders[i], res.FillReqs[i].Amount)
+		//s.orderBookStore.SetPendingOrders(ctx, res.Orders[i], res.FillReqs[i].Amount)
+		res.Orders[i].SizePending = res.FillReqs[i].Amount
 
 		// s.ProcessOrder(ctx, ProcessOrderInput{
 		// 	UserId:        uuid.UUID{},
@@ -78,6 +78,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 		// 	ClientOrderID: res.Orders[i].ClientOId,
 		// })
 	}
+	s.orderBookStore.StoreOrders(ctx, res.Orders)
 
 	// type ProcessOrderInput struct {
 	// 	UserId        uuid.UUID

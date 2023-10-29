@@ -14,6 +14,7 @@ import (
 type OrderBookStore interface {
 	// MM side
 	StoreOrder(ctx context.Context, order models.Order) error
+	StoreOrders(ctx context.Context, orders []*models.Order) error
 	RemoveOrder(ctx context.Context, order models.Order) error
 	FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error)
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
@@ -24,7 +25,6 @@ type OrderBookStore interface {
 	GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.FilledOrder, error)
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
-	SetOrderPending(ctx context.Context, order *models.Order, size decimal.Decimal) error
 }
 
 // Service contains methods that implement the business logic for the application.
