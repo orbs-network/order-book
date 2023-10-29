@@ -23,9 +23,9 @@ func TestRedisRepository_StoreAuction(t *testing.T) {
 	}
 
 	auctionID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
-	auction := []models.OrderFrag{matchOne, matchTwo}
+	frags := []models.OrderFrag{matchOne, matchTwo}
 
-	auctionJson, _ := models.MarshalOrderFrags(auction)
+	auctionJson, _ := models.MarshalOrderFrags(frags)
 
 	t.Run("should store auction", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
@@ -36,7 +36,7 @@ func TestRedisRepository_StoreAuction(t *testing.T) {
 
 		mock.ExpectRPush(CreateAuctionKey(auctionID), auctionJson).SetVal(1)
 
-		err := repo.StoreAuction(ctx, auctionID, auction)
+		err := repo.StoreAuction(ctx, auctionID, frags)
 		assert.NoError(t, err)
 	})
 
@@ -49,7 +49,7 @@ func TestRedisRepository_StoreAuction(t *testing.T) {
 
 		mock.ExpectSAdd(CreateAuctionKey(auctionID), auctionJson).SetErr(assert.AnError)
 
-		err := repo.StoreAuction(ctx, auctionID, auction)
+		err := repo.StoreAuction(ctx, auctionID, frags)
 		assert.Equal(t, models.ErrUnexpectedError, err)
 	})
 

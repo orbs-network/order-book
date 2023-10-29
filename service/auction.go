@@ -22,7 +22,7 @@ func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 	if order.Status != models.STATUS_OPEN {
 		return false
 	}
-	// order.size - (Order.filled + prder.pending) >= fillOrder.amount
+	// order.size - (Order.filled + prder.pending) >= frag.size
 	orderLockedSum := order.SizeFilled.Sub(order.SizePending)
 	return order.Size.Sub(orderLockedSum).GreaterThanOrEqual(frag.Size)
 }
@@ -67,48 +67,12 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	// process all fill requests
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
-		//s.orderBookStore.SetPendingOrders(ctx, res.Orders[i], res.Fragments[i].Amount)
 		res.Orders[i].SizePending = res.Fragments[i].Size
-
-		// s.ProcessOrder(ctx, ProcessOrderInput{
-		// 	UserId:        uuid.UUID{},
-		// 	Price:         res.Orders[i].Price,
-		// 	Size:          res.Fragments[i].Amount,
-		// 	Side:          res.Orders[i].Side,
-		// 	ClientOrderID: res.Orders[i].ClientOId,
-		// })
 	}
 	s.orderBookStore.StoreOrders(ctx, res.Orders)
 
-	// type ProcessOrderInput struct {
-	// 	UserId        uuid.UUID
-	// 	Price         decimal.Decimal
-	// 	Symbol        models.Symbol
-	// 	Size          decimal.Decimal
-	// 	Side          models.Side
-	// 	ClientOrderID uuid.UUID
-	// }
-
-	// type Order struct {
-	// 	Id        uuid.UUID       `json:"orderId"`
-	// 	ClientOId uuid.UUID       `json:"clientOrderId"`
-	// 	UserId    uuid.UUID       `json:"userId"`
-	// 	Price     decimal.Decimal `json:"price"`
-	// 	Symbol    Symbol          `json:"symbol"`
-	// 	Size      decimal.Decimal `json:"size"`
-	// 	Signature string          `json:"-" ` // EIP 712
-	// 	Status    Status          `json:"-"`  // when order is pending, it should not be updateable
-	// 	Side      Side            `json:"side"`
-	// 	Timestamp time.Time       `json:"timestamp"`
-	// }
-
-	// return orders signatures
-
 	// add oredebook signature on the buffer
 	res.BookSignature = []byte("todo:sign")
-
-	// lock funds
-	//s.orderBookStore.
 
 	// set entire auction as pending ??
 	//s.orderBookStore.RemoveAuction(auctionId)
