@@ -43,6 +43,7 @@ func (h *Handler) Listen() {
 	lhApi.HandleFunc("/quote", h.amountOut).Methods("POST")
 	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("GET")
 	lhApi.HandleFunc("/remove_auction/{auctionId}", h.removeAuction).Methods("GET")
+	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("GET")
 
 	// LISTEN
 	logctx.Info(context.TODO(), "starting server", logger.String("port", "8080"))

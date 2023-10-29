@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -27,12 +28,23 @@ func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 	return order.Size.Sub(orderLockedSum).GreaterThanOrEqual(frag.Size)
 }
 
+func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
+	// check if order is still open
+	if order.Status != models.STATUS_OPEN {
+		return false
+	}
+	// order.Size pending should be greater or equal to orderFrag: (Order.sizePending + prder.pending) >= frag.size
+	return order.SizePending.GreaterThanOrEqual(frag.Size)
+}
+
 func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error) {
+	// TODO: validate it doesnt already confirmed
+
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
 	if err != nil {
-		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
-		return ConfirmAuctionRes{}, models.ErrInsufficientLiquity
+		logctx.Warn(ctx, err.Error())
+		return ConfirmAuctionRes{}, err
 	}
 
 	res := ConfirmAuctionRes{}
@@ -59,12 +71,9 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 			// success- append
 			res.Orders = append(res.Orders, order)
 			res.Fragments = append(res.Fragments, &frag)
-
-			// later s.orderBookStore.FillOrder()
-
 		}
 	}
-	// process all fill requests
+	// set order order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
 		res.Orders[i].SizePending = res.Fragments[i].Size
@@ -74,14 +83,56 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	// add oredebook signature on the buffer
 	res.BookSignature = []byte("todo:sign")
 
-	// set entire auction as pending ??
-	//s.orderBookStore.RemoveAuction(auctionId)
-
-	// error
-
 	return res, nil
 }
 
 func (s *Service) RemoveAuction(ctx context.Context, auctionId uuid.UUID) error {
+
 	return nil
+}
+
+func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
+	// TODO: validate it doesnt already confirmed
+
+	// get auction from store
+	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
+	if err != nil {
+		logctx.Warn(ctx, err.Error())
+		return err
+	}
+	var filledOrders []*models.Order
+
+	// validate all pending orders fragments of auction
+	for _, frag := range frags {
+		// get order by ID
+		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
+		if order == nil {
+			// cancel auction
+			s.RemoveAuction(ctx, auctionId)
+
+			// return empty
+			logctx.Warn(ctx, err.Error())
+			return models.ErrOrderNotFound
+		} else if !validatePendingFrag(frag, order) {
+			// cancel auction
+			s.RemoveAuction(ctx, auctionId)
+
+			logctx.Error(ctx, fmt.Sprintf("validatePendingFrag failed. PendingSize: %s FragSize:%s", order.SizePending.String(), frag.Size.String()))
+			return models.ErrAuctionInvalid
+		} else {
+			// fill fragment in the order
+			order.SizePending.Sub(frag.Size)
+			order.SizeFilled.Add(frag.Size)
+
+			// success - mark as filled
+			filledOrders = append(filledOrders, order)
+		}
+	}
+
+	// store orders
+	// TODO: close completely filled orders
+	s.orderBookStore.StoreOrders(ctx, filledOrders)
+
+	return s.RemoveAuction(ctx, auctionId)
+
 }

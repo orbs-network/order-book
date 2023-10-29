@@ -22,7 +22,7 @@ type Service interface {
 	//GetAmountOut(ctx context.Context, auctionID string, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 	GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 	ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (service.ConfirmAuctionRes, error)
-	RemoveAuction(ctx context.Context, auctionId uuid.UUID) error
+	//RemoveAuction(ctx context.Context, auctionId uuid.UUID) error
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)
 }
 

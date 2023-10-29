@@ -73,5 +73,15 @@ func (h *Handler) removeAuction(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "auctionId is empty", http.StatusBadRequest)
 		return
 	}
+}
+
+func (h *Handler) auctionMined(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	auctionId := vars["auctionId"]
+	if auctionId == "" {
+		http.Error(w, "auctionId is empty", http.StatusBadRequest)
+		return
+	}
 
 }
