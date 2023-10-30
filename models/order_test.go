@@ -16,29 +16,33 @@ var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000003")
 func TestOrder_OrderToMap(t *testing.T) {
 	timestamp, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
 	order := Order{
-		Id:        id,
-		ClientOId: clientOId,
-		UserId:    userId,
-		Price:     decimal.NewFromFloat(10.99),
-		Symbol:    "USDC-ETH",
-		Size:      decimal.NewFromInt(1000),
-		Signature: "signature",
-		Status:    STATUS_OPEN,
-		Side:      BUY,
-		Timestamp: timestamp,
+		Id:          id,
+		ClientOId:   clientOId,
+		UserId:      userId,
+		Price:       decimal.NewFromFloat(10.99),
+		Symbol:      "USDC-ETH",
+		Size:        decimal.NewFromInt(1000),
+		SizeFilled:  decimal.NewFromInt(600),
+		SizePending: decimal.NewFromInt(400),
+		Signature:   "signature",
+		Status:      STATUS_OPEN,
+		Side:        BUY,
+		Timestamp:   timestamp,
 	}
 
 	expectedMap := map[string]string{
-		"id":        order.Id.String(),
-		"clientOId": order.ClientOId.String(),
-		"userId":    order.UserId.String(),
-		"price":     order.Price.String(),
-		"symbol":    order.Symbol.String(),
-		"size":      order.Size.String(),
-		"signature": order.Signature,
-		"status":    order.Status.String(),
-		"side":      order.Side.String(),
-		"timestamp": order.Timestamp.Format(time.RFC3339),
+		"id":          order.Id.String(),
+		"clientOId":   order.ClientOId.String(),
+		"userId":      order.UserId.String(),
+		"price":       order.Price.String(),
+		"symbol":      order.Symbol.String(),
+		"size":        order.Size.String(),
+		"sizePending": order.SizePending.String(),
+		"sizeFilled":  order.SizeFilled.String(),
+		"signature":   order.Signature,
+		"status":      order.Status.String(),
+		"side":        order.Side.String(),
+		"timestamp":   order.Timestamp.Format(time.RFC3339),
 	}
 
 	actualMap := order.OrderToMap()
