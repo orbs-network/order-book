@@ -61,6 +61,12 @@ func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId uuid.
 func (m *MockOrderBookService) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (service.ConfirmAuctionRes, error) {
 	return service.ConfirmAuctionRes{}, nil
 }
+func (m *MockOrderBookService) RevertAuction(ctx context.Context, auctionId uuid.UUID) error {
+	return nil
+}
 func (m *MockOrderBookService) RemoveAuction(ctx context.Context, auctionId uuid.UUID) error {
+	return nil
+}
+func (m *MockOrderBookService) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	return nil
 }
