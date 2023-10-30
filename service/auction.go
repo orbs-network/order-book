@@ -38,7 +38,7 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 }
 
 func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error) {
-	// TODO: validate it doesnt already confirmed
+	// TODO: re-entrance validate it doesnt already confirmed
 
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
@@ -86,13 +86,18 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	return res, nil
 }
 
+func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error {
+
+	return nil
+}
+
 func (s *Service) RemoveAuction(ctx context.Context, auctionId uuid.UUID) error {
 
 	return nil
 }
 
 func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
-	// TODO: validate it doesnt already confirmed
+	// TODO: re-entrance validate it doesnt already confirmed
 
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
@@ -108,14 +113,14 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		if order == nil {
 			// cancel auction
-			s.RemoveAuction(ctx, auctionId)
+			s.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
 
 			// return empty
-			logctx.Warn(ctx, err.Error())
+			logctx.Error(ctx, err.Error())
 			return models.ErrOrderNotFound
 		} else if !validatePendingFrag(frag, order) {
 			// cancel auction
-			s.RemoveAuction(ctx, auctionId)
+			s.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
 
 			logctx.Error(ctx, fmt.Sprintf("validatePendingFrag failed. PendingSize: %s FragSize:%s", order.SizePending.String(), frag.Size.String()))
 			return models.ErrAuctionInvalid
@@ -133,6 +138,6 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	// TODO: close completely filled orders
 	s.orderBookStore.StoreOrders(ctx, filledOrders)
 
-	return s.RemoveAuction(ctx, auctionId)
+	return s.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
 
 }
