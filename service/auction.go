@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
@@ -43,7 +44,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
 	if err != nil {
-		logctx.Warn(ctx, err.Error())
+		logctx.Warn(ctx, "GetAuction Failed", logger.Error(err))
 		return ConfirmAuctionRes{}, err
 	}
 
@@ -87,11 +88,35 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 }
 
 func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error {
-	// get auction
+	// TODO: re-entrance validate it isn't already confirmed
 
-	// for each order-frag, revert the pending in original order
+	// get auction from store
+	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
+	if err != nil {
+		logctx.Warn(ctx, "GetAuction Failed", logger.Error(err))
+		return err
+	}
 
-	return nil
+	orders := []*models.Order{}
+	// validate all pending orders fragments of auction
+	for _, frag := range frags {
+		// get order by ID
+		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
+		// no return during erros as what can be revert, should
+		if order == nil {
+			logctx.Error(ctx, "order not found while reverting an auction", logger.Error(err))
+		} else if !validatePendingFrag(frag, order) {
+			logctx.Error(ctx, "Auction fragments should be valid during a revert request", logger.Error(err))
+		} else {
+			// success
+			order.SizePending.Sub(frag.Size)
+			orders = append(orders, order)
+		}
+	}
+	// store orders
+	s.orderBookStore.StoreOrders(ctx, orders)
+
+	return s.orderBookStore.RemoveAuction(ctx, auctionId)
 }
 
 func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
@@ -100,7 +125,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
 	if err != nil {
-		logctx.Warn(ctx, err.Error())
+		logctx.Warn(ctx, "GetAuction Failed", logger.Error(err))
 		return err
 	}
 	var filledOrders []*models.Order
@@ -112,6 +137,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 		if order == nil {
 			// cancel auction
 			s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
+			logctx.Error(ctx, "Auction fragment's order should not be removed during pending to be mined", logger.Error(err))
 
 			// return empty
 			logctx.Error(ctx, err.Error())
@@ -119,6 +145,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 		} else if !validatePendingFrag(frag, order) {
 			// cancel auction
 			s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
+			logctx.Error(ctx, "Auction fragments should be valid after pending to be mined", logger.Error(err))
 
 			logctx.Error(ctx, fmt.Sprintf("validatePendingFrag failed. PendingSize: %s FragSize:%s", order.SizePending.String(), frag.Size.String()))
 			return models.ErrAuctionInvalid
