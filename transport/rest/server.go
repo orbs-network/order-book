@@ -42,11 +42,11 @@ func (h *Handler) Listen() {
 	/////////////////////////////////////////////////////////////////////
 	// LH side
 	lhApi := h.router.PathPrefix("/lh/v1").Subrouter()
-	lhApi.HandleFunc("/quote", h.amountOut).Methods("POST")
-	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("GET")
-	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("GET")
-	lhApi.HandleFunc("/remove_auction/{auctionId}", h.removeAuction).Methods("GET")
-	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("GET")
+	lhApi.HandleFunc("/quote", h.amountOut).Methods("GET")
+	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("POST")
+	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("POST")
+	lhApi.HandleFunc("/remove_auction/{auctionId}", h.removeAuction).Methods("DELETE")
+	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("POST")
 
 	// LISTEN
 	logctx.Info(context.TODO(), "starting server", logger.String("port", "8080"))
