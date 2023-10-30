@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/service"
 	"github.com/shopspring/decimal"
 )
 
@@ -16,6 +17,10 @@ type MockOrderBookStore struct {
 	MarketDepth models.MarketDepth
 	OrderIter   models.OrderIter
 	frags       []models.OrderFrag
+}
+
+func (m *MockOrderBookStore) GetStore() service.OrderBookStore {
+	return nil
 }
 
 func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order) error {
@@ -67,6 +72,10 @@ func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID
 		return nil, m.Error
 	}
 	return m.frags, nil
+}
+
+func (m *MockOrderBookStore) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {
+	return nil
 }
 
 func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {

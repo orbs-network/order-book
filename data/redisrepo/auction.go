@@ -34,3 +34,7 @@ func (r *redisRepository) GetAuction(ctx context.Context, auctionID uuid.UUID) (
 	logctx.Info(ctx, "got auction", logger.String("auctionID", auctionID.String()))
 	return frags, nil
 }
+
+func (r *redisRepository) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {
+	return nil
+}

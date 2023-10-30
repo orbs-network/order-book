@@ -13,6 +13,7 @@ import (
 
 // Service represents the methods available on the service to handle the actual request.
 type Service interface {
+	GetStore() service.OrderBookStore
 	ProcessOrder(ctx context.Context, input service.ProcessOrderInput) (models.Order, error)
 	CancelOrder(ctx context.Context, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error)
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
@@ -21,7 +22,6 @@ type Service interface {
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 	ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (service.ConfirmAuctionRes, error)
-	RemoveAuction(ctx context.Context, auctionId uuid.UUID) error
 	RevertAuction(ctx context.Context, auctionId uuid.UUID) error
 	AuctionMined(ctx context.Context, auctionId uuid.UUID) error
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)

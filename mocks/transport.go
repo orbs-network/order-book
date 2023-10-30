@@ -19,6 +19,10 @@ type MockOrderBookService struct {
 	Symbols     []models.Symbol
 }
 
+func (m *MockOrderBookService) GetStore() service.OrderBookStore {
+	return nil
+}
+
 func (m *MockOrderBookService) ProcessOrder(ctx context.Context, input service.ProcessOrderInput) (models.Order, error) {
 	return *m.Order, m.Error
 }
@@ -64,9 +68,7 @@ func (m *MockOrderBookService) ConfirmAuction(ctx context.Context, auctionId uui
 func (m *MockOrderBookService) RevertAuction(ctx context.Context, auctionId uuid.UUID) error {
 	return nil
 }
-func (m *MockOrderBookService) RemoveAuction(ctx context.Context, auctionId uuid.UUID) error {
-	return nil
-}
+
 func (m *MockOrderBookService) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	return nil
 }

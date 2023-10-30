@@ -55,14 +55,14 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		if order == nil {
 			// cancel auction
-			s.RemoveAuction(ctx, auctionId)
+			s.orderBookStore.RemoveAuction(ctx, auctionId)
 
 			// return empty
 			logctx.Warn(ctx, err.Error())
 			return ConfirmAuctionRes{}, models.ErrOrderNotFound
 		} else if !validateOrderFrag(frag, order) {
 			// cancel auction
-			s.RemoveAuction(ctx, auctionId)
+			s.orderBookStore.RemoveAuction(ctx, auctionId)
 
 			// return empty
 			logctx.Warn(ctx, err.Error())
@@ -87,11 +87,9 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 }
 
 func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error {
+	// get auction
 
-	return nil
-}
-
-func (s *Service) RemoveAuction(ctx context.Context, auctionId uuid.UUID) error {
+	// for each order-frag, revert the pending in original order
 
 	return nil
 }
@@ -113,14 +111,14 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		if order == nil {
 			// cancel auction
-			s.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
+			s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
 
 			// return empty
 			logctx.Error(ctx, err.Error())
 			return models.ErrOrderNotFound
 		} else if !validatePendingFrag(frag, order) {
 			// cancel auction
-			s.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
+			s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
 
 			logctx.Error(ctx, fmt.Sprintf("validatePendingFrag failed. PendingSize: %s FragSize:%s", order.SizePending.String(), frag.Size.String()))
 			return models.ErrAuctionInvalid
@@ -138,6 +136,6 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	// TODO: close completely filled orders
 	s.orderBookStore.StoreOrders(ctx, filledOrders)
 
-	return s.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
+	return s.orderBookStore.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
 
 }

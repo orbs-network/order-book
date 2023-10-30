@@ -104,7 +104,7 @@ func (h *Handler) removeAuction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	err := h.svc.RemoveAuction(ctx, *auctionId)
+	err := h.svc.GetStore().RemoveAuction(ctx, *auctionId)
 	if err != nil {
 		logctx.Error(ctx, "failed to RemoveAuction", logger.Error(err))
 		http.Error(w, "Error RemoveAuction", http.StatusInternalServerError)
