@@ -67,6 +67,13 @@ func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UU
 	return m.Error
 }
 
+func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+	if m.Error != nil {
+		return nil, 0, m.Error
+	}
+	return m.Orders, len(m.Orders), nil
+}
+
 func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error) {
 	if m.Error != nil {
 		return nil, m.Error

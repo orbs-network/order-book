@@ -13,7 +13,7 @@ import (
 // CancelOrder cancels an order by its ID or clientOId. If `isClientOId` is true, the `id` is treated as a clientOId, otherwise it is treated as an orderId.
 func (s *Service) CancelOrder(ctx context.Context, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error) {
 
-	user := utils.GetUser(ctx)
+	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user not found in context")
 		return nil, models.ErrNoUserInContext

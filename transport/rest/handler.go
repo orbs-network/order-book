@@ -20,11 +20,12 @@ type Service interface {
 	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 	GetOrderByClientOId(ctx context.Context, clientOId uuid.UUID) (*models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
-	GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 	ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (service.ConfirmAuctionRes, error)
 	RevertAuction(ctx context.Context, auctionId uuid.UUID) error
 	AuctionMined(ctx context.Context, auctionId uuid.UUID) error
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)
+	GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
+	GetAmountOut(ctx context.Context, auctionID uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 }
 
 type Handler struct {

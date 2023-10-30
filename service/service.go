@@ -20,6 +20,7 @@ type OrderBookStore interface {
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
+	GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
 	// LH side
 	StoreAuction(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error
 	RemoveAuction(ctx context.Context, auctionID uuid.UUID) error

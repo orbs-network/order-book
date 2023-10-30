@@ -59,6 +59,10 @@ func (m *MockOrderBookService) GetSymbols(ctx context.Context) ([]models.Symbol,
 	return m.Symbols, m.Error
 }
 
+func (m *MockOrderBookService) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+	return m.Orders, len(m.Orders), m.Error
+}
+
 func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 	return m.AmountOut, m.Error
 }
