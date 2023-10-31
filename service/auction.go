@@ -54,16 +54,20 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	for _, frag := range frags {
 		// get order by ID
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
-		if order == nil {
-			// cancel auction
-			s.orderBookStore.RemoveAuction(ctx, auctionId)
-
-			// return empty
+		if err != nil {
+			// err !mpty
 			logctx.Warn(ctx, err.Error())
+
+			// cancel auction
+			err = s.orderBookStore.RemoveAuction(ctx, auctionId)
+			if err != nil {
+				logctx.Warn(ctx, "Remove Auction", logger.Error(err))
+			}
+
 			return ConfirmAuctionRes{}, models.ErrOrderNotFound
 		} else if !validateOrderFrag(frag, order) {
 			// cancel auction
-			s.orderBookStore.RemoveAuction(ctx, auctionId)
+			_ = s.orderBookStore.RemoveAuction(ctx, auctionId)
 
 			// return empty
 			logctx.Warn(ctx, err.Error())
@@ -79,7 +83,11 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
 		res.Orders[i].SizePending = res.Fragments[i].Size
 	}
-	s.orderBookStore.StoreOrders(ctx, res.Orders)
+	err = s.orderBookStore.StoreOrders(ctx, res.Orders)
+	if err != nil {
+		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		return ConfirmAuctionRes{}, err
+	}
 
 	// add oredebook signature on the buffer
 	res.BookSignature = []byte("todo:sign")
@@ -103,7 +111,7 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 		// get order by ID
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		// no return during erros as what can be revert, should
-		if order == nil {
+		if err != nil {
 			logctx.Error(ctx, "order not found while reverting an auction", logger.Error(err))
 		} else if !validatePendingFrag(frag, order) {
 			logctx.Error(ctx, "Auction fragments should be valid during a revert request", logger.Error(err))
@@ -114,7 +122,11 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 		}
 	}
 	// store orders
-	s.orderBookStore.StoreOrders(ctx, orders)
+	err = s.orderBookStore.StoreOrders(ctx, orders)
+	if err != nil {
+		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		return err
+	}
 
 	return s.orderBookStore.RemoveAuction(ctx, auctionId)
 }
@@ -134,17 +146,23 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	for _, frag := range frags {
 		// get order by ID
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
-		if order == nil {
-			// cancel auction
-			s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
+		if err != nil {
+			logctx.Error(ctx, err.Error())
 			logctx.Error(ctx, "Auction fragment's order should not be removed during pending to be mined", logger.Error(err))
 
+			// cancel auction
+			err = s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
+			if err != nil {
+				logctx.Error(ctx, err.Error())
+			}
 			// return empty
-			logctx.Error(ctx, err.Error())
 			return models.ErrOrderNotFound
 		} else if !validatePendingFrag(frag, order) {
 			// cancel auction
-			s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
+			err = s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
+			if err != nil {
+				logctx.Error(ctx, err.Error())
+			}
 			logctx.Error(ctx, "Auction fragments should be valid after pending to be mined", logger.Error(err))
 
 			logctx.Error(ctx, fmt.Sprintf("validatePendingFrag failed. PendingSize: %s FragSize:%s", order.SizePending.String(), frag.Size.String()))
@@ -161,7 +179,11 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 
 	// store orders
 	// TODO: close completely filled orders
-	s.orderBookStore.StoreOrders(ctx, filledOrders)
+	err = s.orderBookStore.StoreOrders(ctx, filledOrders)
+	if err != nil {
+		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
+		return err
+	}
 
 	return s.orderBookStore.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
 
