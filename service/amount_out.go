@@ -30,7 +30,7 @@ func (s *Service) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol 
 		logctx.Error(ctx, "getAmountOutIn failed", logger.Error(err))
 		return models.AmountOut{}, err
 	}
-	err = s.orderBookStore.StoreAuction(ctx, auctionId, res.FillOrders)
+	err = s.orderBookStore.StoreAuction(ctx, auctionId, res.OrderFrags)
 	if err != nil {
 		logctx.Error(ctx, "StoreAuction failed", logger.Error(err))
 		return models.AmountOut{}, err
@@ -43,7 +43,7 @@ func (s *Service) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol 
 // amount out A token (ETH)
 func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB decimal.Decimal) (models.AmountOut, error) {
 	amountOutA := decimal.NewFromInt(0)
-	var fillOrders []models.FilledOrder
+	var frags []models.OrderFrag
 	var order *models.Order
 	for it.HasNext() && amountInB.IsPositive() {
 		order = it.Next(ctx)
@@ -61,17 +61,17 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 		amountOutA = amountOutA.Add(gainA)
 
 		// res
-		logctx.Info(ctx, fmt.Sprintf("append FilledOrder gainA: %s", gainA.String()))
-		logctx.Info(ctx, fmt.Sprintf("append FilledOrder spendB: %s", spendB.String()))
-		fillOrders = append(fillOrders, models.FilledOrder{OrderId: order.Id, Amount: gainA})
+		logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
+		logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
+		frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: gainA})
 	}
 	// not all is Spent - error
 	if amountInB.IsPositive() {
 		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
 		return models.AmountOut{}, models.ErrInsufficientLiquity
 	}
-	logctx.Info(ctx, fmt.Sprintf("append FilledOrder amountOutA: %s", amountOutA.String()))
-	return models.AmountOut{AmountOut: amountOutA, FillOrders: fillOrders}, nil
+	logctx.Info(ctx, fmt.Sprintf("append OrderFrag amountOutA: %s", amountOutA.String()))
+	return models.AmountOut{AmountOut: amountOutA, OrderFrags: frags}, nil
 }
 
 // PAIR/SYMBOL A-B (ETH-USDC)
@@ -80,7 +80,7 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 func getAmountOutInBToken(ctx context.Context, it models.OrderIter, amountInA decimal.Decimal) (models.AmountOut, error) {
 	amountOutB := decimal.NewFromInt(0)
 	var order *models.Order
-	var fillOrders []models.FilledOrder
+	var frags []models.OrderFrag
 	for it.HasNext() && amountInA.IsPositive() {
 		order = it.Next(ctx)
 
@@ -97,14 +97,14 @@ func getAmountOutInBToken(ctx context.Context, it models.OrderIter, amountInA de
 		amountOutB = amountOutB.Add(gainB)
 
 		// res
-		logctx.Info(ctx, fmt.Sprintf("append FilledOrder spendA: %s", spendA.String()))
-		logctx.Info(ctx, fmt.Sprintf("append FilledOrder gainB: %s", gainB.String()))
-		fillOrders = append(fillOrders, models.FilledOrder{OrderId: order.Id, Amount: spendA})
+		logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendA: %s", spendA.String()))
+		logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainB: %s", gainB.String()))
+		frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: spendA})
 	}
 	if amountInA.IsPositive() {
 		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
 		return models.AmountOut{}, models.ErrInsufficientLiquity
 	}
-	logctx.Info(ctx, fmt.Sprintf("append FilledOrder amountOutB: %s", amountOutB.String()))
-	return models.AmountOut{AmountOut: amountOutB, FillOrders: fillOrders}, nil
+	logctx.Info(ctx, fmt.Sprintf("append OrderFrag amountOutB: %s", amountOutB.String()))
+	return models.AmountOut{AmountOut: amountOutB, OrderFrags: frags}, nil
 }

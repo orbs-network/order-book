@@ -5,20 +5,29 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/service"
 	"github.com/shopspring/decimal"
 )
 
 // Mock store methods for service layer testing
 type MockOrderBookStore struct {
-	Error        error
-	Order        *models.Order
-	Orders       []models.Order
-	MarketDepth  models.MarketDepth
-	OrderIter    models.OrderIter
-	FilledOrders []models.FilledOrder
+	Error       error
+	Order       *models.Order
+	Orders      []models.Order
+	MarketDepth models.MarketDepth
+	OrderIter   models.OrderIter
+	frags       []models.OrderFrag
+}
+
+func (m *MockOrderBookStore) GetStore() service.OrderBookStore {
+	return nil
 }
 
 func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) StoreOrders(ctx context.Context, orders []*models.Order) error {
 	return m.Error
 }
 
@@ -54,6 +63,10 @@ func (m *MockOrderBookStore) GetMarketDepth(ctx context.Context, symbol models.S
 	return m.MarketDepth, nil
 }
 
+func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error {
+	return m.Error
+}
+
 func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
 	if m.Error != nil {
 		return nil, 0, m.Error
@@ -61,15 +74,15 @@ func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.U
 	return m.Orders, len(m.Orders), nil
 }
 
-func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UUID, fillOrders []models.FilledOrder) error {
-	return m.Error
-}
-
-func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.FilledOrder, error) {
+func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
-	return m.FilledOrders, nil
+	return m.frags, nil
+}
+
+func (m *MockOrderBookStore) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {
+	return nil
 }
 
 func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {

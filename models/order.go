@@ -9,30 +9,34 @@ import (
 )
 
 type Order struct {
-	Id        uuid.UUID       `json:"orderId"`
-	ClientOId uuid.UUID       `json:"clientOrderId"`
-	UserId    uuid.UUID       `json:"userId"`
-	Price     decimal.Decimal `json:"price"`
-	Symbol    Symbol          `json:"symbol"`
-	Size      decimal.Decimal `json:"size"`
-	Signature string          `json:"-" ` // EIP 712
-	Status    Status          `json:"-"`  // when order is pending, it should not be updateable
-	Side      Side            `json:"side"`
-	Timestamp time.Time       `json:"timestamp"`
+	Id          uuid.UUID       `json:"orderId"`
+	ClientOId   uuid.UUID       `json:"clientOrderId"`
+	UserId      uuid.UUID       `json:"userId"`
+	Price       decimal.Decimal `json:"price"`
+	Symbol      Symbol          `json:"symbol"`
+	Size        decimal.Decimal `json:"size"`
+	SizePending decimal.Decimal `json:"sizePending"`
+	SizeFilled  decimal.Decimal `json:"sizeFilled"`
+	Signature   string          `json:"-" ` // EIP 712
+	Status      Status          `json:"-"`  // when order is pending, it should not be updateable
+	Side        Side            `json:"side"`
+	Timestamp   time.Time       `json:"timestamp"`
 }
 
 func (o *Order) OrderToMap() map[string]string {
 	return map[string]string{
-		"id":        o.Id.String(),
-		"clientOId": o.ClientOId.String(),
-		"userId":    o.UserId.String(),
-		"price":     o.Price.String(),
-		"symbol":    o.Symbol.String(),
-		"size":      o.Size.String(),
-		"signature": o.Signature,
-		"status":    o.Status.String(),
-		"side":      o.Side.String(),
-		"timestamp": o.Timestamp.Format(time.RFC3339),
+		"id":          o.Id.String(),
+		"clientOId":   o.ClientOId.String(),
+		"userId":      o.UserId.String(),
+		"price":       o.Price.String(),
+		"symbol":      o.Symbol.String(),
+		"size":        o.Size.String(),
+		"sizePending": o.SizePending.String(),
+		"sizeFilled":  o.SizeFilled.String(),
+		"signature":   o.Signature,
+		"status":      o.Status.String(),
+		"side":        o.Side.String(),
+		"timestamp":   o.Timestamp.Format(time.RFC3339),
 	}
 }
 

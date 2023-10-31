@@ -36,7 +36,8 @@ func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) e
 
 	// update order status to CANCELED
 	orderIDKey := CreateOrderIDKey(order.Id)
-	transaction.HSet(ctx, orderIDKey, "status", models.STATUS_CANCELLED.String())
+	//remove order instead
+	transaction.Del(ctx, orderIDKey)
 
 	_, err := transaction.Exec(ctx)
 

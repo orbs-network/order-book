@@ -19,6 +19,13 @@ type AmountOutRequest struct {
 	Side      string `json:"side"`
 }
 
+type AmountOutResponse struct {
+	AuctionId string `json:"auctionId"`
+	// AmountIn  string `json:"amountIn"`
+	// Symbol    string `json:"symbol"`
+	// Side      string `json:"side"`
+}
+
 func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 
 	var args AmountOutRequest
@@ -72,8 +79,4 @@ func (h *Handler) amountOut(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
 		return
 	}
-
-}
-
-func (h *Handler) approveOrders(w http.ResponseWriter, r *http.Request) {
 }

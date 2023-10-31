@@ -10,27 +10,31 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func (r *redisRepository) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.FilledOrder, error) {
+func (r *redisRepository) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error) {
 	auctionKey := CreateAuctionKey(auctionID)
 
 	auctionJsons, err := r.client.LRange(ctx, auctionKey, 0, -1).Result()
 	if err != nil {
 		logctx.Error(ctx, "failed to get auction", logger.String("auctionID", auctionID.String()), logger.Error(err))
-		return []models.FilledOrder{}, models.ErrUnexpectedError
+		return []models.OrderFrag{}, models.ErrUnexpectedError
 	}
 
-	var allFilledOrders []models.FilledOrder
+	var frags []models.OrderFrag
 
 	for _, auctionJson := range auctionJsons {
-		var orders []models.FilledOrder
+		var orders []models.OrderFrag
 		err := json.Unmarshal([]byte(auctionJson), &orders)
 		if err != nil {
 			logctx.Error(ctx, "failed to unmarshal auction", logger.String("auctionID", auctionID.String()), logger.Error(err))
-			return []models.FilledOrder{}, models.ErrMarshalError
+			return []models.OrderFrag{}, models.ErrMarshalError
 		}
-		allFilledOrders = append(allFilledOrders, orders...)
+		frags = append(frags, orders...)
 	}
 
 	logctx.Info(ctx, "got auction", logger.String("auctionID", auctionID.String()))
-	return allFilledOrders, nil
+	return frags, nil
+}
+
+func (r *redisRepository) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {
+	return nil
 }
