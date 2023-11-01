@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -104,17 +103,9 @@ func TestService_ConfirmAuction(t *testing.T) {
 		for i := 1; i < len(res.Orders); i++ {
 			order := res.Orders[i]
 			frag := res.Fragments[i]
-
-			fmt.Println(i)
-			fmt.Println(frag.OrderId.String())
-			fmt.Println(order.Id.String())
 			assert.Equal(t, frag.OrderId.String(), order.Id.String())
-			//assert.Equal(t, frag.Size, order.SizePending)
+			assert.Equal(t, frag.Size, order.SizePending)
 		}
-
-		// t.Log(res)
-		//assert.Equal(res, res, nil)
-		// assert.Equal(t, res.AmountOut.String(), decimal.NewFromFloat(1+2+3).String())
 	})
 
 }
