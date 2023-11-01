@@ -76,17 +76,10 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 			// success- append
 			res.Orders = append(res.Orders, *order)
 			res.Fragments = append(res.Fragments, frag)
-			fmt.Println(i, "sz: ", res.Orders[i].Size)
-			fmt.Println(i, "or: ", res.Orders[i].Id.String())
-			fmt.Println(i, "fr: ", res.Fragments[i].OrderId.String())
 		}
 	}
 	// set order order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
-		fmt.Println(i, "sz: ", res.Orders[i].Size)
-		fmt.Println(i, "or: ", res.Orders[i].Id.String())
-		fmt.Println(i, "fr: ", res.Fragments[i].OrderId.String())
-
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
 		res.Orders[i].SizePending = res.Fragments[i].Size
 	}
