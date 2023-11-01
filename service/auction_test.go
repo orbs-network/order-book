@@ -106,6 +106,12 @@ func TestService_ConfirmAuction(t *testing.T) {
 			assert.Equal(t, frag.OrderId.String(), order.Id.String())
 			assert.Equal(t, frag.Size, order.SizePending)
 		}
+
+		// make sure last fraf size is not equal to size
+		last := len(res.Orders) - 1
+		order := res.Orders[last]
+		frag := res.Fragments[last]
+		assert.NotEqual(t, frag.Size, order.Size)
 	})
 
 }
