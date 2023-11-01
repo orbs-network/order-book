@@ -12,6 +12,8 @@ import (
 )
 
 type OrderBookStore interface {
+	// Generic
+	AddVal2Set(ctx context.Context, key, val string) error
 	// MM side
 	StoreOrder(ctx context.Context, order models.Order) error
 	StoreOrders(ctx context.Context, orders []models.Order) error

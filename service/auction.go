@@ -10,6 +10,11 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
+const (
+	ConfirmedAuctions = "confirmed-auctions"
+	MinedAuctions     = "mined-auctions"
+)
+
 // orderID->amount bought or sold in A token always
 
 type ConfirmAuctionRes struct {
@@ -39,7 +44,17 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 }
 
 func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error) {
-	// TODO: re-entrance validate it doesnt already confirmed
+	// returns error if already confirmed
+	err := s.GetStore().AddVal2Set(ctx, ConfirmedAuctions, auctionId.String())
+
+	if err != nil {
+		if err == models.ErrValAlreadyInSet {
+			logctx.Warn(ctx, "ConfirmAuction re-entry!", logger.String("auctionID: ", auctionId.String()))
+		} else {
+			logctx.Warn(ctx, "ConfirmAuction AddVal2Set Failed", logger.String("auctionID: ", auctionId.String()), logger.Error(err))
+		}
+		return ConfirmAuctionRes{}, err
+	}
 
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
@@ -51,7 +66,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	res := ConfirmAuctionRes{}
 
 	// validate all orders of auction
-	for i, frag := range frags {
+	for _, frag := range frags {
 		// get order by ID
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		if err != nil {
@@ -132,7 +147,16 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 }
 
 func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
-	// TODO: re-entrance validate it doesnt already confirmed
+	// returns error if already confirmed
+	err := s.GetStore().AddVal2Set(ctx, MinedAuctions, auctionId.String())
+	if err != nil {
+		if err == models.ErrValAlreadyInSet {
+			logctx.Warn(ctx, "AuctionMined re-entry!", logger.String("auctionID: ", auctionId.String()))
+		} else {
+			logctx.Warn(ctx, "AuctionMined AddVal2Set Failed", logger.String("auctionID: ", auctionId.String()), logger.Error(err))
+		}
+		return err
+	}
 
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)

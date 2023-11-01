@@ -113,3 +113,7 @@ func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol
 func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
 	return m.OrderIter
 }
+
+func (r *MockOrderBookStore) AddVal2Set(ctx context.Context, key, val string) error {
+	return nil
+}
