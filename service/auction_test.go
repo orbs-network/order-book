@@ -114,4 +114,29 @@ func TestService_ConfirmAuction(t *testing.T) {
 		assert.NotEqual(t, frag.Size, order.Size)
 	})
 
+	t.Run("RevertAuction HappyPath", func(t *testing.T) {
+		uuid, _ := uuid.NewUUID()
+		mock := createAuctionMock()
+		svc, _ := service.New(mock)
+		res, err := svc.ConfirmAuction(ctx, uuid)
+		assert.NoError(t, err)
+
+		// all orders have pending size - no greater than the order itself
+
+		for _, order := range res.Orders {
+			assert.True(t, order.Size.GreaterThanOrEqual(order.SizePending))
+			assert.True(t, order.SizePending.GreaterThan(decimal.Zero))
+		}
+
+		err = svc.RevertAuction(ctx, uuid)
+		assert.NoError(t, err)
+
+		// all orders should not have pending size
+		for _, order := range res.Orders {
+			updatedOrder, err := svc.GetStore().FindOrderById(ctx, order.Id, false)
+			assert.NoError(t, err)
+			assert.True(t, updatedOrder.SizePending.Equal(decimal.Zero))
+		}
+	})
+
 }
