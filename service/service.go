@@ -14,7 +14,7 @@ import (
 type OrderBookStore interface {
 	// MM side
 	StoreOrder(ctx context.Context, order models.Order) error
-	StoreOrders(ctx context.Context, orders []*models.Order) error
+	StoreOrders(ctx context.Context, orders []models.Order) error
 	RemoveOrder(ctx context.Context, order models.Order) error
 	FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error)
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)

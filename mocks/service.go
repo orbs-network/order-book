@@ -16,7 +16,10 @@ type MockOrderBookStore struct {
 	Orders      []models.Order
 	MarketDepth models.MarketDepth
 	OrderIter   models.OrderIter
-	frags       []models.OrderFrag
+	// auction
+	Asks  []*models.Order
+	Bids  []*models.Order
+	Frags []models.OrderFrag
 }
 
 func (m *MockOrderBookStore) GetStore() service.OrderBookStore {
@@ -27,7 +30,7 @@ func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order)
 	return m.Error
 }
 
-func (m *MockOrderBookStore) StoreOrders(ctx context.Context, orders []*models.Order) error {
+func (m *MockOrderBookStore) StoreOrders(ctx context.Context, orders []models.Order) error {
 	return m.Error
 }
 
@@ -35,9 +38,27 @@ func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order
 	return m.Error
 }
 
+func findOrder(orders []*models.Order, id uuid.UUID) *models.Order {
+	for _, order := range orders {
+		if order.Id == id {
+			return order
+		}
+	}
+	return nil
+}
 func (m *MockOrderBookStore) FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error) {
 	if m.Error != nil {
 		return nil, m.Error
+	}
+
+	order := findOrder(m.Asks, id)
+	if order != nil {
+		return order, nil
+	}
+
+	order = findOrder(m.Bids, id)
+	if order != nil {
+		return order, nil
 	}
 	return m.Order, nil
 }
@@ -78,7 +99,7 @@ func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID
 	if m.Error != nil {
 		return nil, m.Error
 	}
-	return m.frags, nil
+	return m.Frags, nil
 }
 
 func (m *MockOrderBookStore) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {

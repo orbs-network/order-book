@@ -98,19 +98,19 @@ func (h *Handler) abortAuction(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) removeAuction(w http.ResponseWriter, r *http.Request) {
-	auctionId := handleAuctionId(w, r)
-	if auctionId == nil {
-		return
-	}
-	ctx := r.Context()
-	err := h.svc.GetStore().RemoveAuction(ctx, *auctionId)
-	if err != nil {
-		logctx.Error(ctx, "failed to RemoveAuction", logger.Error(err))
-		http.Error(w, "Error RemoveAuction", http.StatusInternalServerError)
-		return
-	}
-}
+// func (h *Handler) removeAuction(w http.ResponseWriter, r *http.Request) {
+// 	auctionId := handleAuctionId(w, r)
+// 	if auctionId == nil {
+// 		return
+// 	}
+// 	ctx := r.Context()
+// 	err := h.svc.GetStore().RemoveAuction(ctx, *auctionId)
+// 	if err != nil {
+// 		logctx.Error(ctx, "failed to RemoveAuction", logger.Error(err))
+// 		http.Error(w, "Error RemoveAuction", http.StatusInternalServerError)
+// 		return
+// 	}
+// }
 
 func (h *Handler) auctionMined(w http.ResponseWriter, r *http.Request) {
 

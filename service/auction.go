@@ -13,8 +13,8 @@ import (
 // orderID->amount bought or sold in A token always
 
 type ConfirmAuctionRes struct {
-	Orders        []*models.Order
-	Fragments     []*models.OrderFrag
+	Orders        []models.Order
+	Fragments     []models.OrderFrag
 	BookSignature []byte
 }
 
@@ -51,7 +51,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 	res := ConfirmAuctionRes{}
 
 	// validate all orders of auction
-	for _, frag := range frags {
+	for i, frag := range frags {
 		// get order by ID
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		if err != nil {
@@ -74,12 +74,19 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 			return ConfirmAuctionRes{}, models.ErrAuctionInvalid
 		} else {
 			// success- append
-			res.Orders = append(res.Orders, order)
-			res.Fragments = append(res.Fragments, &frag)
+			res.Orders = append(res.Orders, *order)
+			res.Fragments = append(res.Fragments, frag)
+			fmt.Println(i, "sz: ", res.Orders[i].Size)
+			fmt.Println(i, "or: ", res.Orders[i].Id.String())
+			fmt.Println(i, "fr: ", res.Fragments[i].OrderId.String())
 		}
 	}
 	// set order order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
+		fmt.Println(i, "sz: ", res.Orders[i].Size)
+		fmt.Println(i, "or: ", res.Orders[i].Id.String())
+		fmt.Println(i, "fr: ", res.Fragments[i].OrderId.String())
+
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
 		res.Orders[i].SizePending = res.Fragments[i].Size
 	}
@@ -105,7 +112,7 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 		return err
 	}
 
-	orders := []*models.Order{}
+	orders := []models.Order{}
 	// validate all pending orders fragments of auction
 	for _, frag := range frags {
 		// get order by ID
@@ -118,7 +125,7 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 		} else {
 			// success
 			order.SizePending.Sub(frag.Size)
-			orders = append(orders, order)
+			orders = append(orders, *order)
 		}
 	}
 	// store orders
@@ -140,7 +147,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 		logctx.Warn(ctx, "GetAuction Failed", logger.Error(err))
 		return err
 	}
-	var filledOrders []*models.Order
+	var filledOrders []models.Order
 
 	// validate all pending orders fragments of auction
 	for _, frag := range frags {
@@ -173,7 +180,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 			order.SizeFilled.Add(frag.Size)
 
 			// success - mark as filled
-			filledOrders = append(filledOrders, order)
+			filledOrders = append(filledOrders, *order)
 		}
 	}
 
@@ -186,5 +193,4 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	}
 
 	return s.orderBookStore.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
-
 }

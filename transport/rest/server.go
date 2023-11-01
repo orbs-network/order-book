@@ -45,8 +45,13 @@ func (h *Handler) Listen() {
 	lhApi.HandleFunc("/quote", h.amountOut).Methods("GET")
 	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("POST")
 	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("POST")
-	lhApi.HandleFunc("/remove_auction/{auctionId}", h.removeAuction).Methods("DELETE")
 	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("POST")
+
+	// unified
+	// lhApi.HandleFunc("/auction/{auctionId}", h.amountOut).Methods("GET")    // amountOut
+	// lhApi.HandleFunc("/auction/{auctionId}", h.amountOut).Methods("DELETE") // abort
+	// lhApi.HandleFunc("/auction/{auctionId}", h.amountOut).Methods("POST")   // confirm
+	// lhApi.HandleFunc("/auction/{auctionId}", h.amountOut).Methods("PUT")    // mined
 
 	// LISTEN
 	logctx.Info(context.TODO(), "starting server", logger.String("port", "8080"))
