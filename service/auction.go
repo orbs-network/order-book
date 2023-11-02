@@ -30,8 +30,7 @@ func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 		return false
 	}
 	// order.size - (Order.filled + prder.pending) >= frag.size
-	orderLockedSum := order.SizeFilled.Sub(order.SizePending)
-	return order.Size.Sub(orderLockedSum).GreaterThanOrEqual(frag.Size)
+	return order.GetAvailableSize().GreaterThanOrEqual(frag.Size)
 }
 
 func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
@@ -188,7 +187,6 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 				logctx.Error(ctx, err.Error())
 			}
 			logctx.Error(ctx, "Auction fragments should be valid after pending to be mined", logger.Error(err))
-
 			logctx.Error(ctx, fmt.Sprintf("validatePendingFrag failed. PendingSize: %s FragSize:%s", order.SizePending.String(), frag.Size.String()))
 			return models.ErrAuctionInvalid
 		} else {

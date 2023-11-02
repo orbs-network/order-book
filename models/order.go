@@ -153,3 +153,8 @@ func (o *Order) MapToOrder(data map[string]string) error {
 
 	return nil
 }
+
+func (o *Order) GetAvailableSize() decimal.Decimal {
+	used := o.SizePending.Add(o.SizeFilled)
+	return o.Size.Sub(used)
+}

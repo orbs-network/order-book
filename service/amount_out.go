@@ -48,7 +48,7 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 	for it.HasNext() && amountInB.IsPositive() {
 		order = it.Next(ctx)
 		// max Spend in B token  for this order
-		orderSizeB := order.Price.Mul(order.Size)
+		orderSizeB := order.Price.Mul(order.GetAvailableSize())
 		// spend the min of orderSizeB/amountInB
 		spendB := decimal.Min(orderSizeB, amountInB)
 
@@ -85,7 +85,7 @@ func getAmountOutInBToken(ctx context.Context, it models.OrderIter, amountInA de
 		order = it.Next(ctx)
 
 		// Spend
-		spendA := decimal.Min(order.Size, amountInA)
+		spendA := decimal.Min(order.GetAvailableSize(), amountInA)
 		fmt.Println("sizeA ", spendA.String())
 
 		// Gain

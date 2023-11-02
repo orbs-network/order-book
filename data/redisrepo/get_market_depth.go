@@ -43,7 +43,7 @@ func (r *redisRepository) GetMarketDepth(ctx context.Context, symbol models.Symb
 				logctx.Error(ctx, "Error fetching order", logger.Error(err))
 				continue
 			}
-			marketDepth.Asks = append(marketDepth.Asks, []decimal.Decimal{order.Price, order.Size})
+			marketDepth.Asks = append(marketDepth.Asks, []decimal.Decimal{order.Price, order.GetAvailableSize()})
 		}
 		errChan <- nil
 	}()
@@ -69,7 +69,7 @@ func (r *redisRepository) GetMarketDepth(ctx context.Context, symbol models.Symb
 				logctx.Error(ctx, "Error fetching order", logger.Error(err))
 				continue
 			}
-			marketDepth.Bids = append(marketDepth.Bids, []decimal.Decimal{order.Price, order.Size})
+			marketDepth.Bids = append(marketDepth.Bids, []decimal.Decimal{order.Price, order.GetAvailableSize()})
 		}
 		errChan <- nil
 	}()
