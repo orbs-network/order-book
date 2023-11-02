@@ -44,3 +44,8 @@ func New(store OrderBookStore) (*Service, error) {
 
 	return &Service{orderBookStore: store}, nil
 }
+
+// getters
+func (s *Service) GetStore() OrderBookStore {
+	return s.orderBookStore
+}
