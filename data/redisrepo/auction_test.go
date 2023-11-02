@@ -59,6 +59,6 @@ func TestRedisRepository_GetAuction(t *testing.T) {
 	})
 }
 
-// func TestRedisRepository_RemoveAuction(t *testing.T) {
+func TestRedisRepository_RemoveAuction(t *testing.T) {
 
-// }
+}
