@@ -35,9 +35,9 @@ import (
 // 	return &i.orders[i.index]
 // }
 
-func newOrder(price, size int64) *models.Order {
+func newOrder(price, size int64) models.Order {
 	oid, _ := uuid.NewUUID()
-	return &models.Order{
+	return models.Order{
 		Id:     oid,
 		Price:  decimal.NewFromInt(price),
 		Size:   decimal.NewFromInt(size),
@@ -45,22 +45,22 @@ func newOrder(price, size int64) *models.Order {
 	}
 }
 
-func newAsks() []*models.Order {
-	return []*models.Order{
+func newAsks() []models.Order {
+	return []models.Order{
 		newOrder(1000, 1),
 		newOrder(1001, 2),
 		newOrder(1002, 3),
 	}
 }
-func newBids() []*models.Order {
-	return []*models.Order{
+func newBids() []models.Order {
+	return []models.Order{
 		newOrder(900, 1),
 		newOrder(800, 2),
 		newOrder(700, 3),
 	}
 }
 
-func newFrags(orders []*models.Order) []models.OrderFrag {
+func newFrags(orders []models.Order) []models.OrderFrag {
 	frags := []models.OrderFrag{}
 	// create frag of all input orders except last one, which is only half filled
 	for i, order := range orders {
@@ -113,12 +113,15 @@ func TestService_ConfirmAuction(t *testing.T) {
 		frag := res.Fragments[last]
 		assert.NotEqual(t, frag.Size, order.Size)
 	})
+}
+func TestService_RevertAuction(t *testing.T) {
+	ctx := context.Background()
 
 	t.Run("RevertAuction HappyPath", func(t *testing.T) {
-		uuid, _ := uuid.NewUUID()
+		auctionId, _ := uuid.NewUUID()
 		mock := createAuctionMock()
 		svc, _ := service.New(mock)
-		res, err := svc.ConfirmAuction(ctx, uuid)
+		res, err := svc.ConfirmAuction(ctx, auctionId)
 		assert.NoError(t, err)
 
 		// all orders have pending size - no greater than the order itself
@@ -128,7 +131,30 @@ func TestService_ConfirmAuction(t *testing.T) {
 			assert.True(t, order.SizePending.GreaterThan(decimal.Zero))
 		}
 
-		err = svc.RevertAuction(ctx, uuid)
+		err = svc.RevertAuction(ctx, auctionId)
+		assert.NoError(t, err)
+
+		// all orders should not have pending size
+		for _, order := range res.Orders {
+			updatedOrder, err := svc.GetStore().FindOrderById(ctx, order.Id, false)
+			assert.NoError(t, err)
+			assert.True(t, updatedOrder.SizePending.Equal(decimal.Zero))
+		}
+	})
+}
+func TestService_AuctionMined(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("AuctionMined HappyPath", func(t *testing.T) {
+		auctionId, _ := uuid.NewUUID()
+		// creates the auction
+		mock := createAuctionMock()
+		svc, _ := service.New(mock)
+		// confirm
+		res, err := svc.ConfirmAuction(ctx, auctionId)
+		assert.NoError(t, err)
+		// mined
+		err = svc.AuctionMined(ctx, auctionId)
 		assert.NoError(t, err)
 
 		// all orders should not have pending size

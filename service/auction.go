@@ -172,7 +172,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		if err != nil {
 			logctx.Error(ctx, err.Error())
-			logctx.Error(ctx, "Auction fragment's order should not be removed during pending to be mined", logger.Error(err))
+			logctx.Error(ctx, "Auction fragment's order should not be removed if is pending to be mined", logger.Error(err))
 
 			// cancel auction
 			err = s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
@@ -200,14 +200,23 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 			filledOrders = append(filledOrders, *order)
 		}
 	}
+	// only if all reags successfully filled - continue
+	// close completely filled orders
+	for _, order := range filledOrders {
+		if order.Size.Equal(order.SizeFilled) {
+			order.Status = models.STATUS_FILLED
+			logctx.Info(ctx, fmt.Sprintf("order is completely filled %s", order.Id.String()))
+		}
+	}
 
 	// store orders
-	// TODO: close completely filled orders
 	err = s.orderBookStore.StoreOrders(ctx, filledOrders)
 	if err != nil {
 		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
 		return err
 	}
+
+	// TODO: remove filled orders
 
 	return s.orderBookStore.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
 }

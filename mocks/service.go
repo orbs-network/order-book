@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -17,8 +18,8 @@ type MockOrderBookStore struct {
 	MarketDepth models.MarketDepth
 	OrderIter   models.OrderIter
 	// auction
-	Asks  []*models.Order
-	Bids  []*models.Order
+	Asks  []models.Order
+	Bids  []models.Order
 	Frags []models.OrderFrag
 }
 
@@ -27,10 +28,27 @@ func (m *MockOrderBookStore) GetStore() service.OrderBookStore {
 }
 
 func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order) error {
+
+	source, err := m.FindOrderById(ctx, order.Id, false)
+	if err != nil {
+		return err
+	}
+
+	source.SizePending = order.SizePending
+	*source = order
+	fmt.Printf("order address: %v", source)
+
 	return m.Error
 }
 
 func (m *MockOrderBookStore) StoreOrders(ctx context.Context, orders []models.Order) error {
+	// update the orders
+	for _, order := range orders {
+		err := m.StoreOrder(ctx, order)
+		if err != nil {
+			return err
+		}
+	}
 	return m.Error
 }
 
@@ -38,10 +56,10 @@ func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order
 	return m.Error
 }
 
-func findOrder(orders []*models.Order, id uuid.UUID) *models.Order {
+func findOrder(orders []models.Order, id uuid.UUID) *models.Order {
 	for _, order := range orders {
 		if order.Id == id {
-			return order
+			return &order
 		}
 	}
 	return nil
@@ -85,7 +103,12 @@ func (m *MockOrderBookStore) GetMarketDepth(ctx context.Context, symbol models.S
 }
 
 func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error {
-	return m.Error
+	if m.Error != nil {
+		return m.Error
+	}
+	// save auction
+	m.Frags = frags
+	return nil
 }
 
 func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
