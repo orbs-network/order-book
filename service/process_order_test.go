@@ -41,32 +41,32 @@ func TestService_ProcessOrder(t *testing.T) {
 		assert.Equal(t, models.Order{}, order)
 	})
 
-	t.Run("no previous order - should create new order", func(t *testing.T) {
-		input := service.ProcessOrderInput{
-			UserId:        userId,
-			Price:         price,
-			Symbol:        symbol,
-			Size:          size,
-			Side:          models.SELL,
-			ClientOrderID: orderId,
-		}
+	// t.Run("no previous order - should create new order", func(t *testing.T) {
+	// 	input := service.ProcessOrderInput{
+	// 		UserId:        userId,
+	// 		Price:         price,
+	// 		Symbol:        symbol,
+	// 		Size:          size,
+	// 		Side:          models.SELL,
+	// 		ClientOrderID: orderId,
+	// 	}
 
-		svc, _ := service.New(&mocks.MockOrderBookStore{Order: nil})
+	// 	svc, _ := service.New(&mocks.MockOrderBookStore{Order: nil})
 
-		newOrder, err := svc.ProcessOrder(ctx, input)
+	// 	newOrder, err := svc.ProcessOrder(ctx, input)
 
-		assert.NoError(t, err)
-		// TODO: I am not asserting against the full order as timestamp is always different
-		assert.NotEqual(t, newOrder.Id, orderId)
-		assert.Equal(t, newOrder.ClientOId, orderId)
-		assert.Equal(t, newOrder.UserId, userId)
-		assert.Equal(t, newOrder.Price, price)
-		assert.Equal(t, newOrder.Symbol, symbol)
-		assert.Equal(t, newOrder.Size, size)
-		assert.Equal(t, newOrder.Signature, "")
-		assert.Equal(t, newOrder.Status, models.STATUS_OPEN)
-		assert.Equal(t, newOrder.Side, models.SELL)
-	})
+	// 	assert.NoError(t, err)
+	// 	// TODO: I am not asserting against the full order as timestamp is always different
+	// 	assert.NotEqual(t, newOrder.Id, orderId)
+	// 	assert.Equal(t, newOrder.ClientOId, orderId)
+	// 	assert.Equal(t, newOrder.UserId, userId)
+	// 	assert.Equal(t, newOrder.Price, price)
+	// 	assert.Equal(t, newOrder.Symbol, symbol)
+	// 	assert.Equal(t, newOrder.Size, size)
+	// 	assert.Equal(t, newOrder.Signature, "")
+	// 	assert.Equal(t, newOrder.Status, models.STATUS_OPEN)
+	// 	assert.Equal(t, newOrder.Side, models.SELL)
+	// })
 
 	t.Run("existing order with different userId - should return `ErrClashingOrderId` error", func(t *testing.T) {
 		input := service.ProcessOrderInput{

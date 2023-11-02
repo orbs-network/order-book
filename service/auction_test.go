@@ -38,10 +38,12 @@ import (
 func newOrder(price, size int64) models.Order {
 	oid, _ := uuid.NewUUID()
 	return models.Order{
-		Id:     oid,
-		Price:  decimal.NewFromInt(price),
-		Size:   decimal.NewFromInt(size),
-		Status: models.STATUS_OPEN,
+		Id:          oid,
+		Price:       decimal.NewFromInt(price),
+		Size:        decimal.NewFromInt(size),
+		SizePending: decimal.Zero,
+		SizeFilled:  decimal.Zero,
+		Status:      models.STATUS_OPEN,
 	}
 }
 

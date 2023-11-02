@@ -131,7 +131,7 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 			logctx.Error(ctx, "Auction fragments should be valid during a revert request", logger.Error(err))
 		} else {
 			// success
-			order.SizePending.Sub(frag.Size)
+			order.SizePending = order.SizePending.Sub(frag.Size)
 			orders = append(orders, *order)
 		}
 	}
@@ -191,8 +191,8 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 			return models.ErrAuctionInvalid
 		} else {
 			// fill fragment in the order
-			order.SizePending.Sub(frag.Size)
-			order.SizeFilled.Add(frag.Size)
+			order.SizePending = order.SizePending.Sub(frag.Size)
+			order.SizeFilled = order.SizeFilled.Add(frag.Size)
 
 			// success - mark as filled
 			filledOrders = append(filledOrders, *order)

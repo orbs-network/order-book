@@ -75,6 +75,16 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("no size provided")
 	}
 
+	sizePendingStr, exists := data["sizePending"]
+	if !exists {
+		return fmt.Errorf("no sizePending provided")
+	}
+
+	sizeFilledStr, exists := data["sizeFilled"]
+	if !exists {
+		return fmt.Errorf("no sizeFilled provided")
+	}
+
 	signatureStr, exists := data["signature"]
 	if !exists {
 		return fmt.Errorf("no signature provided")
@@ -120,6 +130,16 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("invalid size: %v", err)
 	}
 
+	sizePending, err := decimal.NewFromString(sizePendingStr)
+	if err != nil {
+		return fmt.Errorf("invalid sizePending: %v", err)
+	}
+
+	sizeFilled, err := decimal.NewFromString(sizeFilledStr)
+	if err != nil {
+		return fmt.Errorf("invalid sizeFilled: %v", err)
+	}
+
 	symbol, err := StrToSymbol(symbolStr)
 	if err != nil {
 		return err
@@ -146,6 +166,8 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	o.Price = price
 	o.Symbol = symbol
 	o.Size = size
+	o.SizePending = sizePending
+	o.SizeFilled = sizeFilled
 	o.Signature = signatureStr
 	o.Status = status
 	o.Side = side

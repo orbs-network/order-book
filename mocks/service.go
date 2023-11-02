@@ -34,9 +34,8 @@ func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order)
 		return err
 	}
 
-	source.SizePending = order.SizePending
+	//source.SizePending = order.SizePending
 	*source = order
-	fmt.Printf("order address: %v", source)
 
 	return m.Error
 }
@@ -57,9 +56,12 @@ func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order
 }
 
 func findOrder(orders []models.Order, id uuid.UUID) *models.Order {
-	for _, order := range orders {
-		if order.Id == id {
-			return &order
+	//for i, order := range *orders {
+	for i := 0; i < len(orders); i++ { // := range *orders {
+		if orders[i].Id == id {
+			res := &orders[i]
+			fmt.Printf("Address of Order %v", res)
+			return res
 		}
 	}
 	return nil
@@ -78,6 +80,15 @@ func (m *MockOrderBookStore) FindOrderById(ctx context.Context, id uuid.UUID, is
 	if order != nil {
 		return order, nil
 	}
+
+	order = findOrder(m.Orders, id)
+	if order != nil {
+		return order, nil
+	}
+	if m.Order == nil {
+		return nil, models.ErrOrderNotFound
+	}
+
 	return m.Order, nil
 }
 
