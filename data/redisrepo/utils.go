@@ -48,7 +48,6 @@ func (r *redisRepository) AddVal2Set(ctx context.Context, key, val string) error
 		return err
 	}
 	if isMember {
-		logctx.Warn(ctx, err.Error())
 		return models.ErrValAlreadyInSet
 	}
 
