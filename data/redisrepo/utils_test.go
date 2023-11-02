@@ -30,7 +30,7 @@ func TestRedisRepository_Utils(t *testing.T) {
 	t.Run("AddVal2Set  - should set userfail if value already exist", func(t *testing.T) {
 		const val1 = "val1"
 		const val2 = "val2"
-		const key = "test-set"
+		const key = "test:set:a"
 		ctx := context.Background()
 		err := repository.AddVal2Set(ctx, key, val1)
 		assert.NoError(t, err, "should not return error")
