@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
+	"github.com/shopspring/decimal"
 )
 
 //	type FillOrder struct {
@@ -23,6 +26,89 @@ type ConfirmAuctionResponse struct {
 	//FillOrders    []FillOrder `json:"fillOrders"`
 }
 
+type BeginAuctionReq struct {
+	AmountIn string `json:"amountIn"`
+	Symbol   string `json:"symbol"`
+	Side     string `json:"side"`
+}
+
+type BeginAuctionRes struct {
+	AuctionId string `json:"auctionId"`
+	AmountOut string `json:"amountIn"`
+}
+
+func handleAuctionId(w http.ResponseWriter, r *http.Request) *uuid.UUID {
+	vars := mux.Vars(r)
+	auctionId := vars["auctionId"]
+	ctx := r.Context()
+	if auctionId == "" {
+		logctx.Error(ctx, "auctionID is empty")
+		http.Error(w, "auctionId is empty", http.StatusBadRequest)
+		return nil
+	}
+	res, err := uuid.Parse(auctionId)
+	if err != nil {
+		logctx.Error(ctx, fmt.Sprintf("invalid auctionID: %s", auctionId), logger.Error(err))
+		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		return nil
+	}
+	return &res
+
+}
+
+func (h *Handler) beginAuction(w http.ResponseWriter, r *http.Request) {
+
+	auctionId := handleAuctionId(w, r)
+	if auctionId == nil {
+		return
+	}
+
+	var args BeginAuctionReq
+	err := json.NewDecoder(r.Body).Decode(&args)
+	if err != nil {
+		http.Error(w, "invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	symbol, err := models.StrToSymbol(args.Symbol)
+	if err != nil {
+		http.Error(w, "'symbol' is not a valid", http.StatusBadRequest)
+		return
+	}
+	amountIn, err := decimal.NewFromString(args.AmountIn)
+	if err != nil {
+		http.Error(w, "'size' is not a valid number format", http.StatusBadRequest)
+		return
+	}
+
+	side, err := models.StrToSide(strings.ToLower(args.Side))
+	if err != nil {
+		http.Error(w, "'side' is not a valid", http.StatusBadRequest)
+		return
+	}
+
+	amountOutRes, err := h.svc.GetAmountOut(r.Context(), *auctionId, symbol, side, amountIn)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	resp, err := json.Marshal(amountOutRes)
+	if err != nil {
+		logctx.Error(r.Context(), "failed to marshal amountOutRes", logger.Error(err))
+		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write(resp)
+	if err != nil {
+		logctx.Error(r.Context(), "failed to write amountOutRes response", logger.Error(err))
+		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		return
+	}
+}
 func (h *Handler) confirmAuction(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
@@ -63,25 +149,6 @@ func (h *Handler) confirmAuction(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
 		return
 	}
-}
-
-func handleAuctionId(w http.ResponseWriter, r *http.Request) *uuid.UUID {
-	vars := mux.Vars(r)
-	auctionId := vars["auctionId"]
-	ctx := r.Context()
-	if auctionId == "" {
-		logctx.Error(ctx, "auctionID is empty")
-		http.Error(w, "auctionId is empty", http.StatusBadRequest)
-		return nil
-	}
-	res, err := uuid.FromBytes([]byte(auctionId))
-	if err != nil {
-		logctx.Error(ctx, fmt.Sprintf("invalid auctionID: %s", auctionId), logger.Error(err))
-		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
-		return nil
-	}
-	return &res
-
 }
 
 func (h *Handler) abortAuction(w http.ResponseWriter, r *http.Request) {

@@ -40,9 +40,9 @@ func (h *Handler) Listen() {
 	api.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
 
 	/////////////////////////////////////////////////////////////////////
-	// LH side
+	// LH Auction side
 	lhApi := h.router.PathPrefix("/lh/v1").Subrouter()
-	lhApi.HandleFunc("/quote", h.amountOut).Methods("GET")
+	lhApi.HandleFunc("/begin_auction/{auctionId}", h.beginAuction).Methods("POST")
 	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("POST")
 	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("POST")
 	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("POST")
