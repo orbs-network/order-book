@@ -206,6 +206,8 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 			logctx.Info(ctx, fmt.Sprintf("order is completely filled %s", order.Id.String()))
 		}
 	}
+	// TODO: remove order from sell/buy side
+	// Add them to "filled" storage - can be done withn StoreOrders()
 
 	// store orders
 	err = s.orderBookStore.StoreOrders(ctx, filledOrders)
