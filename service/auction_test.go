@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/mocks"
-	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
 	"github.com/shopspring/decimal"
 
@@ -35,55 +34,6 @@ import (
 // 	return &i.orders[i.index]
 // }
 
-func newOrder(price, size int64) models.Order {
-	oid, _ := uuid.NewUUID()
-	return models.Order{
-		Id:          oid,
-		Price:       decimal.NewFromInt(price),
-		Size:        decimal.NewFromInt(size),
-		SizePending: decimal.Zero,
-		SizeFilled:  decimal.Zero,
-		Status:      models.STATUS_OPEN,
-	}
-}
-
-func newAsks() []models.Order {
-	return []models.Order{
-		newOrder(1000, 1),
-		newOrder(1001, 2),
-		newOrder(1002, 3),
-	}
-}
-func newBids() []models.Order {
-	return []models.Order{
-		newOrder(900, 1),
-		newOrder(800, 2),
-		newOrder(700, 3),
-	}
-}
-
-func newFrags(orders []models.Order) []models.OrderFrag {
-	frags := []models.OrderFrag{}
-	// create frag of all input orders except last one, which is only half filled
-	for i, order := range orders {
-		sz := order.Size
-		// last element make half size
-		if i == len(orders)-1 {
-			sz = sz.Div(decimal.NewFromInt(2))
-		}
-		frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: sz})
-	}
-	return frags
-}
-
-func createAuctionMock() *mocks.MockOrderBookStore {
-	res := mocks.MockOrderBookStore{Error: nil}
-	res.Asks = newAsks()
-	res.Bids = newBids()
-	res.Frags = newFrags(res.Asks)
-	return &res
-}
-
 // ///////////////////////////////////////////////////////////////
 func TestService_ConfirmAuction(t *testing.T) {
 	ctx := context.Background()
@@ -98,7 +48,7 @@ func TestService_ConfirmAuction(t *testing.T) {
 
 	t.Run("ConfirmAuction HappyPath", func(t *testing.T) {
 		uuid, _ := uuid.NewUUID()
-		mock := createAuctionMock()
+		mock := mocks.CreateAuctionMock()
 		svc, _ := service.New(mock)
 		res, err := svc.ConfirmAuction(ctx, uuid)
 		assert.NoError(t, err)
@@ -121,7 +71,7 @@ func TestService_RevertAuction(t *testing.T) {
 
 	t.Run("RevertAuction HappyPath", func(t *testing.T) {
 		auctionId, _ := uuid.NewUUID()
-		mock := createAuctionMock()
+		mock := mocks.CreateAuctionMock()
 		svc, _ := service.New(mock)
 		res, err := svc.ConfirmAuction(ctx, auctionId)
 		assert.NoError(t, err)
@@ -150,7 +100,7 @@ func TestService_AuctionMined(t *testing.T) {
 	t.Run("AuctionMined HappyPath", func(t *testing.T) {
 		auctionId, _ := uuid.NewUUID()
 		// creates the auction
-		mock := createAuctionMock()
+		mock := mocks.CreateAuctionMock()
 		svc, _ := service.New(mock)
 		// confirm
 		res, err := svc.ConfirmAuction(ctx, auctionId)

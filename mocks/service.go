@@ -141,11 +141,17 @@ func (m *MockOrderBookStore) RemoveAuction(ctx context.Context, auctionID uuid.U
 }
 
 func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {
-	return m.OrderIter
+	return OrderIterMock{
+		orders: m.Asks,
+		index:  -1,
+	}
 }
 
 func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
-	return m.OrderIter
+	return OrderIterMock{
+		orders: m.Bids,
+		index:  -1,
+	}
 }
 
 func (r *MockOrderBookStore) AddVal2Set(ctx context.Context, key, val string) error {
