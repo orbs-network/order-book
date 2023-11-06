@@ -14,16 +14,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-//	type FillOrder struct {
-//		OrderID        string `json:"orderID"`
-//		OrderSignatrue string `json:"orderSignatrue"`
-//		AmountOut      string `json:"amountOut"`
-//		Source         string `json:"source"` // 0xPubKey
-//	}
 type ConfirmAuctionResponse struct {
 	AuctionId     string `json:"auctionId"`
 	BookSignature string `json:"bookSignature"`
-	//FillOrders    []FillOrder `json:"fillOrders"`
 }
 
 type BeginAuctionReq struct {
@@ -94,7 +87,7 @@ func (h *Handler) beginAuction(w http.ResponseWriter, r *http.Request) {
 	}
 	// convert res
 	baRes := BeginAuctionRes{
-		AmountOut: amountOutRes.AmountOut.String(),
+		AmountOut: amountOutRes.Size.String(),
 		AuctionId: auctionId.String(),
 	}
 
