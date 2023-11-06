@@ -34,7 +34,7 @@ type BeginAuctionReq struct {
 
 type BeginAuctionRes struct {
 	AuctionId string `json:"auctionId"`
-	AmountOut string `json:"amountIn"`
+	AmountOut string `json:"amountOut"`
 }
 
 func handleAuctionId(w http.ResponseWriter, r *http.Request) *uuid.UUID {
@@ -92,8 +92,13 @@ func (h *Handler) beginAuction(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	// convert res
+	baRes := BeginAuctionRes{
+		AmountOut: amountOutRes.AmountOut.String(),
+		AuctionId: auctionId.String(),
+	}
 
-	resp, err := json.Marshal(amountOutRes)
+	resp, err := json.Marshal(baRes)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal amountOutRes", logger.Error(err))
 		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
