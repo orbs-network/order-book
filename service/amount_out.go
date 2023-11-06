@@ -57,7 +57,6 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 
 		// sub-add
 		amountInB = amountInB.Sub(spendB)
-		logctx.Info(ctx, "StoreAuction failed")
 		amountOutA = amountOutA.Add(gainA)
 
 		// res
