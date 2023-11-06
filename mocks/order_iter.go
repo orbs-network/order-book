@@ -10,17 +10,13 @@ import (
 type OrderIterMock struct {
 	orders []models.Order
 	index  int
-	// Error          error
-	// Order          *models.Order
-	// ShouldHaveNext bool
 }
 
-func (i OrderIterMock) HasNext() bool {
+func (i *OrderIterMock) HasNext() bool {
 	return i.index < (len(i.orders) - 1)
-
 }
 
-func (i OrderIterMock) Next(ctx context.Context) *models.Order {
+func (i *OrderIterMock) Next(ctx context.Context) *models.Order {
 	if i.index >= len(i.orders) {
 		logctx.Error(ctx, "Error iterator reached last element")
 		return nil
@@ -28,7 +24,6 @@ func (i OrderIterMock) Next(ctx context.Context) *models.Order {
 
 	// increment index
 	i.index = i.index + 1
-	// get order
 
 	return &i.orders[i.index]
 }

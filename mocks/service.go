@@ -141,14 +141,14 @@ func (m *MockOrderBookStore) RemoveAuction(ctx context.Context, auctionID uuid.U
 }
 
 func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {
-	return OrderIterMock{
+	return &OrderIterMock{
 		orders: m.Asks,
 		index:  -1,
 	}
 }
 
 func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
-	return OrderIterMock{
+	return &OrderIterMock{
 		orders: m.Bids,
 		index:  -1,
 	}
