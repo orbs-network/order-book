@@ -2,7 +2,6 @@ package mocks
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -60,7 +59,6 @@ func findOrder(orders []models.Order, id uuid.UUID) *models.Order {
 	for i := 0; i < len(orders); i++ { // := range *orders {
 		if orders[i].Id == id {
 			res := &orders[i]
-			fmt.Printf("Address of Order %v", res)
 			return res
 		}
 	}

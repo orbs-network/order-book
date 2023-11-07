@@ -20,10 +20,6 @@ import (
 
 const ETH_USD = "ETH-USD"
 
-type ErrorResponse struct {
-	Message string `json:"message"`
-}
-
 func createServer(t *testing.T) bool {
 	auctionRepo := mocks.CreateAuctionMock()
 	service, err := service.New(auctionRepo)

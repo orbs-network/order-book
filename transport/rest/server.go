@@ -43,7 +43,7 @@ func (h *Handler) Listen() {
 	// LH Auction side
 	lhApi := h.router.PathPrefix("/lh/v1").Subrouter()
 	lhApi.HandleFunc("/begin_auction/{auctionId}", h.beginAuction).Methods("POST")
-	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("POST")
+	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("GET")
 	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("POST")
 	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("POST")
 
