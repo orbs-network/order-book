@@ -144,7 +144,7 @@ func TestHandlers_BeginAuction(t *testing.T) {
 		})
 	}
 	// liquidity insufficient
-	t.Run("BUY- liquidity insuficinet try to buy with too many B token", func(t *testing.T) {
+	t.Run("BUY- should error insuficinet liquidity try to buy with too many B token", func(t *testing.T) {
 		insuficientAskB := strconv.Itoa((1000 * 1) + (1001 * 2) + (1002 * 3) + 1)
 
 		req := rest.BeginAuctionReq{
@@ -170,11 +170,11 @@ func TestHandlers_BeginAuction(t *testing.T) {
 		expected := "not enough liquidity in book to satisfy amountIn\n"
 		assert.Equal(t, line, expected)
 	})
-	t.Run("SELL- liquidity insuficinet try to sell with too many B token", func(t *testing.T) {
+	t.Run("SELL- should error insuficinet liquidity when sell with too many A token", func(t *testing.T) {
 
-		insuficientBidB := strconv.Itoa((900 * 1) + (800 * 2) + (700 * 3) + 1)
+		insuficientBidA := strconv.Itoa((1 + 2 + 3) + 1)
 		req := rest.BeginAuctionReq{
-			AmountIn: insuficientBidB,
+			AmountIn: insuficientBidA,
 			Symbol:   ETH_USD,
 			Side:     "SELL",
 		}
