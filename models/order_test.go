@@ -61,6 +61,8 @@ func TestOrder_MapToOrder(t *testing.T) {
 			"price":         "10.99",
 			"symbol":        "USDC-ETH",
 			"size":          "1000",
+			"sizePending":   "0",
+			"sizeFilled":    "0",
 			"signature":     "signature",
 			"status":        "OPEN",
 			"side":          "buy",
@@ -69,6 +71,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 		}
 
 		err := order.MapToOrder(data)
+		assert.NoError(t, err)
 
 		priceDec, _ := decimal.NewFromString("10.99")
 		sizeDec, _ := decimal.NewFromString("1000")
