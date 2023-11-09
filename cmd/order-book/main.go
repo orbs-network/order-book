@@ -33,6 +33,11 @@ func setup() {
 		panic("REDIS_DB not set")
 	}
 
+	port, found := os.LookupEnv("LISTEN_PORT")
+	if !found {
+		port = ":8080"
+	}
+
 	redisDbInt, err := strconv.Atoi(redisDb)
 	if err != nil {
 		panic("REDIS_DB not a number")
@@ -55,11 +60,15 @@ func setup() {
 	}
 
 	router := mux.NewRouter()
-
 	handler, err := rest.NewHandler(service, router)
 	if err != nil {
 		log.Fatalf("error creating handler: %v", err)
 	}
+	handler.Init()
 
-	handler.Listen()
+	server := rest.NewHTTPServer(port, handler.Router)
+	server.StartServer()
+	// blocking
+	<-server.StopChannel
+	//handler.Listen(port)
 }
