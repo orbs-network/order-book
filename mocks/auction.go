@@ -48,7 +48,10 @@ func newFrags(orders []models.Order) []models.OrderFrag {
 }
 
 func CreateAuctionMock() *MockOrderBookStore {
-	res := MockOrderBookStore{Error: nil}
+	res := MockOrderBookStore{
+		Error: nil,
+		Sets:  make(map[string]map[string]struct{}),
+	}
 	res.Asks = newAsks()
 	res.Bids = newBids()
 	res.Frags = newFrags(res.Asks)

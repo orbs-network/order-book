@@ -6,43 +6,26 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/mocks"
+	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
 	"github.com/shopspring/decimal"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// /////////////////////////////////////////////////////////////////
-// static iterator impl
-// type iter struct {
-// 	orders []models.Order
-// 	index  int
-// }
-
-// func (i *iter) HasNext() bool {
-// 	return i.index < (len(i.orders) - 1)
-// }
-// func (i *iter) Next(ctx context.Context) *models.Order {
-// 	// increment index
-// 	i.index = i.index + 1
-
-// 	if i.index >= len(i.orders) {
-// 		return nil
-// 	}
-
-// 	// get order
-// 	return &i.orders[i.index]
-// }
-
-// ///////////////////////////////////////////////////////////////
+// /////////////////////////////////////////////////////////////
 func TestService_ConfirmAuction(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("ConfirmAuction error", func(t *testing.T) {
-		svc, _ := service.New(&mocks.MockOrderBookStore{Error: assert.AnError})
+		store := mocks.MockOrderBookStore{
+			Error: models.ErrAuctionInvalid,
+			Sets:  make(map[string]map[string]struct{}),
+		}
+		svc, _ := service.New(&store)
 		uuid, _ := uuid.NewUUID()
 		_, err := svc.ConfirmAuction(ctx, uuid)
-		assert.Error(t, err)
+		assert.Error(t, err, models.ErrAuctionInvalid)
 
 	})
 
@@ -77,7 +60,6 @@ func TestService_RevertAuction(t *testing.T) {
 		assert.NoError(t, err)
 
 		// all orders have pending size - no greater than the order itself
-
 		for _, order := range res.Orders {
 			assert.True(t, order.Size.GreaterThanOrEqual(order.SizePending))
 			assert.True(t, order.SizePending.GreaterThan(decimal.Zero))
