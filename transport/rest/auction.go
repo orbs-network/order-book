@@ -99,7 +99,7 @@ func (h *Handler) beginAuction(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(baRes)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal amountOutRes", logger.Error(err))
-		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -108,7 +108,7 @@ func (h *Handler) beginAuction(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(resp)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to write amountOutRes response", logger.Error(err))
-		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -141,7 +141,7 @@ func (h *Handler) confirmAuction(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(respObj)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal confirmAuction response", logger.Error(err))
-		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (h *Handler) confirmAuction(w http.ResponseWriter, r *http.Request) {
 	_, err = w.Write(resp)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to write confirmAuction response", logger.Error(err))
-		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -164,27 +164,12 @@ func (h *Handler) abortAuction(w http.ResponseWriter, r *http.Request) {
 	err := h.svc.RevertAuction(ctx, *auctionId)
 	if err != nil {
 		logctx.Error(ctx, "failed to RevertAuction", logger.Error(err))
-		http.Error(w, "Error RevertAuction", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-// func (h *Handler) removeAuction(w http.ResponseWriter, r *http.Request) {
-// 	auctionId := handleAuctionId(w, r)
-// 	if auctionId == nil {
-// 		return
-// 	}
-// 	ctx := r.Context()
-// 	err := h.svc.GetStore().RemoveAuction(ctx, *auctionId)
-// 	if err != nil {
-// 		logctx.Error(ctx, "failed to RemoveAuction", logger.Error(err))
-// 		http.Error(w, "Error RemoveAuction", http.StatusInternalServerError)
-// 		return
-// 	}
-// }
-
 func (h *Handler) auctionMined(w http.ResponseWriter, r *http.Request) {
-
 	auctionId := handleAuctionId(w, r)
 	if auctionId == nil {
 		return
@@ -193,7 +178,7 @@ func (h *Handler) auctionMined(w http.ResponseWriter, r *http.Request) {
 	err := h.svc.AuctionMined(ctx, *auctionId)
 	if err != nil {
 		logctx.Error(ctx, "failed to AuctionMined", logger.Error(err))
-		http.Error(w, "Error AuctionMined", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

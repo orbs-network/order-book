@@ -3,6 +3,7 @@ package rest_test
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -20,26 +21,25 @@ import (
 
 const ETH_USD = "ETH-USD"
 
-func createServer(t *testing.T) bool {
-	auctionRepo := mocks.CreateAuctionMock()
-	service, err := service.New(auctionRepo)
-	//service, err := service.New(repository)
+var httpServer *rest.HTTPServer
+
+func runAuctionServer(t *testing.T) {
+	repository := mocks.CreateAuctionMock()
+
+	service, err := service.New(repository)
 	if err != nil {
-		t.Fatalf("error creating service: %v", err)
-		return false
+		log.Fatalf("error creating service: %v", err)
 	}
 
 	router := mux.NewRouter()
-
 	handler, err := rest.NewHandler(service, router)
 	if err != nil {
 		log.Fatalf("error creating handler: %v", err)
 	}
+	handler.Init()
 
-	go handler.Listen()
-
-	return true
-
+	httpServer = rest.NewHTTPServer(":8080", handler.Router)
+	httpServer.StartServer()
 }
 
 type BeginAuctionTest struct {
@@ -50,10 +50,8 @@ type BeginAuctionTest struct {
 	symbol    string
 }
 
-func TestHandler_beginAuction(t *testing.T) {
-
-	res := createServer(t)
-	assert.True(t, res)
+func TestHandlers_BeginAuction(t *testing.T) {
+	runAuctionServer(t)
 
 	entireA := strconv.Itoa((1) + (2) + (3))
 	entireAskB := strconv.Itoa((1000 * 1) + (1001 * 2) + (1002 * 3))
@@ -145,9 +143,8 @@ func TestHandler_beginAuction(t *testing.T) {
 			assert.Equal(t, expectedRes, actualRes)
 		})
 	}
-
 	// liquidity insufficient
-	t.Run("begin_auction BUY- liquidity insuficinet try to buy with too many B token", func(t *testing.T) {
+	t.Run("BUY- liquidity insuficinet try to buy with too many B token", func(t *testing.T) {
 		insuficientAskB := strconv.Itoa((1000 * 1) + (1001 * 2) + (1002 * 3) + 1)
 
 		req := rest.BeginAuctionReq{
@@ -173,7 +170,7 @@ func TestHandler_beginAuction(t *testing.T) {
 		expected := "not enough liquidity in book to satisfy amountIn\n"
 		assert.Equal(t, line, expected)
 	})
-	t.Run("begin_auction BUY- liquidity insuficinet try to buy with too many B token", func(t *testing.T) {
+	t.Run("SELL- liquidity insuficinet try to sell with too many B token", func(t *testing.T) {
 
 		insuficientBidB := strconv.Itoa((900 * 1) + (800 * 2) + (700 * 3) + 1)
 		req := rest.BeginAuctionReq{
@@ -197,6 +194,69 @@ func TestHandler_beginAuction(t *testing.T) {
 		line, err := reader.ReadString('\n')
 		assert.NoError(t, err)
 		expected := "not enough liquidity in book to satisfy amountIn\n"
+		assert.Equal(t, line, expected)
+	})
+	// stop server
+	httpServer.StopServer(context.Background())
+}
+
+func TestHandlers_ConfirmAuction(t *testing.T) {
+	runAuctionServer(t)
+	// revert auction mock
+
+	t.Run("Happy Path", func(t *testing.T) {
+		auctionId := uuid.New().String()
+
+		url := fmt.Sprintf("http://localhost:8080/lh/v1/confirm_auction/%s", auctionId)
+		response, err := http.Get(url)
+		assert.NoError(t, err)
+
+		// Decode the response body into the struct
+		var actualRes rest.ConfirmAuctionRes
+		err = json.NewDecoder(response.Body).Decode(&actualRes)
+		assert.NoError(t, err)
+		assert.Equal(t, len(actualRes.Fragments), 3)
+		assert.Equal(t, actualRes.Fragments[0].AmountOut, "1")
+		assert.Equal(t, actualRes.Fragments[1].AmountOut, "2")
+		assert.Equal(t, actualRes.Fragments[2].AmountOut, "1.5")
+
+		//assert.Equal(t, expectedRes, actualRes)
+	})
+	// stop server
+	httpServer.StopServer(context.Background())
+}
+
+func TestHandlers_AbortAuction(t *testing.T) {
+	runAuctionServer(t)
+
+	t.Run("Happy Path", func(t *testing.T) {
+		auctionId := uuid.New().String()
+		url := fmt.Sprintf("http://localhost:8080/lh/v1/abort_auction/%s", auctionId)
+		response, err := http.Post(url, "application/json", nil)
+		assert.NoError(t, err)
+		assert.Equal(t, response.ContentLength, int64(0))
+		assert.Equal(t, response.StatusCode, 200)
+	})
+
+	// stop server
+	httpServer.StopServer(context.Background())
+}
+
+func TestHandler_AuctionMined(t *testing.T) {
+	runAuctionServer(t)
+
+	t.Run("Auction Mined - but never began or confirmed", func(t *testing.T) {
+		auctionId := uuid.New().String()
+
+		url := fmt.Sprintf("http://localhost:8080/lh/v1/auction_mined/%s", auctionId)
+		res, err := http.Post(url, "application/json", nil)
+		// Read the response body line by line
+		assert.NoError(t, err)
+		defer res.Body.Close()
+		reader := bufio.NewReader(res.Body)
+		line, err := reader.ReadString('\n')
+		assert.NoError(t, err)
+		expected := "orders in the auction can not fill any longer\n"
 		assert.Equal(t, line, expected)
 	})
 }
