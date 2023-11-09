@@ -36,3 +36,8 @@ func CreateSellSidePricesKey(symbol models.Symbol) string {
 func CreateAuctionKey(auctionID uuid.UUID) string {
 	return fmt.Sprintf("auctionId:%s", auctionID)
 }
+
+// CreateUserPKKey creates a Redis key for storing the user's public key
+func CreateUserPKKey(publicKey string) string {
+	return fmt.Sprintf("user:%s:publicKey", publicKey)
+}

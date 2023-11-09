@@ -25,6 +25,7 @@ type Service interface {
 	AuctionMined(ctx context.Context, auctionId uuid.UUID) error
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)
 	GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
+	CancelOrdersForUser(ctx context.Context, publicKey string) error
 	GetAmountOut(ctx context.Context, auctionID uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 }
 

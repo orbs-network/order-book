@@ -28,6 +28,8 @@ func (h *Handler) Listen() {
 	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
 	// Get all orders for a user
 	api.HandleFunc("/orders", PaginationMiddleware(h.GetOrdersForUser)).Methods("GET")
+	// Cancel all orders for a user
+	api.HandleFunc("/orders", ExtractPkMiddleware(h.CancelOrdersForUser)).Methods("DELETE")
 	// Get all symbols
 	api.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth

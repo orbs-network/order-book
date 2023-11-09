@@ -17,7 +17,7 @@ func AddUserToCtx(user *models.User) context.Context {
 	}
 
 	_user := models.User{
-		ID:   uuid.MustParse("a577273e-12de-4acc-a4f8-de7fb5b86e37"),
+		Id:   uuid.MustParse("a577273e-12de-4acc-a4f8-de7fb5b86e37"),
 		Type: models.MARKET_MAKER,
 	}
 
