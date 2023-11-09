@@ -12,6 +12,7 @@ import (
 
 const (
 	ConfirmedAuctions = "confirmed-auctions"
+	RevertedAuctions  = "reverted-auctions"
 	MinedAuctions     = "mined-auctions"
 )
 
@@ -110,7 +111,17 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 }
 
 func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error {
-	// TODO: re-entrance validate it isn't already confirmed
+	// returns error if already confirmed
+	err := s.GetStore().AddVal2Set(ctx, RevertedAuctions, auctionId.String())
+
+	if err != nil {
+		if err == models.ErrValAlreadyInSet {
+			logctx.Warn(ctx, "RevertAuction re-entry!", logger.String("auctionID: ", auctionId.String()))
+		} else {
+			logctx.Warn(ctx, "RevertAuction AddVal2Set Failed", logger.String("auctionID: ", auctionId.String()), logger.Error(err))
+		}
+		return err
+	}
 
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
