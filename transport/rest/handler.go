@@ -68,6 +68,11 @@ func (h *Handler) Init() {
 	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
 	// Get all orders for a user
 	api.HandleFunc("/orders", PaginationMiddleware(h.GetOrdersForUser)).Methods("GET")
+	api.HandleFunc("/orders", ExtractPkMiddleware(h.CancelOrdersForUser)).Methods("DELETE")
+
+	// Get market depth
+
+	//--------------------------
 	// Get all symbols
 	api.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth
@@ -86,16 +91,4 @@ func (h *Handler) Init() {
 	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("GET")
 	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("POST")
 	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("POST")
-
-	// unified
-	// lhApi.HandleFunc("/auction/{auctionId}", h.amountOut).Methods("GET")    // amountOut
-	// lhApi.HandleFunc("/auction/{auctionId}", h.amountOut).Methods("DELETE") // abort
-	// lhApi.HandleFunc("/auction/{auctionId}", h.amountOut).Methods("POST")   // confirm
-	// lhApi.HandleFunc("/auction/{auctionId}", h.amountOut).Methods("PUT")    // mined
-
-	// LISTEN
-	//logctx.Info(context.TODO(), "starting server", logger.String("port", port))
-	// if err := h.server.ListenAndServe(":8080", h.router); err != nil {
-	// 	log.Fatalf("error starting http listener: %v", err)
-	// }
 }
