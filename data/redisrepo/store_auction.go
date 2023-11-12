@@ -2,8 +2,6 @@ package redisrepo
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -28,11 +26,12 @@ func (r *redisRepository) StoreAuction(ctx context.Context, auctionID uuid.UUID,
 	}
 
 	// Set the TTL to 24 hours (24 hours * 60 minutes * 60 seconds)
-	err = r.client.Expire(ctx, auctionKey, 24*time.Hour).Err()
-	if err != nil {
-		fmt.Println("Error setting key:", err)
-		return models.ErrUnexpectedError
-	}
+	// TODO:
+	// err = r.client.Expire(ctx, auctionKey, 24*time.Hour).Err()
+	// if err != nil {
+	// 	fmt.Println("Error setting key:", err)
+	// 	return models.ErrUnexpectedError
+	// }
 
 	logctx.Info(ctx, "stored auction", logger.String("auctionID", auctionID.String()))
 	return nil

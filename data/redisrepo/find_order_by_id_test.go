@@ -28,15 +28,18 @@ func TestRedisRepository_FindOrderById(t *testing.T) {
 	clientOId := uuid.MustParse("00000000-0000-0000-0000-000000000009")
 	symbol, _ := models.StrToSymbol("USDC-ETH")
 	price := decimal.NewFromFloat(10000.55)
+	zero := decimal.NewFromFloat(0)
 	order := models.Order{
-		Id:        orderID,
-		ClientOId: clientOId,
-		UserId:    uuid.New(),
-		Price:     price,
-		Size:      sizeDec,
-		Symbol:    symbol,
-		Side:      models.BUY,
-		Status:    models.STATUS_OPEN,
+		Id:          orderID,
+		ClientOId:   clientOId,
+		UserId:      uuid.New(),
+		Price:       price,
+		Size:        sizeDec,
+		SizePending: zero,
+		SizeFilled:  zero,
+		Symbol:      symbol,
+		Side:        models.BUY,
+		Status:      models.STATUS_OPEN,
 	}
 
 	t.Run("order found by orderID", func(t *testing.T) {
@@ -44,6 +47,7 @@ func TestRedisRepository_FindOrderById(t *testing.T) {
 
 		foundOrder, err := repo.FindOrderById(ctx, orderID, false)
 		assert.NoError(t, err)
+		fmt.Println(foundOrder)
 		assert.Equal(t, order, *foundOrder)
 	})
 
