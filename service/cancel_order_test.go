@@ -51,7 +51,7 @@ func TestService_CancelOrder(t *testing.T) {
 			fmt.Print(c.name)
 			svc, _ := service.New(&mocks.MockOrderBookStore{Order: c.order, Error: c.err})
 
-			userCtx := mocks.AddUserToCtx(&models.User{ID: userId, Type: models.MARKET_MAKER})
+			userCtx := mocks.AddUserToCtx(&models.User{Id: userId, Type: models.MARKET_MAKER})
 
 			orderId, err := svc.CancelOrder(userCtx, orderId, false)
 			assert.Equal(t, c.expectedOrderId, orderId)

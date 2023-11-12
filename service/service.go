@@ -23,6 +23,9 @@ type OrderBookStore interface {
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
+	CancelOrdersForUser(ctx context.Context, userId uuid.UUID) error
+	GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error)
+	StoreUserByPublicKey(ctx context.Context, user models.User) error
 	// LH side
 	StoreAuction(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error
 	RemoveAuction(ctx context.Context, auctionID uuid.UUID) error

@@ -59,3 +59,8 @@ func (r *redisRepository) AddVal2Set(ctx context.Context, key, val string) error
 
 	return nil
 }
+
+// CreateUserPKKey creates a Redis key for storing the user's public key
+func CreateUserPKKey(publicKey string) string {
+	return fmt.Sprintf("user:%s:publicKey", publicKey)
+}

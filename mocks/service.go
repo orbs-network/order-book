@@ -14,6 +14,7 @@ type MockOrderBookStore struct {
 	Error       error
 	Order       *models.Order
 	Orders      []models.Order
+	User        *models.User
 	MarketDepth models.MarketDepth
 	OrderIter   models.OrderIter
 	// auction
@@ -127,6 +128,21 @@ func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.U
 		return nil, 0, m.Error
 	}
 	return m.Orders, len(m.Orders), nil
+}
+
+func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {
+	if m.Error != nil {
+		return nil, m.Error
+	}
+	return m.User, nil
+}
+
+func (m *MockOrderBookStore) StoreUserByPublicKey(ctx context.Context, user models.User) error {
+	return m.Error
 }
 
 func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error) {

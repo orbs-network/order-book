@@ -9,18 +9,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// package main
-
-// import (
-//     "fmt"
-//     "net/http"
-//     "os"
-//     "os/signal"
-//     "syscall"
-
-//     "github.com/gorilla/mux"
-// )
-
 type HTTPServer struct {
 	server      *http.Server
 	router      *mux.Router
@@ -53,28 +41,3 @@ func (hs *HTTPServer) StopServer(ctx context.Context) {
 		fmt.Printf("HTTP server shutdown error: %v\n", err)
 	}
 }
-
-// func (hs *HTTPServer) AddRoute(path string, handler http.HandlerFunc, methods ...string) {
-// 	hs.router.HandleFunc(path, handler).Methods(methods...)
-// }
-
-// func main() {
-//     server := NewHTTPServer(":8080")
-
-//     // Define your routes using the custom HTTPServer methods
-//     server.AddRoute("/", func(w http.ResponseWriter, r *http.Request) {
-//         fmt.Fprintln(w, "Hello, World!")
-//     }, "GET")
-
-//     // Set up termination signal handling
-//     signal.Notify(server.stopChannel, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-//     // Start the HTTP server
-//     server.StartServer()
-
-//     // Wait for a signal to stop the server
-//     <-server.stopChannel
-
-//     // Stop the server
-//     server.StopServer()
-// }
