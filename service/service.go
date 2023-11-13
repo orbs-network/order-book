@@ -12,8 +12,6 @@ import (
 )
 
 type OrderBookStore interface {
-	// Utils
-	AddVal2Set(ctx context.Context, key, val string) error
 	// MM side
 	StoreOrder(ctx context.Context, order models.Order) error
 	StoreOrders(ctx context.Context, orders []models.Order) error
@@ -32,6 +30,7 @@ type OrderBookStore interface {
 	GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error)
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
+	UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error
 }
 
 // Service contains methods that implement the business logic for the application.
@@ -46,9 +45,4 @@ func New(store OrderBookStore) (*Service, error) {
 	}
 
 	return &Service{orderBookStore: store}, nil
-}
-
-// getters
-func (s *Service) GetStore() OrderBookStore {
-	return s.orderBookStore
 }

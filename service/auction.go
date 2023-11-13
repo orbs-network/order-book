@@ -45,7 +45,7 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 
 func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error) {
 	// returns error if already confirmed
-	err := s.GetStore().AddVal2Set(ctx, ConfirmedAuctions, auctionId.String())
+	err := s.orderBookStore.UpdateAuctionTracker(ctx, models.AUCTION_CONFIRMED, auctionId)
 
 	if err != nil {
 		if err == models.ErrValAlreadyInSet {
@@ -112,7 +112,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 
 func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error {
 	// returns error if already confirmed
-	err := s.GetStore().AddVal2Set(ctx, RevertedAuctions, auctionId.String())
+	err := s.orderBookStore.UpdateAuctionTracker(ctx, models.AUCTION_REVERTED, auctionId)
 
 	if err != nil {
 		if err == models.ErrValAlreadyInSet {
@@ -158,7 +158,7 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 
 func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	// returns error if already confirmed
-	err := s.GetStore().AddVal2Set(ctx, MinedAuctions, auctionId.String())
+	err := s.orderBookStore.UpdateAuctionTracker(ctx, models.AUCTION_MINED, auctionId)
 	if err != nil {
 		if err == models.ErrValAlreadyInSet {
 			logctx.Warn(ctx, "AuctionMined re-entry!", logger.String("auctionID: ", auctionId.String()))

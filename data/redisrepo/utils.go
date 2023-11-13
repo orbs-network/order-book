@@ -6,8 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
-	"github.com/orbs-network/order-book/utils/logger"
-	"github.com/orbs-network/order-book/utils/logger/logctx"
+	"github.com/redis/go-redis/v9"
 )
 
 // CreateOrderIDKey creates a Redis key for storing the user's orders
@@ -45,21 +44,20 @@ func CreateUserPubKeyKey(publicKey string) string {
 	return fmt.Sprintf("user:%s:publicKey", publicKey)
 }
 
+// CreateAuctionTrackerKey creates a Redis key for storing auctions of different statuses
+func CreateAuctionTrackerKey(status models.AuctionStatus) string {
+	return fmt.Sprintf("auctionTracker:%s", status)
+}
+
 // GENERIC store funcs
-func (r *redisRepository) AddVal2Set(ctx context.Context, key, val string) error {
-	isMember, err := r.client.SIsMember(ctx, key, val).Result()
+func AddVal2Set(ctx context.Context, client redis.Cmdable, key, val string) error {
+	added, err := client.SAdd(ctx, key, val).Result()
 	if err != nil {
-		logctx.Warn(ctx, "SIsMember Failed", logger.Error(err))
 		return err
-	}
-	if isMember {
-		return models.ErrValAlreadyInSet
 	}
 
-	_, err = r.client.SAdd(ctx, key, val).Result()
-	if err != nil {
-		logctx.Warn(ctx, "SAdd Failed", logger.Error(err))
-		return err
+	if added == 0 {
+		return models.ErrValAlreadyInSet
 	}
 
 	return nil
