@@ -2,58 +2,42 @@ package rest
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
+	"os"
 
-	"github.com/orbs-network/order-book/utils/logger"
-	"github.com/orbs-network/order-book/utils/logger/logctx"
+	"github.com/gorilla/mux"
 )
 
-func (h *Handler) Listen() {
+type HTTPServer struct {
+	server      *http.Server
+	router      *mux.Router
+	StopChannel chan os.Signal
+}
 
-	/////////////////////////////////////////////////////////////////////
-	// Market maker side
-	api := h.router.PathPrefix("/api/v1").Subrouter()
+func NewHTTPServer(addr string, router *mux.Router) *HTTPServer {
+	return &HTTPServer{
+		server: &http.Server{
+			Addr:    addr,
+			Handler: router,
+		},
+		router:      router,
+		StopChannel: make(chan os.Signal, 1),
+	}
+}
 
-	// ------- CREATE -------
-	// Place a new order
-	api.HandleFunc("/order", h.ProcessOrder).Methods("POST")
+func (hs *HTTPServer) StartServer() {
+	go func() {
+		fmt.Printf("HTTP server started on %s\n", hs.server.Addr)
+		if err := hs.server.ListenAndServe(); err != nil {
+			fmt.Printf("HTTP server error: %v\n", err)
+		}
+	}()
+}
 
-	// ------- READ -------
-	// Get an order by client order ID
-	api.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId).Methods("GET")
-	// Get the best price for a symbol and side
-	api.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
-	// Get an order by ID
-	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
-	// Get all orders for a user
-	api.HandleFunc("/orders", PaginationMiddleware(h.GetOrdersForUser)).Methods("GET")
-	// Cancel all orders for a user
-	api.HandleFunc("/orders", ExtractPkMiddleware(h.CancelOrdersForUser)).Methods("DELETE")
-	// Get all symbols
-	api.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
-	// Get market depth
-	api.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
-
-	// ------- DELETE -------
-	// Cancel an existing order by client order ID
-	api.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
-	// Cancel an existing order by order ID
-	api.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
-
-	/////////////////////////////////////////////////////////////////////
-	// LH side
-	lhApi := h.router.PathPrefix("/lh/v1").Subrouter()
-	lhApi.HandleFunc("/quote", h.amountOut).Methods("GET")
-	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("POST")
-	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("POST")
-	lhApi.HandleFunc("/remove_auction/{auctionId}", h.removeAuction).Methods("DELETE")
-	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("POST")
-
-	// LISTEN
-	logctx.Info(context.TODO(), "starting server", logger.String("port", "8080"))
-
-	if err := http.ListenAndServe(":8080", h.router); err != nil {
-		log.Fatalf("error starting http listener: %v", err)
+func (hs *HTTPServer) StopServer(ctx context.Context) {
+	fmt.Println("Shutting down the HTTP server...")
+	if err := hs.server.Shutdown(ctx); err != nil {
+		fmt.Printf("HTTP server shutdown error: %v\n", err)
 	}
 }

@@ -58,3 +58,7 @@ func TestRedisRepository_GetAuction(t *testing.T) {
 		assert.Equal(t, models.ErrUnexpectedError, err)
 	})
 }
+
+func TestRedisRepository_RemoveAuction(t *testing.T) {
+
+}

@@ -70,12 +70,12 @@ func (r *redisRepository) StoreOrder(ctx context.Context, order models.Order) er
 	return nil
 }
 
-func (r *redisRepository) StoreOrders(ctx context.Context, orders []*models.Order) error {
+func (r *redisRepository) StoreOrders(ctx context.Context, orders []models.Order) error {
 	// --- START TRANSACTION ---
 	transaction := r.client.TxPipeline()
 
 	for _, order := range orders {
-		err := storeOrderTX(ctx, transaction, order)
+		err := storeOrderTX(ctx, transaction, &order)
 		if err != nil {
 			return err
 		}

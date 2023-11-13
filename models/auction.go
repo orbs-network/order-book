@@ -8,7 +8,7 @@ import (
 )
 
 type AmountOut struct {
-	AmountOut  decimal.Decimal
+	Size       decimal.Decimal
 	OrderFrags []OrderFrag
 }
 

@@ -25,6 +25,14 @@ func (r *redisRepository) StoreAuction(ctx context.Context, auctionID uuid.UUID,
 		return models.ErrUnexpectedError
 	}
 
+	// Set the TTL to 24 hours (24 hours * 60 minutes * 60 seconds)
+	// TODO:
+	// err = r.client.Expire(ctx, auctionKey, 24*time.Hour).Err()
+	// if err != nil {
+	// 	fmt.Println("Error setting key:", err)
+	// 	return models.ErrUnexpectedError
+	// }
+
 	logctx.Info(ctx, "stored auction", logger.String("auctionID", auctionID.String()))
 	return nil
 }

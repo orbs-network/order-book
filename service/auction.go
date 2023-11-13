@@ -10,11 +10,17 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
+const (
+	ConfirmedAuctions = "confirmed-auctions"
+	RevertedAuctions  = "reverted-auctions"
+	MinedAuctions     = "mined-auctions"
+)
+
 // orderID->amount bought or sold in A token always
 
 type ConfirmAuctionRes struct {
-	Orders        []*models.Order
-	Fragments     []*models.OrderFrag
+	Orders        []models.Order
+	Fragments     []models.OrderFrag
 	BookSignature []byte
 }
 
@@ -25,8 +31,7 @@ func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 		return false
 	}
 	// order.size - (Order.filled + prder.pending) >= frag.size
-	orderLockedSum := order.SizeFilled.Sub(order.SizePending)
-	return order.Size.Sub(orderLockedSum).GreaterThanOrEqual(frag.Size)
+	return order.GetAvailableSize().GreaterThanOrEqual(frag.Size)
 }
 
 func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
@@ -39,7 +44,17 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 }
 
 func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error) {
-	// TODO: re-entrance validate it doesnt already confirmed
+	// returns error if already confirmed
+	err := s.GetStore().AddVal2Set(ctx, ConfirmedAuctions, auctionId.String())
+
+	if err != nil {
+		if err == models.ErrValAlreadyInSet {
+			logctx.Warn(ctx, "ConfirmAuction re-entry!", logger.String("auctionID: ", auctionId.String()))
+		} else {
+			logctx.Warn(ctx, "ConfirmAuction AddVal2Set Failed", logger.String("auctionID: ", auctionId.String()), logger.Error(err))
+		}
+		return ConfirmAuctionRes{}, err
+	}
 
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
@@ -74,8 +89,8 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 			return ConfirmAuctionRes{}, models.ErrAuctionInvalid
 		} else {
 			// success- append
-			res.Orders = append(res.Orders, order)
-			res.Fragments = append(res.Fragments, &frag)
+			res.Orders = append(res.Orders, *order)
+			res.Fragments = append(res.Fragments, frag)
 		}
 	}
 	// set order order fragments as Pending
@@ -96,7 +111,17 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 }
 
 func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error {
-	// TODO: re-entrance validate it isn't already confirmed
+	// returns error if already confirmed
+	err := s.GetStore().AddVal2Set(ctx, RevertedAuctions, auctionId.String())
+
+	if err != nil {
+		if err == models.ErrValAlreadyInSet {
+			logctx.Warn(ctx, "RevertAuction re-entry!", logger.String("auctionID: ", auctionId.String()))
+		} else {
+			logctx.Warn(ctx, "RevertAuction AddVal2Set Failed", logger.String("auctionID: ", auctionId.String()), logger.Error(err))
+		}
+		return err
+	}
 
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
@@ -105,7 +130,7 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 		return err
 	}
 
-	orders := []*models.Order{}
+	orders := []models.Order{}
 	// validate all pending orders fragments of auction
 	for _, frag := range frags {
 		// get order by ID
@@ -117,8 +142,8 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 			logctx.Error(ctx, "Auction fragments should be valid during a revert request", logger.Error(err))
 		} else {
 			// success
-			order.SizePending.Sub(frag.Size)
-			orders = append(orders, order)
+			order.SizePending = order.SizePending.Sub(frag.Size)
+			orders = append(orders, *order)
 		}
 	}
 	// store orders
@@ -132,7 +157,16 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 }
 
 func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
-	// TODO: re-entrance validate it doesnt already confirmed
+	// returns error if already confirmed
+	err := s.GetStore().AddVal2Set(ctx, MinedAuctions, auctionId.String())
+	if err != nil {
+		if err == models.ErrValAlreadyInSet {
+			logctx.Warn(ctx, "AuctionMined re-entry!", logger.String("auctionID: ", auctionId.String()))
+		} else {
+			logctx.Warn(ctx, "AuctionMined AddVal2Set Failed", logger.String("auctionID: ", auctionId.String()), logger.Error(err))
+		}
+		return err
+	}
 
 	// get auction from store
 	frags, err := s.orderBookStore.GetAuction(ctx, auctionId)
@@ -140,7 +174,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 		logctx.Warn(ctx, "GetAuction Failed", logger.Error(err))
 		return err
 	}
-	var filledOrders []*models.Order
+	var filledOrders []models.Order
 
 	// validate all pending orders fragments of auction
 	for _, frag := range frags {
@@ -148,7 +182,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		if err != nil {
 			logctx.Error(ctx, err.Error())
-			logctx.Error(ctx, "Auction fragment's order should not be removed during pending to be mined", logger.Error(err))
+			logctx.Error(ctx, "Auction fragment's order should not be removed if is pending to be mined", logger.Error(err))
 
 			// cancel auction
 			err = s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
@@ -164,27 +198,36 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 				logctx.Error(ctx, err.Error())
 			}
 			logctx.Error(ctx, "Auction fragments should be valid after pending to be mined", logger.Error(err))
-
 			logctx.Error(ctx, fmt.Sprintf("validatePendingFrag failed. PendingSize: %s FragSize:%s", order.SizePending.String(), frag.Size.String()))
 			return models.ErrAuctionInvalid
 		} else {
 			// fill fragment in the order
-			order.SizePending.Sub(frag.Size)
-			order.SizeFilled.Add(frag.Size)
+			order.SizePending = order.SizePending.Sub(frag.Size)
+			order.SizeFilled = order.SizeFilled.Add(frag.Size)
 
 			// success - mark as filled
-			filledOrders = append(filledOrders, order)
+			filledOrders = append(filledOrders, *order)
 		}
 	}
+	// only if all reags successfully filled - continue
+	// close completely filled orders
+	for _, order := range filledOrders {
+		if order.Size.Equal(order.SizeFilled) {
+			order.Status = models.STATUS_FILLED
+			logctx.Info(ctx, fmt.Sprintf("order is completely filled %s", order.Id.String()))
+		}
+	}
+	// TODO: remove order from sell/buy side
+	// Add them to "filled" storage - can be done withn StoreOrders()
 
 	// store orders
-	// TODO: close completely filled orders
 	err = s.orderBookStore.StoreOrders(ctx, filledOrders)
 	if err != nil {
 		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
 		return err
 	}
 
-	return s.orderBookStore.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
+	// TODO: remove filled orders
 
+	return s.orderBookStore.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
 }

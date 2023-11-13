@@ -12,9 +12,11 @@ import (
 )
 
 type OrderBookStore interface {
+	// Utils
+	AddVal2Set(ctx context.Context, key, val string) error
 	// MM side
 	StoreOrder(ctx context.Context, order models.Order) error
-	StoreOrders(ctx context.Context, orders []*models.Order) error
+	StoreOrders(ctx context.Context, orders []models.Order) error
 	RemoveOrder(ctx context.Context, order models.Order) error
 	FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error)
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
@@ -44,4 +46,9 @@ func New(store OrderBookStore) (*Service, error) {
 	}
 
 	return &Service{orderBookStore: store}, nil
+}
+
+// getters
+func (s *Service) GetStore() OrderBookStore {
+	return s.orderBookStore
 }

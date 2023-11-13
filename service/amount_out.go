@@ -48,7 +48,7 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 	for it.HasNext() && amountInB.IsPositive() {
 		order = it.Next(ctx)
 		// max Spend in B token  for this order
-		orderSizeB := order.Price.Mul(order.Size)
+		orderSizeB := order.Price.Mul(order.GetAvailableSize())
 		// spend the min of orderSizeB/amountInB
 		spendB := decimal.Min(orderSizeB, amountInB)
 
@@ -57,7 +57,6 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 
 		// sub-add
 		amountInB = amountInB.Sub(spendB)
-		logctx.Info(ctx, "StoreAuction failed")
 		amountOutA = amountOutA.Add(gainA)
 
 		// res
@@ -71,7 +70,7 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 		return models.AmountOut{}, models.ErrInsufficientLiquity
 	}
 	logctx.Info(ctx, fmt.Sprintf("append OrderFrag amountOutA: %s", amountOutA.String()))
-	return models.AmountOut{AmountOut: amountOutA, OrderFrags: frags}, nil
+	return models.AmountOut{Size: amountOutA, OrderFrags: frags}, nil
 }
 
 // PAIR/SYMBOL A-B (ETH-USDC)
@@ -85,7 +84,7 @@ func getAmountOutInBToken(ctx context.Context, it models.OrderIter, amountInA de
 		order = it.Next(ctx)
 
 		// Spend
-		spendA := decimal.Min(order.Size, amountInA)
+		spendA := decimal.Min(order.GetAvailableSize(), amountInA)
 		fmt.Println("sizeA ", spendA.String())
 
 		// Gain
@@ -106,5 +105,5 @@ func getAmountOutInBToken(ctx context.Context, it models.OrderIter, amountInA de
 		return models.AmountOut{}, models.ErrInsufficientLiquity
 	}
 	logctx.Info(ctx, fmt.Sprintf("append OrderFrag amountOutB: %s", amountOutB.String()))
-	return models.AmountOut{AmountOut: amountOutB, OrderFrags: frags}, nil
+	return models.AmountOut{Size: amountOutB, OrderFrags: frags}, nil
 }

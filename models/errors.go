@@ -13,3 +13,6 @@ var ErrOrderNotOpen = errors.New("order must be status open to perform this acti
 var ErrTransactionFailed = errors.New("transaction failed")
 var ErrInsufficientLiquity = errors.New("not enough liquidity in book to satisfy amountIn")
 var ErrAuctionInvalid = errors.New("orders in the auction can not fill any longer")
+
+// store generic errors
+var ErrValAlreadyInSet = errors.New("the value is already a memeber of the set")

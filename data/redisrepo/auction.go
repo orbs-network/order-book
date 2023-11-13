@@ -36,5 +36,8 @@ func (r *redisRepository) GetAuction(ctx context.Context, auctionID uuid.UUID) (
 }
 
 func (r *redisRepository) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {
-	return nil
+	auctionKey := CreateAuctionKey(auctionID)
+	err := r.client.Del(ctx, auctionKey).Err()
+	logctx.Error(ctx, "Redis del failed", logger.String("key", auctionKey), logger.Error(err))
+	return err
 }

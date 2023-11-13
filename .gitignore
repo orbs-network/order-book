@@ -1,3 +1,5 @@
 .vscode/
-
+__debug_*
+.DS_Store
+*secret*
 *.pem

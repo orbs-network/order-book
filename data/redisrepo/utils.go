@@ -1,10 +1,13 @@
 package redisrepo
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/utils/logger"
+	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
 // CreateOrderIDKey creates a Redis key for storing the user's orders
@@ -35,6 +38,26 @@ func CreateSellSidePricesKey(symbol models.Symbol) string {
 // CreateAuctionKey creates a Redis key for storing the auction data
 func CreateAuctionKey(auctionID uuid.UUID) string {
 	return fmt.Sprintf("auctionId:%s", auctionID)
+}
+
+// GENERIC store funcs
+func (r *redisRepository) AddVal2Set(ctx context.Context, key, val string) error {
+	isMember, err := r.client.SIsMember(ctx, key, val).Result()
+	if err != nil {
+		logctx.Warn(ctx, "SIsMember Failed", logger.Error(err))
+		return err
+	}
+	if isMember {
+		return models.ErrValAlreadyInSet
+	}
+
+	_, err = r.client.SAdd(ctx, key, val).Result()
+	if err != nil {
+		logctx.Warn(ctx, "SAdd Failed", logger.Error(err))
+		return err
+	}
+
+	return nil
 }
 
 // CreateUserPKKey creates a Redis key for storing the user's public key
