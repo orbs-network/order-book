@@ -24,10 +24,6 @@ func (m *MockOrderBookService) GetUserByPublicKey(ctx context.Context, publicKey
 	return m.User, m.Error
 }
 
-func (m *MockOrderBookService) GetStore() service.OrderBookStore {
-	return nil
-}
-
 func (m *MockOrderBookService) ProcessOrder(ctx context.Context, input service.ProcessOrderInput) (models.Order, error) {
 	return *m.Order, m.Error
 }

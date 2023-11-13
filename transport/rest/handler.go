@@ -14,7 +14,6 @@ import (
 // Service represents the methods available on the service to handle the actual request.
 type Service interface {
 	GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error)
-	GetStore() service.OrderBookStore
 	ProcessOrder(ctx context.Context, input service.ProcessOrderInput) (models.Order, error)
 	CancelOrder(ctx context.Context, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error)
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)

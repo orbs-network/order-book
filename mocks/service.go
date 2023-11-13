@@ -5,7 +5,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
-	"github.com/orbs-network/order-book/service"
 	"github.com/shopspring/decimal"
 )
 
@@ -23,10 +22,6 @@ type MockOrderBookStore struct {
 	Frags []models.OrderFrag
 	// re-entrance
 	Sets map[string]map[string]struct{}
-}
-
-func (m *MockOrderBookStore) GetStore() service.OrderBookStore {
-	return nil
 }
 
 func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order) error {
@@ -171,18 +166,6 @@ func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol
 	}
 }
 
-func (r *MockOrderBookStore) AddVal2Set(ctx context.Context, key, val string) error {
-
-	set, exists := r.Sets[key]
-	if !exists {
-		set = make(map[string]struct{})
-		r.Sets[key] = set
-	}
-
-	if _, added := set[val]; added {
-		return models.ErrValAlreadyInSet
-	}
-
-	set[val] = struct{}{}
-	return nil
+func (m *MockOrderBookStore) UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error {
+	return m.Error
 }

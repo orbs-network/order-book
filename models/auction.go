@@ -7,6 +7,18 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type AuctionStatus string
+
+const (
+	AUCTION_CONFIRMED AuctionStatus = "confirmed"
+	AUCTION_MINED     AuctionStatus = "mined"
+	AUCTION_REVERTED  AuctionStatus = "reverted"
+)
+
+func (a AuctionStatus) String() string {
+	return string(a)
+}
+
 type AmountOut struct {
 	Size       decimal.Decimal
 	OrderFrags []OrderFrag
