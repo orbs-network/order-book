@@ -11,7 +11,7 @@ import (
 
 func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	publicKey := utils.GetPkCtx(ctx)
+	publicKey := utils.GetPubKeyCtx(ctx)
 	if publicKey == "" {
 		http.Error(w, "Missing public key", http.StatusBadRequest)
 		return

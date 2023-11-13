@@ -20,9 +20,9 @@ func (u UserType) String() string {
 
 type User struct {
 	Id uuid.UUID
-	// Public key
-	Pk   string
-	Type UserType
+	// The user's public key from their public/private key pair
+	PubKey string
+	Type   UserType
 }
 
 var ErrInvalidUserType = errors.New("invalid user type")
@@ -37,5 +37,13 @@ func StrToUserType(str string) (UserType, error) {
 		return ADMIN, nil
 	default:
 		return "", ErrInvalidUserType
+	}
+}
+
+func (u *User) UserToMap() map[string]string {
+	return map[string]string{
+		"id":     u.Id.String(),
+		"pubKey": u.PubKey,
+		"type":   u.Type.String(),
 	}
 }

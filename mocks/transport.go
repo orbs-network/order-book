@@ -17,6 +17,11 @@ type MockOrderBookService struct {
 	MarketDepth models.MarketDepth
 	AmountOut   models.AmountOut
 	Symbols     []models.Symbol
+	User        *models.User
+}
+
+func (m *MockOrderBookService) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {
+	return m.User, m.Error
 }
 
 func (m *MockOrderBookService) GetStore() service.OrderBookStore {

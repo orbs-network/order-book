@@ -12,7 +12,7 @@ import (
 
 func (r *redisRepository) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {
 
-	key := CreateUserPKKey(publicKey)
+	key := CreateUserPubKeyKey(publicKey)
 
 	fields, err := r.client.HGetAll(ctx, key).Result()
 	if err != nil {
@@ -37,16 +37,16 @@ func (r *redisRepository) GetUserByPublicKey(ctx context.Context, publicKey stri
 		return nil, fmt.Errorf("unexpected error parsing user type: %w", err)
 	}
 
-	if fields["pk"] != publicKey {
-		logctx.Error(ctx, "public key mismatch", logger.String("publicKey", publicKey), logger.String("pk", fields["pk"]))
+	if fields["pubKey"] != publicKey {
+		logctx.Error(ctx, "public key mismatch", logger.String("publicKey from args", publicKey), logger.String("pubKey from map", fields["pubKey"]))
 		return nil, fmt.Errorf("public key mismatch")
 	}
 
 	logctx.Info(ctx, "user found", logger.String("publicKey", publicKey), logger.String("userId", userId.String()))
 
 	return &models.User{
-		Id:   userId,
-		Pk:   publicKey,
-		Type: userType,
+		Id:     userId,
+		PubKey: publicKey,
+		Type:   userType,
 	}, nil
 }

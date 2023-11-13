@@ -8,8 +8,8 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-// ExtractPkMiddleware extracts the public key from the X-Public-Key header and adds it to the context
-func ExtractPkMiddleware(next http.HandlerFunc) http.HandlerFunc {
+// ExtractPubKeyMiddleware extracts the public key from the X-Public-Key header and adds it to the context
+func ExtractPubKeyMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		publicKey := r.Header.Get("X-Public-Key")
@@ -19,7 +19,7 @@ func ExtractPkMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		ctx := utils.WithPkCtx(r.Context(), publicKey)
+		ctx := utils.WithPubKeyCtx(r.Context(), publicKey)
 
 		logctx.Info(ctx, "found public key header", logger.String("publicKey", publicKey))
 		next.ServeHTTP(w, r.WithContext(ctx))

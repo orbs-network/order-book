@@ -11,7 +11,7 @@ type key int
 const (
 	userKey       key = iota
 	paginationKey key = iota
-	pkKey         key = iota
+	pubKeyKey     key = iota
 )
 
 // WithUserCtx returns a new context with the provided user value
@@ -40,15 +40,15 @@ func GetPaginationCtx(ctx context.Context) *Paginator {
 	return nil
 }
 
-// WithPkCtx returns a new context with the provided public key value
-func WithPkCtx(ctx context.Context, pk string) context.Context {
-	return context.WithValue(ctx, pkKey, pk)
+// WithPubKeyCtx returns a new context with the provided public key value
+func WithPubKeyCtx(ctx context.Context, pubKey string) context.Context {
+	return context.WithValue(ctx, pubKeyKey, pubKey)
 }
 
-// GetPkCtx retrieves the public key value from the context
-func GetPkCtx(ctx context.Context) string {
-	if pk, ok := ctx.Value(pkKey).(string); ok {
-		return pk
+// GetPubKeyCtx retrieves the public key value from the context
+func GetPubKeyCtx(ctx context.Context) string {
+	if pubKey, ok := ctx.Value(pubKeyKey).(string); ok {
+		return pubKey
 	}
 	return ""
 }

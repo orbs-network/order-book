@@ -42,7 +42,7 @@ func main() {
 				},
 			},
 			{
-				Name:  "storeUserByPk",
+				Name:  "storeUserByPubKey",
 				Usage: "Store user by public key",
 				Action: func(c *cli.Context) error {
 					storeUserByPublicKey()
@@ -50,7 +50,7 @@ func main() {
 				},
 			},
 			{
-				Name:  "getUserByPK",
+				Name:  "getUserByPubKey",
 				Usage: "Get user by public key",
 				Action: func(c *cli.Context) error {
 					getUserByPublicKey()
@@ -89,9 +89,9 @@ var symbol, _ = models.StrToSymbol("USDC-ETH")
 var price = decimal.NewFromFloat(10.0)
 
 var user = models.User{
-	Id:   userId,
-	Type: models.MARKET_MAKER,
-	Pk:   publicKey,
+	Id:     userId,
+	Type:   models.MARKET_MAKER,
+	PubKey: publicKey,
 }
 
 func createAuctions() {
@@ -187,6 +187,6 @@ func getUserByPublicKey() {
 	log.Print("--------------------------")
 	log.Printf("userId: %v", retrievedUser.Id)
 	log.Printf("userType: %v", retrievedUser.Type)
-	log.Printf("userPk: %v", retrievedUser.Pk)
+	log.Printf("userPubKey: %v", retrievedUser.PubKey)
 	log.Print("--------------------------")
 }

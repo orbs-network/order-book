@@ -19,21 +19,21 @@ func TestRedisRepository_GetUserByPublicKey(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateUserPKKey(mocks.Pk)
+		key := CreateUserPubKeyKey(mocks.PubKey)
 
 		mock.ExpectHGetAll(key).SetVal(map[string]string{
-			"id":   mocks.UserId.String(),
-			"pk":   mocks.Pk,
-			"type": mocks.UserType.String(),
+			"id":     mocks.UserId.String(),
+			"pubKey": mocks.PubKey,
+			"type":   mocks.UserType.String(),
 		})
 
-		user, err := repo.GetUserByPublicKey(ctx, mocks.Pk)
+		user, err := repo.GetUserByPublicKey(ctx, mocks.PubKey)
 
 		assert.NoError(t, err)
 		assert.Equal(t, user, &models.User{
-			Id:   mocks.UserId,
-			Pk:   mocks.Pk,
-			Type: mocks.UserType,
+			Id:     mocks.UserId,
+			PubKey: mocks.PubKey,
+			Type:   mocks.UserType,
 		})
 	})
 
@@ -44,11 +44,11 @@ func TestRedisRepository_GetUserByPublicKey(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateUserPKKey(mocks.Pk)
+		key := CreateUserPubKeyKey(mocks.PubKey)
 
 		mock.ExpectHGetAll(key).SetVal(map[string]string{})
 
-		user, err := repo.GetUserByPublicKey(ctx, mocks.Pk)
+		user, err := repo.GetUserByPublicKey(ctx, mocks.PubKey)
 
 		assert.Nil(t, user)
 		assert.ErrorIs(t, err, models.ErrUserNotFound)
@@ -61,11 +61,11 @@ func TestRedisRepository_GetUserByPublicKey(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateUserPKKey(mocks.Pk)
+		key := CreateUserPubKeyKey(mocks.PubKey)
 
 		mock.ExpectHGetAll(key).SetErr(assert.AnError)
 
-		user, err := repo.GetUserByPublicKey(ctx, mocks.Pk)
+		user, err := repo.GetUserByPublicKey(ctx, mocks.PubKey)
 
 		assert.Nil(t, user)
 		assert.ErrorContains(t, err, "unexpected error getting user by public key")
@@ -78,15 +78,15 @@ func TestRedisRepository_GetUserByPublicKey(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateUserPKKey(mocks.Pk)
+		key := CreateUserPubKeyKey(mocks.PubKey)
 
 		mock.ExpectHGetAll(key).SetVal(map[string]string{
-			"id":   "invalid",
-			"pk":   mocks.Pk,
-			"type": mocks.UserType.String(),
+			"id":     "invalid",
+			"pubKey": mocks.PubKey,
+			"type":   mocks.UserType.String(),
 		})
 
-		user, err := repo.GetUserByPublicKey(ctx, mocks.Pk)
+		user, err := repo.GetUserByPublicKey(ctx, mocks.PubKey)
 
 		assert.Nil(t, user)
 		assert.ErrorContains(t, err, "unexpected error parsing user id")
@@ -99,15 +99,15 @@ func TestRedisRepository_GetUserByPublicKey(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateUserPKKey(mocks.Pk)
+		key := CreateUserPubKeyKey(mocks.PubKey)
 
 		mock.ExpectHGetAll(key).SetVal(map[string]string{
-			"id":   mocks.UserId.String(),
-			"pk":   mocks.Pk,
-			"type": "invalid",
+			"id":     mocks.UserId.String(),
+			"pubKey": mocks.PubKey,
+			"type":   "invalid",
 		})
 
-		user, err := repo.GetUserByPublicKey(ctx, mocks.Pk)
+		user, err := repo.GetUserByPublicKey(ctx, mocks.PubKey)
 
 		assert.Nil(t, user)
 		assert.ErrorContains(t, err, "unexpected error parsing user type")
@@ -120,15 +120,15 @@ func TestRedisRepository_GetUserByPublicKey(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateUserPKKey(mocks.Pk)
+		key := CreateUserPubKeyKey(mocks.PubKey)
 
 		mock.ExpectHGetAll(key).SetVal(map[string]string{
-			"id":   mocks.UserId.String(),
-			"pk":   "invalid",
-			"type": mocks.UserType.String(),
+			"id":     mocks.UserId.String(),
+			"pubKey": "invalid",
+			"type":   mocks.UserType.String(),
 		})
 
-		user, err := repo.GetUserByPublicKey(ctx, mocks.Pk)
+		user, err := repo.GetUserByPublicKey(ctx, mocks.PubKey)
 
 		assert.Nil(t, user)
 		assert.ErrorContains(t, err, "public key mismatch")
