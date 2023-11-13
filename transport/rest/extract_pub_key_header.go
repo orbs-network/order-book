@@ -9,7 +9,7 @@ import (
 )
 
 // ExtractPubKeyMiddleware extracts the public key from the X-Public-Key header and adds it to the context
-func ExtractPubKeyMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func ExtractPubKeyMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		publicKey := r.Header.Get("X-Public-Key")

@@ -53,36 +53,35 @@ func (h *Handler) Init() {
 
 	/////////////////////////////////////////////////////////////////////
 	// Market maker side
-	api := h.Router.PathPrefix("/api/v1").Subrouter()
+	mmApi := h.Router.PathPrefix("/api/v1").Subrouter()
+
+	mmApi.Use(ExtractPubKeyMiddleware)
 
 	// ------- CREATE -------
 	// Place a new order
-	api.HandleFunc("/order", h.ProcessOrder).Methods("POST")
+	mmApi.HandleFunc("/order", h.ProcessOrder).Methods("POST")
 
 	// ------- READ -------
 	// Get an order by client order ID
-	api.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId).Methods("GET")
+	mmApi.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId).Methods("GET")
 	// Get the best price for a symbol and side
-	api.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
+	mmApi.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
 	// Get an order by ID
-	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
+	mmApi.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
 	// Get all orders for a user
-	api.HandleFunc("/orders", PaginationMiddleware(h.GetOrdersForUser)).Methods("GET")
-	api.HandleFunc("/orders", ExtractPubKeyMiddleware(h.CancelOrdersForUser)).Methods("DELETE")
-
-	// Get market depth
-
-	//--------------------------
+	mmApi.HandleFunc("/orders", PaginationMiddleware(h.GetOrdersForUser)).Methods("GET")
 	// Get all symbols
-	api.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
+	mmApi.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth
-	api.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
+	mmApi.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
 
 	// ------- DELETE -------
 	// Cancel an existing order by client order ID
-	api.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
+	mmApi.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
 	// Cancel an existing order by order ID
-	api.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
+	mmApi.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
+	// Cancel all orders for a user
+	mmApi.HandleFunc("/orders", h.CancelOrdersForUser).Methods("DELETE")
 
 	/////////////////////////////////////////////////////////////////////
 	// LH Auction side
