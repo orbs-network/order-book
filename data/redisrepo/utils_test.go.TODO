@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/go-redis/redismock/v9"
 	"github.com/orbs-network/order-book/models"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
@@ -23,8 +24,9 @@ func TestRedisRepository_Utils(t *testing.T) {
 		fmt.Println("redis is not running in ", address)
 		return
 	}
+	db, _ := redismock.NewClientMock()
 
-	repository, err := NewRedisRepository(rdb)
+	repository, err := NewRedisRepository(db)
 	assert.NoError(t, err, "should not return error")
 
 	t.Run("AddVal2Set  - should set userfail if value already exist", func(t *testing.T) {
