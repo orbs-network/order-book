@@ -4,28 +4,17 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
 func (s *Service) CancelOrdersForUser(ctx context.Context, publicKey string) error {
 
-	user, err := s.orderBookStore.GetUserByPublicKey(ctx, publicKey)
-
-	if err == models.ErrUserNotFound {
-		logctx.Warn(ctx, "user not found", logger.String("publicKey", publicKey))
-		return err
-	}
+	user, err := s.GetUserByPublicKey(ctx, publicKey)
 
 	if err != nil {
-		logctx.Error(ctx, "unexpected error getting user by public key", logger.Error(err), logger.String("publicKey", publicKey))
-		return fmt.Errorf("unexpected error getting user by public key: %w", err)
-	}
-
-	if user == nil {
-		logctx.Warn(ctx, "user not found but no error", logger.String("publicKey", publicKey))
-		return models.ErrUserNotFound
+		logctx.Warn(ctx, "user not found", logger.String("publicKey", publicKey), logger.Error(err))
+		return err
 	}
 
 	if err = s.orderBookStore.CancelOrdersForUser(ctx, user.Id); err != nil {

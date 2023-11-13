@@ -18,18 +18,18 @@ func TestRedisRepository_StoreUserByPublicKey(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateUserPKKey(mocks.Pk)
+		key := CreateUserPubKeyKey(mocks.PubKey)
 
 		mock.ExpectHMSet(key, map[string]interface{}{
-			"id":   mocks.UserId.String(),
-			"pk":   mocks.Pk,
-			"type": mocks.UserType.String(),
+			"id":     mocks.UserId.String(),
+			"pubKey": mocks.PubKey,
+			"type":   mocks.UserType.String(),
 		}).SetVal(true)
 
 		err := repo.StoreUserByPublicKey(ctx, models.User{
-			Id:   mocks.UserId,
-			Pk:   mocks.Pk,
-			Type: mocks.UserType,
+			Id:     mocks.UserId,
+			PubKey: mocks.PubKey,
+			Type:   mocks.UserType,
 		})
 
 		assert.NoError(t, err)
@@ -42,18 +42,18 @@ func TestRedisRepository_StoreUserByPublicKey(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateUserPKKey(mocks.Pk)
+		key := CreateUserPubKeyKey(mocks.PubKey)
 
 		mock.ExpectHMSet(key, map[string]interface{}{
-			"id":   mocks.UserId.String(),
-			"pk":   mocks.Pk,
-			"type": mocks.UserType.String(),
+			"id":     mocks.UserId.String(),
+			"pubKey": mocks.PubKey,
+			"type":   mocks.UserType.String(),
 		}).SetErr(assert.AnError)
 
 		err := repo.StoreUserByPublicKey(ctx, models.User{
-			Id:   mocks.UserId,
-			Pk:   mocks.Pk,
-			Type: mocks.UserType,
+			Id:     mocks.UserId,
+			PubKey: mocks.PubKey,
+			Type:   mocks.UserType,
 		})
 
 		assert.ErrorContains(t, err, "unexpected error storing user by public key")

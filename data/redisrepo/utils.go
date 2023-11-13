@@ -40,6 +40,11 @@ func CreateAuctionKey(auctionID uuid.UUID) string {
 	return fmt.Sprintf("auctionId:%s", auctionID)
 }
 
+// CreateUserPubKeyKey creates a Redis key for storing the user's public key
+func CreateUserPubKeyKey(publicKey string) string {
+	return fmt.Sprintf("user:%s:publicKey", publicKey)
+}
+
 // GENERIC store funcs
 func (r *redisRepository) AddVal2Set(ctx context.Context, key, val string) error {
 	isMember, err := r.client.SIsMember(ctx, key, val).Result()
@@ -58,9 +63,4 @@ func (r *redisRepository) AddVal2Set(ctx context.Context, key, val string) error
 	}
 
 	return nil
-}
-
-// CreateUserPKKey creates a Redis key for storing the user's public key
-func CreateUserPKKey(publicKey string) string {
-	return fmt.Sprintf("user:%s:publicKey", publicKey)
 }

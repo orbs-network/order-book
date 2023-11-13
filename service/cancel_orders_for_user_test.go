@@ -18,7 +18,7 @@ func TestService_CancelOrdersForUser(t *testing.T) {
 
 		s, _ := service.New(store)
 
-		err := s.CancelOrdersForUser(ctx, mocks.Pk)
+		err := s.CancelOrdersForUser(ctx, mocks.PubKey)
 		assert.Equal(t, err, nil)
 	})
 
@@ -27,7 +27,7 @@ func TestService_CancelOrdersForUser(t *testing.T) {
 
 		s, _ := service.New(store)
 
-		err := s.CancelOrdersForUser(ctx, mocks.Pk)
+		err := s.CancelOrdersForUser(ctx, mocks.PubKey)
 		assert.Equal(t, err, models.ErrUserNotFound)
 	})
 
@@ -36,7 +36,7 @@ func TestService_CancelOrdersForUser(t *testing.T) {
 
 		s, _ := service.New(store)
 
-		err := s.CancelOrdersForUser(ctx, mocks.Pk)
+		err := s.CancelOrdersForUser(ctx, mocks.PubKey)
 		assert.ErrorContains(t, err, "unexpected error getting user by public key")
 	})
 

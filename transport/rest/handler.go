@@ -13,6 +13,7 @@ import (
 
 // Service represents the methods available on the service to handle the actual request.
 type Service interface {
+	GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error)
 	GetStore() service.OrderBookStore
 	ProcessOrder(ctx context.Context, input service.ProcessOrderInput) (models.Order, error)
 	CancelOrder(ctx context.Context, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error)
@@ -68,7 +69,7 @@ func (h *Handler) Init() {
 	api.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
 	// Get all orders for a user
 	api.HandleFunc("/orders", PaginationMiddleware(h.GetOrdersForUser)).Methods("GET")
-	api.HandleFunc("/orders", ExtractPkMiddleware(h.CancelOrdersForUser)).Methods("DELETE")
+	api.HandleFunc("/orders", ExtractPubKeyMiddleware(h.CancelOrdersForUser)).Methods("DELETE")
 
 	// Get market depth
 
