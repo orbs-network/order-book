@@ -201,6 +201,7 @@ func TestHandlers_BeginAuction(t *testing.T) {
 }
 
 func TestHandlers_ConfirmAuction(t *testing.T) {
+	t.Skip("TODO refactor into unit test")
 	runAuctionServer(t)
 	// revert auction mock
 

@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "2401fac8-0f5d-4047-ba6b-e2e540779d7d",
+		"_postman_id": "84160747-0acf-4e94-9280-180c42b3266b",
 		"name": "Order book",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "6369230"
@@ -21,10 +21,16 @@
 			],
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"f677273e-12de-4acc-a4f8-de7fb5b86e37\"\n}",
+					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -50,9 +56,15 @@
 			"name": "Cancel order by orderId",
 			"request": {
 				"method": "DELETE",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
 				"url": {
-					"raw": "http://localhost/api/v1/order/36143369-f9b4-4daf-b8d1-6b80a5b0842e",
+					"raw": "http://localhost/api/v1/order/243a5eec-89e2-45ac-bf8b-fde19b691246",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -61,7 +73,7 @@
 						"api",
 						"v1",
 						"order",
-						"36143369-f9b4-4daf-b8d1-6b80a5b0842e"
+						"243a5eec-89e2-45ac-bf8b-fde19b691246"
 					]
 				}
 			},
@@ -71,9 +83,15 @@
 			"name": "Cancel order by clientOId",
 			"request": {
 				"method": "DELETE",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
 				"url": {
-					"raw": "http://localhost/api/v1/order/client-order/d577273e-12de-4acc-a4f8-de7fb5b86e37",
+					"raw": "http://localhost/api/v1/order/client-order/a677273e-12de-4acc-a4f8-de7fb5b86e37",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -83,7 +101,33 @@
 						"v1",
 						"order",
 						"client-order",
-						"d577273e-12de-4acc-a4f8-de7fb5b86e37"
+						"a677273e-12de-4acc-a4f8-de7fb5b86e37"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Cancel all orders",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost/api/v1/orders",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"path": [
+						"api",
+						"v1",
+						"orders"
 					]
 				}
 			},
@@ -232,9 +276,9 @@
 			"response": []
 		},
 		{
-			"name": "Cancel all orders",
+			"name": "Begin auction",
 			"request": {
-				"method": "DELETE",
+				"method": "POST",
 				"header": [
 					{
 						"key": "X-Public-Key",
@@ -242,16 +286,26 @@
 						"type": "text"
 					}
 				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"amountIn\": \"10\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
-					"raw": "http://localhost/api/v1/orders",
+					"raw": "http://localhost/lh/v1/begin_auction/a6143369-f9b4-4daf-b8d1-6b80a5b0842e",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"path": [
-						"api",
+						"lh",
 						"v1",
-						"orders"
+						"begin_auction",
+						"a6143369-f9b4-4daf-b8d1-6b80a5b0842e"
 					]
 				}
 			},

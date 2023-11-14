@@ -25,7 +25,7 @@ func TestService_GetUserByPublicKey(t *testing.T) {
 	})
 
 	t.Run("should return error if user not found", func(t *testing.T) {
-		store := &mocks.MockOrderBookStore{User: nil, Error: models.ErrUserNotFound}
+		store := &mocks.MockOrderBookStore{User: nil, ErrUser: models.ErrUserNotFound}
 
 		svc, _ := service.New(store)
 
@@ -36,7 +36,7 @@ func TestService_GetUserByPublicKey(t *testing.T) {
 	})
 
 	t.Run("should return error on unexpected error getting user by public key", func(t *testing.T) {
-		store := &mocks.MockOrderBookStore{User: nil, Error: assert.AnError}
+		store := &mocks.MockOrderBookStore{User: nil, ErrUser: assert.AnError}
 
 		svc, _ := service.New(store)
 
@@ -47,7 +47,7 @@ func TestService_GetUserByPublicKey(t *testing.T) {
 	})
 
 	t.Run("should return error if user is nil but no error", func(t *testing.T) {
-		store := &mocks.MockOrderBookStore{User: nil, Error: nil}
+		store := &mocks.MockOrderBookStore{User: nil, ErrUser: nil}
 
 		svc, _ := service.New(store)
 
