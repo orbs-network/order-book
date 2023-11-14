@@ -8,10 +8,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
-const pubKey = "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo"
+const PORT = "80"
+
+const pubKey = "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+
 const depthSize = 5
 
 type Ticker struct {
@@ -53,8 +57,9 @@ func onTick(url string) *Ticker {
 	fmt.Printf("ETH-USD Price: %s\n", ticker.Price)
 	return &ticker
 }
+
 func cancelAllOrders() {
-	url := "http://localhost/api/v1/orders"
+	url := fmt.Sprintf("http://localhost:%s/api/v1/orders", PORT)
 
 	// Create a new HTTP client
 	client := &http.Client{}
@@ -66,50 +71,63 @@ func cancelAllOrders() {
 		return
 	}
 
-	// Add a custom header to the request
-	req.Header.Add("X-Public-Key", pubKey) // Replace "YourAccessToken" with your actual token
+	req.Header.Add("X-Public-Key", pubKey)
 
-	// Send the request and get the response
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error making request:", err)
 		return
 	}
 	defer resp.Body.Close()
+
+	fmt.Println("Canceled all orders")
 }
 
 func placeOrder(side string, price, size decimal.Decimal) {
-	req := AddOrderReq{
+	client := &http.Client{}
+
+	cOId := uuid.NewString()
+
+	body := AddOrderReq{
 		Price:         price.String(),
 		Size:          size.String(),
 		Side:          side,
-		Symbol:        "ETH_USD",
-		ClientOrderId: "f677273e-12de-4acc-a4f8-de7fb5b86e37",
+		Symbol:        "ETH-USD",
+		ClientOrderId: cOId,
 	}
-	url := "http://localhost/api/v1/orders"
-	jsonData, err := json.Marshal(req)
+	url := fmt.Sprintf("http://localhost:%s/api/v1/order", PORT)
+	jsonData, err := json.Marshal(body)
 	if err != nil {
 		log.Fatalf("error marshaling: %v", err)
 	}
 
-	res, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Fatalf("error creating request: %v", err)
+	}
+
+	req.Header.Add("X-Public-Key", pubKey)
+
+	res, err := client.Do(req)
+	fmt.Printf("res is ------->: %#v\n", res)
 	if err != nil {
 		log.Fatalf("error post: %v", err)
 	}
 
-	// Read the response body line by line
-	defer res.Body.Close()
+	fmt.Println("Created order with clientOrderId: ", cOId)
+	fmt.Println("Status code:", res.StatusCode)
 
+	defer res.Body.Close()
 }
+
 func updateOrders(price decimal.Decimal) {
 	cancelAllOrders()
 	factor := decimal.NewFromFloat(1.01)
 	curPrice := price
 	for i := 0; i < depthSize; i++ {
-		curPrice = price.Mul(factor)
+		curPrice = curPrice.Mul(factor)
 		curSize := decimal.NewFromFloat(float64(i+1) * 10)
-		placeOrder("SELL", curPrice, curSize)
-
+		placeOrder("sell", curPrice, curSize)
 	}
 
 	factor = decimal.NewFromFloat(0.99)
@@ -117,11 +135,9 @@ func updateOrders(price decimal.Decimal) {
 	for i := 0; i < depthSize; i++ {
 		curPrice := curPrice.Mul(factor)
 		curSize := decimal.NewFromFloat(float64(i+1) * 10)
-		placeOrder("BUY", curPrice, curSize)
-
+		placeOrder("buy", curPrice, curSize)
 	}
 
-	placeOrder("SELL", price, decimal.NewFromFloat(1.1))
 }
 func main() {
 
@@ -130,11 +146,10 @@ func main() {
 		// Fetch the ticker price for ETH-USD
 		ticker := onTick(url)
 		if ticker != nil {
-			fmt.Printf("ETH-USD Price: %s\n", ticker.Price)
 			price := decimal.RequireFromString(ticker.Price)
 			updateOrders(price)
 
-			// Sleep for 10 seconds
+			fmt.Println("Sleeping for 10 seconds...")
 			time.Sleep(10 * time.Second)
 		}
 	}

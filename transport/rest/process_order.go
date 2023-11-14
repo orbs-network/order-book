@@ -64,11 +64,6 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !decSize.IsInteger() {
-		http.Error(w, "'size' must be an integer", http.StatusBadRequest)
-		return
-	}
-
 	if decSize.IsNegative() {
 		http.Error(w, "'size' must be positive", http.StatusBadRequest)
 		return
