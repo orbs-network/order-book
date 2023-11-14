@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
+	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
@@ -29,6 +30,9 @@ type CreateOrderResponse struct {
 var userId = uuid.MustParse("d577273e-12de-4acc-a4f8-de7fb5b86e37")
 
 func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userPubKey := utils.GetPubKeyCtx(ctx)
+
 	var args CreateOrderRequest
 	err := json.NewDecoder(r.Body).Decode(&args)
 	if err != nil {
@@ -88,9 +92,9 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to create order", logger.String("userId", userId.String()), logger.String("price", roundedDecPrice.String()), logger.String("size", decSize.String()), logger.String("clientOrderId", clientOrderId.String()))
-	order, err := h.svc.ProcessOrder(r.Context(), service.ProcessOrderInput{
-		UserId:        userId,
+	logctx.Info(ctx, "user trying to create order", logger.String("userPubKey", userPubKey), logger.String("price", roundedDecPrice.String()), logger.String("size", decSize.String()), logger.String("clientOrderId", clientOrderId.String()))
+	order, err := h.svc.ProcessOrder(ctx, service.ProcessOrderInput{
+		UserPubKey:    userPubKey,
 		Price:         roundedDecPrice,
 		Symbol:        symbol,
 		Size:          decSize,
@@ -109,7 +113,7 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		logctx.Error(r.Context(), "failed to create order", logger.Error(err))
+		logctx.Error(ctx, "failed to create order", logger.Error(err))
 		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
 		return
 	}
@@ -119,7 +123,7 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		logctx.Error(r.Context(), "failed to marshal created order", logger.Error(err))
+		logctx.Error(ctx, "failed to marshal created order", logger.Error(err))
 		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
 		return
 	}
@@ -128,7 +132,7 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	if _, err := w.Write(resp); err != nil {
-		logctx.Error(r.Context(), "failed to write response", logger.Error(err), logger.String("orderId", clientOrderId.String()))
+		logctx.Error(ctx, "failed to write response", logger.Error(err), logger.String("orderId", clientOrderId.String()))
 		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
 	}
 }

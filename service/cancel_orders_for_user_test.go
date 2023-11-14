@@ -23,7 +23,7 @@ func TestService_CancelOrdersForUser(t *testing.T) {
 	})
 
 	t.Run("should return user not found error when no user found", func(t *testing.T) {
-		store := &mocks.MockOrderBookStore{User: nil, Error: models.ErrUserNotFound}
+		store := &mocks.MockOrderBookStore{User: nil, ErrUser: models.ErrUserNotFound}
 
 		s, _ := service.New(store)
 
@@ -32,7 +32,7 @@ func TestService_CancelOrdersForUser(t *testing.T) {
 	})
 
 	t.Run("should return error on unexpected error getting user by public key", func(t *testing.T) {
-		store := &mocks.MockOrderBookStore{User: nil, Error: assert.AnError}
+		store := &mocks.MockOrderBookStore{User: nil, ErrUser: assert.AnError}
 
 		s, _ := service.New(store)
 
