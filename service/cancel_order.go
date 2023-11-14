@@ -5,18 +5,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
-	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
 // CancelOrder cancels an order by its ID or clientOId. If `isClientOId` is true, the `id` is treated as a clientOId, otherwise it is treated as an orderId.
-func (s *Service) CancelOrder(ctx context.Context, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error) {
+func (s *Service) CancelOrder(ctx context.Context, userPubKey string, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error) {
 
-	user := utils.GetUserCtx(ctx)
-	if user == nil {
-		logctx.Error(ctx, "user not found in context")
-		return nil, models.ErrNoUserInContext
+	user, err := s.GetUserByPublicKey(ctx, userPubKey)
+
+	if err != nil {
+		logctx.Warn(ctx, "user not found", logger.String("userPubKey", userPubKey), logger.Error(err))
+		return nil, err
 	}
 
 	var order *models.Order

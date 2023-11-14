@@ -28,7 +28,7 @@ func (m *MockOrderBookService) ProcessOrder(ctx context.Context, input service.P
 	return *m.Order, m.Error
 }
 
-func (m *MockOrderBookService) CancelOrder(ctx context.Context, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error) {
+func (m *MockOrderBookService) CancelOrder(ctx context.Context, userPubKey string, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}

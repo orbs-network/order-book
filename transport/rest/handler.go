@@ -15,17 +15,18 @@ import (
 type Service interface {
 	GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error)
 	ProcessOrder(ctx context.Context, input service.ProcessOrderInput) (models.Order, error)
-	CancelOrder(ctx context.Context, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error)
+	CancelOrder(ctx context.Context, userPubKey string, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error)
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
 	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 	GetOrderByClientOId(ctx context.Context, clientOId uuid.UUID) (*models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
+	CancelOrdersForUser(ctx context.Context, publicKey string) error
+	GetSymbols(ctx context.Context) ([]models.Symbol, error)
+	GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
+
 	ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (service.ConfirmAuctionRes, error)
 	RevertAuction(ctx context.Context, auctionId uuid.UUID) error
 	AuctionMined(ctx context.Context, auctionId uuid.UUID) error
-	GetSymbols(ctx context.Context) ([]models.Symbol, error)
-	GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
-	CancelOrdersForUser(ctx context.Context, publicKey string) error
 	GetAmountOut(ctx context.Context, auctionID uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 }
 

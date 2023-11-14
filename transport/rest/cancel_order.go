@@ -18,6 +18,9 @@ type CancelOrderResponse struct {
 }
 
 func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userPubKey := utils.GetPubKeyCtx(ctx)
+
 	vars := mux.Vars(r)
 	orderIdStr := vars["orderId"]
 
@@ -27,20 +30,21 @@ func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: don't hardcode user
-	user := models.User{
-		Id:   userId,
-		Type: models.MARKET_MAKER,
-	}
+	logctx.Info(ctx, "user trying to cancel order by orderID", logger.String("userPubKey", userPubKey), logger.String("orderId", orderId.String()))
 
-	userCtx := utils.WithUserCtx(r.Context(), &user)
-
-	logctx.Info(userCtx, "user trying to cancel order by orderID", logger.String("userId", userId.String()), logger.String("orderId", orderId.String()))
-
-	h.handleCancelOrder(userCtx, orderId, false, w)
+	h.handleCancelOrder(hInput{
+		ctx:         ctx,
+		id:          orderId,
+		isClientOId: false,
+		userPubKey:  userPubKey,
+		w:           w,
+	})
 }
 
 func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	userPubKey := utils.GetPubKeyCtx(ctx)
+
 	vars := mux.Vars(r)
 	clientOIdStr := vars["clientOId"]
 
@@ -50,57 +54,63 @@ func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// TODO: don't hardcode user
-	user := models.User{
-		Id:   userId,
-		Type: models.MARKET_MAKER,
-	}
+	logctx.Info(ctx, "user trying to cancel order by clientOId", logger.String("userPubKey", userPubKey), logger.String("clientOId", clientOId.String()))
 
-	userCtx := utils.WithUserCtx(r.Context(), &user)
+	h.handleCancelOrder(hInput{
+		ctx:         ctx,
+		id:          clientOId,
+		isClientOId: true,
+		userPubKey:  userPubKey,
+		w:           w,
+	})
+}
 
-	logctx.Info(userCtx, "user trying to cancel order by clientOId", logger.String("userId", userId.String()), logger.String("clientOId", clientOId.String()))
-
-	h.handleCancelOrder(userCtx, clientOId, true, w)
+type hInput struct {
+	ctx         context.Context
+	id          uuid.UUID
+	isClientOId bool
+	userPubKey  string
+	w           http.ResponseWriter
 }
 
 // handleCancelOrder calls the service to cancel an order and writes the response to the client
-func (h *Handler) handleCancelOrder(userCtx context.Context, id uuid.UUID, isClientOId bool, w http.ResponseWriter) {
+func (h *Handler) handleCancelOrder(input hInput) {
 
-	cancelledOrderId, err := h.svc.CancelOrder(userCtx, id, isClientOId)
+	cancelledOrderId, err := h.svc.CancelOrder(input.ctx, input.userPubKey, input.id, input.isClientOId)
 
 	if err == models.ErrNoUserInContext {
-		logctx.Error(userCtx, "user should be in context")
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		logctx.Error(input.ctx, "user should be in context")
+		http.Error(input.w, "User not found", http.StatusUnauthorized)
 		return
 	}
 
 	if err == models.ErrOrderNotFound {
-		logctx.Warn(userCtx, "order not found", logger.String("id", id.String()))
-		http.Error(w, "Order not found", http.StatusNotFound)
+		logctx.Warn(input.ctx, "order not found", logger.String("id", input.id.String()))
+		http.Error(input.w, "Order not found", http.StatusNotFound)
 		return
 	}
 
 	if err == models.ErrOrderNotOpen {
-		logctx.Warn(userCtx, "user trying to cancel order that is not open", logger.String("id", id.String()))
-		http.Error(w, "Order not found", http.StatusNotFound)
+		logctx.Warn(input.ctx, "user trying to cancel order that is not open", logger.String("id", input.id.String()))
+		http.Error(input.w, "Order not found", http.StatusNotFound)
 		return
 	}
 
 	if err == models.ErrUnauthorized {
-		logctx.Warn(userCtx, "user not authorized to cancel order", logger.String("id", id.String()))
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		logctx.Warn(input.ctx, "user not authorized to cancel order", logger.String("id", input.id.String()))
+		http.Error(input.w, "Not authorized", http.StatusUnauthorized)
 		return
 	}
 
 	if err != nil {
-		logctx.Error(userCtx, "failed to cancel order", logger.Error(err))
-		http.Error(w, "Error cancelling order. Try again later", http.StatusInternalServerError)
+		logctx.Error(input.ctx, "failed to cancel order", logger.Error(err))
+		http.Error(input.w, "Error cancelling order. Try again later", http.StatusInternalServerError)
 		return
 	}
 
 	if cancelledOrderId == nil {
-		logctx.Error(userCtx, "cancelled order ID is nil")
-		http.Error(w, "Error cancelling order. Try again later", http.StatusInternalServerError)
+		logctx.Error(input.ctx, "cancelled order ID is nil")
+		http.Error(input.w, "Error cancelling order. Try again later", http.StatusInternalServerError)
 		return
 	}
 
@@ -110,16 +120,17 @@ func (h *Handler) handleCancelOrder(userCtx context.Context, id uuid.UUID, isCli
 
 	resp, err := json.Marshal(res)
 	if err != nil {
-		logctx.Error(userCtx, "failed to marshal created order", logger.Error(err))
-		http.Error(w, "Error cancelling order. Try again later", http.StatusInternalServerError)
+		logctx.Error(input.ctx, "failed to marshal created order", logger.Error(err))
+		http.Error(input.w, "Error cancelling order. Try again later", http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
+	input.w.Header().Set("Content-Type", "application/json")
+	input.w.WriteHeader(http.StatusOK)
 
-	if _, err := w.Write(resp); err != nil {
-		logctx.Error(userCtx, "failed to write response", logger.Error(err), logger.String("orderId", cancelledOrderId.String()))
-		http.Error(w, "Error cancelling order. Try again later", http.StatusInternalServerError)
+	if _, err := input.w.Write(resp); err != nil {
+		logctx.Error(input.ctx, "failed to write response", logger.Error(err), logger.String("orderId", cancelledOrderId.String()))
+
+		http.Error(input.w, "Error cancelling order. Try again later", http.StatusInternalServerError)
 	}
 }
