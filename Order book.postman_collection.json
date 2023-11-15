@@ -38,10 +38,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost/api/v1/order",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/order",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -64,10 +63,9 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost/api/v1/order/243a5eec-89e2-45ac-bf8b-fde19b691246",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/order/243a5eec-89e2-45ac-bf8b-fde19b691246",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -91,10 +89,9 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost/api/v1/order/client-order/a677273e-12de-4acc-a4f8-de7fb5b86e37",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/order/client-order/a677273e-12de-4acc-a4f8-de7fb5b86e37",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -119,10 +116,9 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost/api/v1/orders",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/orders",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -139,10 +135,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/order/sell/BTC-ETH",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/order/sell/BTC-ETH",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -161,10 +156,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/symbols",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/symbols",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -181,10 +175,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/order/36143369-f9b4-4daf-b8d1-6b80a5b0842e",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/order/36143369-f9b4-4daf-b8d1-6b80a5b0842e",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -202,10 +195,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/order/client-order/d577273e-12de-4acc-a4f8-de7fb5b86e37",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/order/client-order/d577273e-12de-4acc-a4f8-de7fb5b86e37",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -224,10 +216,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/orderbook/BTC-ETH?limit=20",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/orderbook/BTC-ETH?limit=20",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -251,10 +242,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost/api/v1/orders?page=1&pageSize=10",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/api/v1/orders?page=1&pageSize=10",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"api",
@@ -296,10 +286,9 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost/lh/v1/begin_auction/a6143369-f9b4-4daf-b8d1-6b80a5b0842e",
-					"protocol": "http",
+					"raw": "{{BASE_URL}}/lh/v1/begin_auction/a6143369-f9b4-4daf-b8d1-6b80a5b0842e",
 					"host": [
-						"localhost"
+						"{{BASE_URL}}"
 					],
 					"path": [
 						"lh",
@@ -310,6 +299,26 @@
 				}
 			},
 			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
 		}
 	]
 }
