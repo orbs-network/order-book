@@ -1,0 +1,30 @@
+name: Build and Deploy to Heroku
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+
+      - name: Login to Heroku Container Registry
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t registry.heroku.com/order-book-server/web .
+          docker push registry.heroku.com/order-book-server/web
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Release Image
+        run: heroku container:release web --app order-book-server
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
