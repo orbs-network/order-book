@@ -30,27 +30,9 @@ func TestService_ProcessOrder(t *testing.T) {
 		Type:   models.MARKET_MAKER,
 	}
 
-	t.Run("user not found - should return error", func(t *testing.T) {
-		input := service.ProcessOrderInput{
-			UserPubKey:    userPubKey,
-			Price:         price,
-			Symbol:        symbol,
-			Size:          size,
-			Side:          models.SELL,
-			ClientOrderID: orderId,
-		}
-
-		svc, _ := service.New(&mocks.MockOrderBookStore{ErrUser: models.ErrUserNotFound})
-
-		order, err := svc.ProcessOrder(ctx, input)
-
-		assert.ErrorIs(t, err, models.ErrUserNotFound)
-		assert.Equal(t, models.Order{}, order)
-	})
-
 	t.Run("unexpected error from store - should return `ErrUnexpectedError` error", func(t *testing.T) {
 		input := service.ProcessOrderInput{
-			UserPubKey:    userPubKey,
+			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
 			Size:          size,
@@ -68,7 +50,7 @@ func TestService_ProcessOrder(t *testing.T) {
 
 	t.Run("no previous order - should create new order", func(t *testing.T) {
 		input := service.ProcessOrderInput{
-			UserPubKey:    userPubKey,
+			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
 			Size:          size,
@@ -95,7 +77,7 @@ func TestService_ProcessOrder(t *testing.T) {
 
 	t.Run("existing order with different userId - should return `ErrClashingOrderId` error", func(t *testing.T) {
 		input := service.ProcessOrderInput{
-			UserPubKey:    userPubKey,
+			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
 			Size:          size,
@@ -113,7 +95,7 @@ func TestService_ProcessOrder(t *testing.T) {
 
 	t.Run("existing order with same clientOrderId - should return `ErrOrderAlreadyExists` error", func(t *testing.T) {
 		input := service.ProcessOrderInput{
-			UserPubKey:    userPubKey,
+			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
 			Size:          size,

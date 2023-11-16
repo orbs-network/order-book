@@ -28,7 +28,7 @@ func (m *MockOrderBookService) ProcessOrder(ctx context.Context, input service.P
 	return *m.Order, m.Error
 }
 
-func (m *MockOrderBookService) CancelOrder(ctx context.Context, userPubKey string, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error) {
+func (m *MockOrderBookService) CancelOrder(ctx context.Context, input service.CancelOrderInput) (cancelledOrderId *uuid.UUID, err error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
@@ -64,7 +64,7 @@ func (m *MockOrderBookService) GetOrdersForUser(ctx context.Context, userId uuid
 	return m.Orders, len(m.Orders), m.Error
 }
 
-func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, publicKey string) error {
+func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) error {
 	return m.Error
 }
 
