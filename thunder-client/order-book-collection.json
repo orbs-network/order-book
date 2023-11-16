@@ -1,0 +1,222 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "Order book",
+    "dateExported": "2023-11-16T09:25:40.164Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "4c4a0231-f516-40d4-9ccd-9bca1f2202e0",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Place order",
+            "url": "{{BASE_URL}}/api/v1/order",
+            "method": "POST",
+            "sortNum": 10000,
+            "created": "2023-11-16T08:49:48.608Z",
+            "modified": "2023-11-16T08:49:48.608Z",
+            "headers": [
+                {
+                    "name": "X-Public-Key",
+                    "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+                }
+            ],
+            "body": {
+                "type": "json",
+                "raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\"\n}"
+            },
+            "preReq": {
+                "inlineScripts": []
+            },
+            "postReq": {
+                "inlineScripts": [
+                    {
+                        "script": [
+                            ""
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "_id": "8d7bc744-596b-48a4-a4c3-10af7ee43ac2",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Cancel order by orderId",
+            "url": "{{BASE_URL}}/api/v1/order/243a5eec-89e2-45ac-bf8b-fde19b691246",
+            "method": "DELETE",
+            "sortNum": 20000,
+            "created": "2023-11-16T08:49:48.609Z",
+            "modified": "2023-11-16T08:49:48.609Z",
+            "headers": [
+                {
+                    "name": "X-Public-Key",
+                    "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+                }
+            ]
+        },
+        {
+            "_id": "8ae1918a-10f2-4d75-be30-5d4031f5faac",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Cancel order by clientOId",
+            "url": "{{BASE_URL}}/api/v1/order/client-order/a677273e-12de-4acc-a4f8-de7fb5b86e37",
+            "method": "DELETE",
+            "sortNum": 30000,
+            "created": "2023-11-16T08:49:48.610Z",
+            "modified": "2023-11-16T08:49:48.610Z",
+            "headers": [
+                {
+                    "name": "X-Public-Key",
+                    "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+                }
+            ]
+        },
+        {
+            "_id": "184f1bd6-b657-4861-889e-b0f51689ac78",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Cancel all orders",
+            "url": "{{BASE_URL}}/api/v1/orders",
+            "method": "DELETE",
+            "sortNum": 40000,
+            "created": "2023-11-16T08:49:48.611Z",
+            "modified": "2023-11-16T08:49:48.611Z",
+            "headers": [
+                {
+                    "name": "X-Public-Key",
+                    "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+                }
+            ]
+        },
+        {
+            "_id": "85ac4516-6456-4c57-b343-9e093f20f055",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Get best price for",
+            "url": "{{BASE_URL}}/api/v1/order/sell/BTC-ETH",
+            "method": "GET",
+            "sortNum": 50000,
+            "created": "2023-11-16T08:49:48.612Z",
+            "modified": "2023-11-16T08:49:48.612Z",
+            "headers": []
+        },
+        {
+            "_id": "691ca963-a7c1-4330-aa8f-7f1185f579ed",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Get symbols",
+            "url": "{{BASE_URL}}/api/v1/symbols",
+            "method": "GET",
+            "sortNum": 60000,
+            "created": "2023-11-16T08:49:48.613Z",
+            "modified": "2023-11-16T08:49:48.613Z",
+            "headers": []
+        },
+        {
+            "_id": "f57adbee-a043-4e15-bced-19eea4696c03",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Get order by ID",
+            "url": "{{BASE_URL}}/api/v1/order/36143369-f9b4-4daf-b8d1-6b80a5b0842e",
+            "method": "GET",
+            "sortNum": 70000,
+            "created": "2023-11-16T08:49:48.614Z",
+            "modified": "2023-11-16T08:49:48.614Z",
+            "headers": []
+        },
+        {
+            "_id": "ab2d6d04-8a8e-46e5-ba84-b4cf2c4e116c",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Get order by client order ID",
+            "url": "{{BASE_URL}}/api/v1/order/client-order/d577273e-12de-4acc-a4f8-de7fb5b86e37",
+            "method": "GET",
+            "sortNum": 80000,
+            "created": "2023-11-16T08:49:48.615Z",
+            "modified": "2023-11-16T08:49:48.615Z",
+            "headers": []
+        },
+        {
+            "_id": "dbdd983a-31c4-44ac-8071-0c697a2898e2",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Get market depth",
+            "url": "{{BASE_URL}}/api/v1/orderbook/BTC-ETH?limit=20",
+            "method": "GET",
+            "sortNum": 90000,
+            "created": "2023-11-16T08:49:48.616Z",
+            "modified": "2023-11-16T08:49:48.616Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "limit",
+                    "value": "20"
+                }
+            ]
+        },
+        {
+            "_id": "eb0397af-b94c-42d2-8592-8a02c2c3b2c4",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Get orders for user",
+            "url": "{{BASE_URL}}/api/v1/orders?page=1&pageSize=10",
+            "method": "GET",
+            "sortNum": 100000,
+            "created": "2023-11-16T08:49:48.617Z",
+            "modified": "2023-11-16T08:49:48.617Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "page",
+                    "value": "1"
+                },
+                {
+                    "name": "pageSize",
+                    "value": "10"
+                }
+            ]
+        },
+        {
+            "_id": "fcc4c953-6b63-41c0-b7e1-ee0acc969e2d",
+            "colId": "0a646854-72c1-41ea-8026-82903e1321f1",
+            "containerId": "",
+            "name": "Begin auction",
+            "url": "{{BASE_URL}}/lh/v1/begin_auction/a6143369-f9b4-4daf-b8d1-6b80a5b0842e",
+            "method": "POST",
+            "sortNum": 110000,
+            "created": "2023-11-16T08:49:48.618Z",
+            "modified": "2023-11-16T08:49:48.618Z",
+            "headers": [
+                {
+                    "name": "X-Public-Key",
+                    "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+                }
+            ],
+            "body": {
+                "type": "json",
+                "raw": "{\n    \"amountIn\": \"10\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\"\n}"
+            }
+        }
+    ],
+    "settings": {
+        "preReq": {
+            "inlineScripts": [
+                {
+                    "script": [
+                        ""
+                    ]
+                }
+            ]
+        },
+        "postReq": {
+            "inlineScripts": [
+                {
+                    "script": [
+                        ""
+                    ]
+                }
+            ]
+        }
+    }
+}

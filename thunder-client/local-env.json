@@ -1,0 +1,12 @@
+{
+    "client": "Thunder Client",
+    "environmentName": "Local",
+    "dateExported": "2023-11-16T09:36:53.184Z",
+    "version": "1.0",
+    "variables": [
+        {
+            "name": "BASE_URL",
+            "value": "http://localhost"
+        }
+    ]
+}
