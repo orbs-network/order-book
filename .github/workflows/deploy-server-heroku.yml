@@ -1,8 +1,9 @@
-name: Build and Deploy to Heroku
+name: Server - Deploy to Heroku
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
@@ -18,8 +19,8 @@ jobs:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
       - name: Build and Push Docker Image
-        run: |
-          docker build -t registry.heroku.com/order-book-server/web .
+        run: |          
+          docker build -t registry.heroku.com/order-book-server/worker -f cmd/order-book.Dockerfile .
           docker push registry.heroku.com/order-book-server/web
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}

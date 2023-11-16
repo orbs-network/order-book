@@ -1,0 +1,31 @@
+name: Maker Mock - Deploy to Heroku
+
+on:
+  push
+#     branches:
+#       - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+
+      - name: Login to Heroku Container Registry
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Build and Push Docker Image
+        run: |                    
+          docker build -t registry.heroku.com/order-book-maker-mock/worker -f cmd/maker-mock.Dockerfile .
+          docker push registry.heroku.com/order-book-maker-mock/worker
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Release Image
+        run: heroku container:release worker --app order-book-maker-mock
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
