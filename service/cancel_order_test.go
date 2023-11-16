@@ -15,18 +15,9 @@ import (
 func TestService_CancelOrder(t *testing.T) {
 
 	userId := uuid.MustParse("a577273e-12de-4acc-a4f8-de7fb5b86e37")
-	userPubKey := "0x1234567890"
 	orderId := uuid.MustParse("e577273e-12de-4acc-a4f8-de7fb5b86e37")
 	clientOId := uuid.MustParse("f577273e-12de-4acc-a4f8-de7fb5b86e37")
 	order := &models.Order{Id: orderId, UserId: userId, Status: models.STATUS_OPEN, ClientOId: clientOId}
-
-	t.Run("no user found - returns error", func(t *testing.T) {
-		svc, _ := service.New(&mocks.MockOrderBookStore{ErrUser: assert.AnError})
-
-		orderId, err := svc.CancelOrder(context.Background(), userPubKey, orderId, false)
-		assert.Nil(t, orderId)
-		assert.Error(t, assert.AnError, err)
-	})
 
 	testCases := []struct {
 		name            string
@@ -49,9 +40,11 @@ func TestService_CancelOrder(t *testing.T) {
 	for _, c := range testCases {
 		t.Run(c.name, func(t *testing.T) {
 			fmt.Print(c.name)
-			svc, _ := service.New(&mocks.MockOrderBookStore{Order: c.order, Error: c.err, User: &models.User{Id: userId, Type: models.MARKET_MAKER}})
+			svc, _ := service.New(&mocks.MockOrderBookStore{Order: c.order, Error: c.err})
 
-			orderId, err := svc.CancelOrder(context.Background(), userPubKey, orderId, c.isClientOId)
+			input := service.CancelOrderInput{Id: orderId, IsClientOId: false, UserId: userId}
+
+			orderId, err := svc.CancelOrder(context.Background(), input)
 			assert.Equal(t, c.expectedOrderId, orderId)
 			assert.Equal(t, c.expectedErr, err)
 		})

@@ -7,11 +7,20 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
 func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	user := utils.GetUserCtx(ctx)
+	if user == nil {
+		logctx.Error(ctx, "user should be in context")
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+
 	vars := mux.Vars(r)
 	orderIdStr := vars["orderId"]
 
@@ -21,7 +30,7 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to get order by ID", logger.String("orderId", orderId.String()))
+	logctx.Info(r.Context(), "user trying to get order by ID", logger.String("userId", user.Id.String()), logger.String("orderId", orderId.String()))
 	order, err := h.svc.GetOrderById(r.Context(), orderId)
 
 	if err != nil {
