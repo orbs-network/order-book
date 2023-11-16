@@ -10,6 +10,4 @@ RUN find . -type f ! -name "*.go" ! -name "go.mod" ! -name "go.sum" -delete
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /maker-mock ./cmd/maker-mock
 
-EXPOSE 8080
-
 CMD [ "/maker-mock" ]
