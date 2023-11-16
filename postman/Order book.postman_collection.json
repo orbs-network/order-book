@@ -3,7 +3,8 @@
 		"_postman_id": "84160747-0acf-4e94-9280-180c42b3266b",
 		"name": "Order book",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "6369230"
+		"_exporter_id": "6369230",
+		"_collection_link": "https://orbsdev.postman.co/workspace/Orbs-Workspace~f683cb86-9a8f-4ee4-b8f2-acd8b8bd0762/collection/6369230-84160747-0acf-4e94-9280-180c42b3266b?action=share&source=collection_link&creator=6369230"
 	},
 	"item": [
 		{
@@ -63,7 +64,7 @@
 					}
 				],
 				"url": {
-					"raw": "{{BASE_URL}}/api/v1/order/243a5eec-89e2-45ac-bf8b-fde19b691246",
+					"raw": "{{BASE_URL}}/api/v1/order/a40397f3-5ee0-46d7-ac0e-2a233910423d",
 					"host": [
 						"{{BASE_URL}}"
 					],
@@ -71,7 +72,7 @@
 						"api",
 						"v1",
 						"order",
-						"243a5eec-89e2-45ac-bf8b-fde19b691246"
+						"a40397f3-5ee0-46d7-ac0e-2a233910423d"
 					]
 				}
 			},
@@ -133,7 +134,13 @@
 			"name": "Get best price for",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
 				"url": {
 					"raw": "{{BASE_URL}}/api/v1/order/sell/BTC-ETH",
 					"host": [
@@ -154,7 +161,13 @@
 			"name": "Get symbols",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
 				"url": {
 					"raw": "{{BASE_URL}}/api/v1/symbols",
 					"host": [
@@ -173,7 +186,13 @@
 			"name": "Get order by ID",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
 				"url": {
 					"raw": "{{BASE_URL}}/api/v1/order/36143369-f9b4-4daf-b8d1-6b80a5b0842e",
 					"host": [
@@ -193,7 +212,13 @@
 			"name": "Get order by client order ID",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
 				"url": {
 					"raw": "{{BASE_URL}}/api/v1/order/client-order/d577273e-12de-4acc-a4f8-de7fb5b86e37",
 					"host": [
@@ -214,7 +239,13 @@
 			"name": "Get market depth",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
 				"url": {
 					"raw": "{{BASE_URL}}/api/v1/orderbook/BTC-ETH?limit=20",
 					"host": [
@@ -240,7 +271,13 @@
 			"name": "Get orders for user",
 			"request": {
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Public-Key",
+						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"type": "text"
+					}
+				],
 				"url": {
 					"raw": "{{BASE_URL}}/api/v1/orders?page=1&pageSize=10",
 					"host": [
