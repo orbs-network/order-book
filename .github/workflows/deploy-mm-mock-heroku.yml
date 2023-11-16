@@ -21,7 +21,7 @@ jobs:
       - name: Build and Push Docker Image
         run: |                    
           docker build -t registry.heroku.com/order-book-maker-mock/web -f cmd/maker-mock.Dockerfile .
-          docker push registry.heroku.com/order-book-maker-moock/web
+          docker push registry.heroku.com/order-book-maker-mock/web
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
