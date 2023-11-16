@@ -15,7 +15,28 @@ import (
 )
 
 func TestHandler_CancelOrderByOrderId(t *testing.T) {
-	var orderId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	orderId := uuid.MustParse("00000000-0000-0000-0000-000000000001")
+
+	t.Run("no user in context - should return `User not found` error", func(t *testing.T) {
+		router := mux.NewRouter()
+
+		h, _ := rest.NewHandler(&mocks.MockOrderBookService{}, router)
+
+		req, err := http.NewRequest("DELETE", fmt.Sprintf("/order/%s", orderId.String()), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+		router.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
+
+		router.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rr.Code)
+		assert.Equal(t, "User not found\n", rr.Body.String())
+	})
+
+	ctx := mocks.AddUserToCtx(nil)
 
 	tests := []struct {
 		name         string
@@ -32,13 +53,6 @@ func TestHandler_CancelOrderByOrderId(t *testing.T) {
 			"invalid order ID\n",
 		},
 		{
-			"no user in context",
-			&mocks.MockOrderBookService{Error: models.ErrNoUserInContext},
-			fmt.Sprintf("/order/%s", orderId.String()),
-			http.StatusUnauthorized,
-			"User not found\n",
-		},
-		{
 			"order not found",
 			&mocks.MockOrderBookService{Error: models.ErrOrderNotFound},
 			fmt.Sprintf("/order/%s", orderId.String()),
@@ -89,10 +103,12 @@ func TestHandler_CancelOrderByOrderId(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			reqWithCtx := req.WithContext(ctx)
+
 			rr := httptest.NewRecorder()
 			router.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
 
-			router.ServeHTTP(rr, req)
+			router.ServeHTTP(rr, reqWithCtx)
 
 			assert.Equal(t, test.expectedCode, rr.Code)
 			assert.Equal(t, test.expectedBody, rr.Body.String())
@@ -104,6 +120,27 @@ func TestHandler_CancelOrderByOrderId(t *testing.T) {
 func TestHandler_CancelOrderByClientOId(t *testing.T) {
 	var orderId = uuid.MustParse("00000000-0000-0000-0000-000000000000")
 	var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000009")
+
+	t.Run("no user in context - should return `User not found` error", func(t *testing.T) {
+		router := mux.NewRouter()
+
+		h, _ := rest.NewHandler(&mocks.MockOrderBookService{}, router)
+
+		req, err := http.NewRequest("DELETE", fmt.Sprintf("/order/client-order/%s", clientOId.String()), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+		router.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
+
+		router.ServeHTTP(rr, req)
+
+		assert.Equal(t, http.StatusUnauthorized, rr.Code)
+		assert.Equal(t, "User not found\n", rr.Body.String())
+	})
+
+	ctx := mocks.AddUserToCtx(nil)
 
 	tests := []struct {
 		name         string
@@ -120,13 +157,6 @@ func TestHandler_CancelOrderByClientOId(t *testing.T) {
 			"invalid clientOId\n",
 		},
 		{
-			"no user in context",
-			&mocks.MockOrderBookService{Error: models.ErrNoUserInContext},
-			fmt.Sprintf("/order/client-order/%s", clientOId.String()),
-			http.StatusUnauthorized,
-			"User not found\n",
-		},
-		{
 			"order not found",
 			&mocks.MockOrderBookService{Error: models.ErrOrderNotFound},
 			fmt.Sprintf("/order/client-order/%s", clientOId.String()),
@@ -177,10 +207,12 @@ func TestHandler_CancelOrderByClientOId(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			reqWithCtx := req.WithContext(ctx)
+
 			rr := httptest.NewRecorder()
 			router.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
 
-			router.ServeHTTP(rr, req)
+			router.ServeHTTP(rr, reqWithCtx)
 
 			assert.Equal(t, test.expectedCode, rr.Code, fmt.Sprintf("expected code %d, got %d", test.expectedCode, rr.Code))
 			assert.Equal(t, test.expectedBody, rr.Body.String(), fmt.Sprintf("expected body %s, got %s", test.expectedBody, rr.Body.String()))

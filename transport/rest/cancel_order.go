@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -19,7 +20,12 @@ type CancelOrderResponse struct {
 
 func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userPubKey := utils.GetPubKeyCtx(ctx)
+	user := utils.GetUserCtx(ctx)
+	if user == nil {
+		logctx.Error(ctx, "user should be in context")
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
 
 	vars := mux.Vars(r)
 	orderIdStr := vars["orderId"]
@@ -30,20 +36,25 @@ func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(ctx, "user trying to cancel order by orderID", logger.String("userPubKey", userPubKey), logger.String("orderId", orderId.String()))
+	logctx.Info(ctx, "user trying to cancel order by orderID", logger.String("userId", user.Id.String()), logger.String("orderId", orderId.String()))
 
 	h.handleCancelOrder(hInput{
 		ctx:         ctx,
 		id:          orderId,
 		isClientOId: false,
-		userPubKey:  userPubKey,
+		userId:      user.Id,
 		w:           w,
 	})
 }
 
 func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userPubKey := utils.GetPubKeyCtx(ctx)
+	user := utils.GetUserCtx(ctx)
+	if user == nil {
+		logctx.Error(ctx, "user should be in context")
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
 
 	vars := mux.Vars(r)
 	clientOIdStr := vars["clientOId"]
@@ -54,13 +65,13 @@ func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	logctx.Info(ctx, "user trying to cancel order by clientOId", logger.String("userPubKey", userPubKey), logger.String("clientOId", clientOId.String()))
+	logctx.Info(ctx, "user trying to cancel order by clientOId", logger.String("userId", user.Id.String()), logger.String("clientOId", clientOId.String()))
 
 	h.handleCancelOrder(hInput{
 		ctx:         ctx,
 		id:          clientOId,
 		isClientOId: true,
-		userPubKey:  userPubKey,
+		userId:      user.Id,
 		w:           w,
 	})
 }
@@ -69,20 +80,18 @@ type hInput struct {
 	ctx         context.Context
 	id          uuid.UUID
 	isClientOId bool
-	userPubKey  string
+	userId      uuid.UUID
 	w           http.ResponseWriter
 }
 
 // handleCancelOrder calls the service to cancel an order and writes the response to the client
 func (h *Handler) handleCancelOrder(input hInput) {
 
-	cancelledOrderId, err := h.svc.CancelOrder(input.ctx, input.userPubKey, input.id, input.isClientOId)
-
-	if err == models.ErrNoUserInContext {
-		logctx.Error(input.ctx, "user should be in context")
-		http.Error(input.w, "User not found", http.StatusUnauthorized)
-		return
-	}
+	cancelledOrderId, err := h.svc.CancelOrder(input.ctx, service.CancelOrderInput{
+		Id:          input.id,
+		IsClientOId: input.isClientOId,
+		UserId:      input.userId,
+	})
 
 	if err == models.ErrOrderNotFound {
 		logctx.Warn(input.ctx, "order not found", logger.String("id", input.id.String()))

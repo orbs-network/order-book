@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/orbs-network/order-book/mocks"
-	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,26 +17,17 @@ func TestService_CancelOrdersForUser(t *testing.T) {
 
 		s, _ := service.New(store)
 
-		err := s.CancelOrdersForUser(ctx, mocks.PubKey)
+		err := s.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.Equal(t, err, nil)
 	})
 
-	t.Run("should return user not found error when no user found", func(t *testing.T) {
-		store := &mocks.MockOrderBookStore{User: nil, ErrUser: models.ErrUserNotFound}
+	t.Run("should return error on unexpected error", func(t *testing.T) {
+		store := &mocks.MockOrderBookStore{User: nil, Error: assert.AnError}
 
 		s, _ := service.New(store)
 
-		err := s.CancelOrdersForUser(ctx, mocks.PubKey)
-		assert.Equal(t, err, models.ErrUserNotFound)
-	})
-
-	t.Run("should return error on unexpected error getting user by public key", func(t *testing.T) {
-		store := &mocks.MockOrderBookStore{User: nil, ErrUser: assert.AnError}
-
-		s, _ := service.New(store)
-
-		err := s.CancelOrdersForUser(ctx, mocks.PubKey)
-		assert.ErrorContains(t, err, "unexpected error getting user by public key")
+		err := s.CancelOrdersForUser(ctx, mocks.UserId)
+		assert.ErrorContains(t, err, "could not cancel orders for user")
 	})
 
 }

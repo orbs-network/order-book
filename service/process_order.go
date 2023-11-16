@@ -13,7 +13,7 @@ import (
 )
 
 type ProcessOrderInput struct {
-	UserPubKey    string
+	UserId        uuid.UUID
 	Price         decimal.Decimal
 	Symbol        models.Symbol
 	Size          decimal.Decimal
@@ -27,13 +27,6 @@ var (
 
 func (s *Service) ProcessOrder(ctx context.Context, input ProcessOrderInput) (models.Order, error) {
 
-	user, err := s.GetUserByPublicKey(ctx, input.UserPubKey)
-
-	if err != nil {
-		logctx.Warn(ctx, "user not found", logger.String("userPubKey", input.UserPubKey), logger.Error(err))
-		return models.Order{}, err
-	}
-
 	existingOrder, err := s.orderBookStore.FindOrderById(ctx, input.ClientOrderID, true)
 
 	if err != nil && err != models.ErrOrderNotFound {
@@ -43,10 +36,10 @@ func (s *Service) ProcessOrder(ctx context.Context, input ProcessOrderInput) (mo
 
 	if existingOrder == nil {
 		logctx.Info(ctx, "no existing order with same orderId. Trying to create new order", logger.String("clientOrderId", input.ClientOrderID.String()))
-		return s.createNewOrder(ctx, input, user.Id)
+		return s.createNewOrder(ctx, input, input.UserId)
 	}
 
-	if existingOrder.UserId != user.Id {
+	if existingOrder.UserId != input.UserId {
 		logctx.Warn(ctx, "order already exists with different userId", logger.Error(err))
 		return models.Order{}, ErrClashingOrderId
 	}
@@ -56,7 +49,7 @@ func (s *Service) ProcessOrder(ctx context.Context, input ProcessOrderInput) (mo
 		return models.Order{}, models.ErrOrderAlreadyExists
 	}
 
-	logctx.Error(ctx, "did not follow any cases when processing order", logger.String("clientOrderId", input.ClientOrderID.String()), logger.String("userId", user.Id.String()), logger.String("price", input.Price.String()), logger.String("size", input.Size.String()), logger.String("symbol", input.Symbol.String()), logger.String("side", input.Side.String()))
+	logctx.Error(ctx, "did not follow any cases when processing order", logger.String("clientOrderId", input.ClientOrderID.String()), logger.String("userId", input.UserId.String()), logger.String("price", input.Price.String()), logger.String("size", input.Size.String()), logger.String("symbol", input.Symbol.String()), logger.String("side", input.Side.String()))
 
 	return models.Order{}, models.ErrUnexpectedError
 }

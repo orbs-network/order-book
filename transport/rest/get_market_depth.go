@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
@@ -21,6 +22,14 @@ const MAX_LIMIT int = 1000
 const DEFAULT_LIMIT int = 10
 
 func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	user := utils.GetUserCtx(ctx)
+	if user == nil {
+		logctx.Error(ctx, "user should be in context")
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+
 	vars := mux.Vars(r)
 	symbolStr, ok := vars["symbol"]
 	if !ok {
@@ -50,7 +59,7 @@ func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to get market depth", logger.String("symbol", symbol.String()), logger.Int("limit", limit))
+	logctx.Info(r.Context(), "user trying to get market depth", logger.String("userId", user.Id.String()), logger.String("symbol", symbol.String()), logger.Int("limit", limit))
 	marketDepth, err := h.svc.GetMarketDepth(r.Context(), symbol, limit)
 
 	if err != nil {
