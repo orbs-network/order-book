@@ -1,0 +1,12 @@
+{
+    "client": "Thunder Client",
+    "environmentName": "Heroku",
+    "dateExported": "2023-11-16T09:35:36.619Z",
+    "version": "1.0",
+    "variables": [
+        {
+            "name": "BASE_URL",
+            "value": "https://order-book-server-dae656b436a0.herokuapp.com"
+        }
+    ]
+}

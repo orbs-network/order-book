@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/redis/go-redis/v9"
@@ -18,36 +18,24 @@ func main() {
 }
 
 func setup() {
-	redisAddress, found := os.LookupEnv("REDIS_ADDRESS")
+	redisAddress, found := os.LookupEnv("REDIS_URL")
 	if !found {
-		panic("REDIS_ADDRESS not set")
+		panic("REDIS_URL not set")
 	}
 
-	redisPassword, found := os.LookupEnv("REDIS_PASSWORD")
-	if !found {
-		panic("REDIS_PASSWORD not set")
-	}
-
-	redisDb, found := os.LookupEnv("REDIS_DB")
-	if !found {
-		panic("REDIS_DB not set")
-	}
-
-	port, found := os.LookupEnv("LISTEN_PORT")
-	if !found {
-		port = ":8080"
-	}
-
-	redisDbInt, err := strconv.Atoi(redisDb)
+	opt, err := redis.ParseURL(redisAddress)
 	if err != nil {
-		panic("REDIS_DB not a number")
+		panic(fmt.Errorf("failed to parse redis url: %v", err))
 	}
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisAddress,
-		Password: redisPassword,
-		DB:       redisDbInt,
-	})
+	log.Printf("Redis address: %s", opt.Addr)
+
+	port, found := os.LookupEnv("PORT")
+	if !found {
+		port = "8080"
+	}
+
+	rdb := redis.NewClient(opt)
 
 	repository, err := redisrepo.NewRedisRepository(rdb)
 	if err != nil {
@@ -66,7 +54,7 @@ func setup() {
 	}
 	handler.Init()
 
-	server := rest.NewHTTPServer(port, handler.Router)
+	server := rest.NewHTTPServer(":"+port, handler.Router)
 	server.StartServer()
 	// blocking
 	<-server.StopChannel
