@@ -6,17 +6,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
-const PORT = "80"
-
 const pubKey = "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
-
 const depthSize = 5
+
+var HOST = "localhost"
 
 type Ticker struct {
 	Price  string `json:"price"`
@@ -59,7 +59,7 @@ func onTick(url string) *Ticker {
 }
 
 func cancelAllOrders() {
-	url := fmt.Sprintf("http://localhost:%s/api/v1/orders", PORT)
+	url := fmt.Sprintf("%s/api/v1/orders", HOST)
 
 	// Create a new HTTP client
 	client := &http.Client{}
@@ -95,7 +95,7 @@ func placeOrder(side string, price, size decimal.Decimal) {
 		Symbol:        "ETH-USD",
 		ClientOrderId: cOId,
 	}
-	url := fmt.Sprintf("http://localhost:%s/api/v1/order", PORT)
+	url := fmt.Sprintf("%s/api/v1/order", HOST)
 	jsonData, err := json.Marshal(body)
 	if err != nil {
 		log.Fatalf("error marshaling: %v", err)
@@ -140,8 +140,13 @@ func updateOrders(price decimal.Decimal) {
 
 }
 func main() {
-
 	url := "https://www.binance.com/api/v3/ticker/price?symbol=ETHUSDT"
+	println("Ticker URL: ", url)
+	host := os.Getenv("ORDERBOOK_HOST")
+	if len(host) > 0 {
+		HOST = host
+	}
+
 	for {
 		// Fetch the ticker price for ETH-USD
 		ticker := onTick(url)
