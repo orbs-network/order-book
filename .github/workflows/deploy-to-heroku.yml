@@ -1,12 +1,9 @@
 name: Build and Deploy to Heroku
 
-# on:
-#   push:
-#     branches:
-#       - main
-
-# TODO: Only deploy on merge to main
-on: push
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-deploy:

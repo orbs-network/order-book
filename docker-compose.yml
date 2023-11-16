@@ -7,9 +7,8 @@ services:
     ports:
       - "80:8080"
     environment:
-      - REDIS_ADDRESS=db:6379
-      - REDIS_PASSWORD=secret
-      - REDIS_DB=0
+      - REDIS_URL=redis://db:6379/0
+      - PORT=8080
     depends_on:
       - db
     develop:
