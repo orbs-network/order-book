@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
@@ -17,6 +18,14 @@ type GetBestPriceForResponse struct {
 }
 
 func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	user := utils.GetUserCtx(ctx)
+	if user == nil {
+		logctx.Error(ctx, "user should be in context")
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
+
 	vars := mux.Vars(r)
 	symbolStr := vars["symbol"]
 	sideStr := vars["side"]
@@ -33,7 +42,7 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to get best price", logger.String("userId", userId.String()), logger.String("symbol", symbol.String()), logger.String("side", side.String()))
+	logctx.Info(r.Context(), "user trying to get best price", logger.String("userId", user.Id.String()), logger.String("symbol", symbol.String()), logger.String("side", side.String()))
 	price, err := h.svc.GetBestPriceFor(r.Context(), symbol, side)
 
 	if err != nil {

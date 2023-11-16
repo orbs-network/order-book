@@ -26,12 +26,14 @@ type CreateOrderResponse struct {
 	OrderId string `json:"orderId"`
 }
 
-// TODO: hardcoded userId for now
-var userId = uuid.MustParse("d577273e-12de-4acc-a4f8-de7fb5b86e37")
-
 func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userPubKey := utils.GetPubKeyCtx(ctx)
+	user := utils.GetUserCtx(ctx)
+	if user == nil {
+		logctx.Error(ctx, "user should be in context")
+		http.Error(w, "User not found", http.StatusUnauthorized)
+		return
+	}
 
 	var args CreateOrderRequest
 	err := json.NewDecoder(r.Body).Decode(&args)
@@ -87,9 +89,9 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(ctx, "user trying to create order", logger.String("userPubKey", userPubKey), logger.String("price", roundedDecPrice.String()), logger.String("size", decSize.String()), logger.String("clientOrderId", clientOrderId.String()))
+	logctx.Info(ctx, "user trying to create order", logger.String("userId", user.Id.String()), logger.String("price", roundedDecPrice.String()), logger.String("size", decSize.String()), logger.String("clientOrderId", clientOrderId.String()))
 	order, err := h.svc.ProcessOrder(ctx, service.ProcessOrderInput{
-		UserPubKey:    userPubKey,
+		UserId:        user.Id,
 		Price:         roundedDecPrice,
 		Symbol:        symbol,
 		Size:          decSize,

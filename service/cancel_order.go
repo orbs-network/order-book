@@ -9,29 +9,28 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-// CancelOrder cancels an order by its ID or clientOId. If `isClientOId` is true, the `id` is treated as a clientOId, otherwise it is treated as an orderId.
-func (s *Service) CancelOrder(ctx context.Context, userPubKey string, id uuid.UUID, isClientOId bool) (cancelledOrderId *uuid.UUID, err error) {
+type CancelOrderInput struct {
+	Id          uuid.UUID
+	IsClientOId bool
+	UserId      uuid.UUID
+}
 
-	user, err := s.GetUserByPublicKey(ctx, userPubKey)
-
-	if err != nil {
-		logctx.Warn(ctx, "user not found", logger.String("userPubKey", userPubKey), logger.Error(err))
-		return nil, err
-	}
+// CancelOrder cancels an order by its ID or clientOId. If `isClientOId` is true, the `id` is treated as a clientOinput.Id, otherwise it is treated as an orderId.
+func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (cancelledOrderId *uuid.UUID, err error) {
 
 	var order *models.Order
 
-	if isClientOId {
-		logctx.Info(ctx, "finding order by clientOId", logger.String("clientOId", id.String()))
+	if input.IsClientOId {
+		logctx.Info(ctx, "finding order by clientOId", logger.String("clientOId", input.Id.String()))
 
-		order, err = s.orderBookStore.FindOrderById(ctx, id, true)
+		order, err = s.orderBookStore.FindOrderById(ctx, input.Id, true)
 		if err != nil {
 			logctx.Error(ctx, "could not get order ID by clientOId", logger.Error(err))
 			return nil, err
 		}
 	} else {
-		logctx.Info(ctx, "finding order by orderId", logger.String("orderId", id.String()))
-		order, err = s.orderBookStore.FindOrderById(ctx, id, false)
+		logctx.Info(ctx, "finding order by orderId", logger.String("orderId", input.Id.String()))
+		order, err = s.orderBookStore.FindOrderById(ctx, input.Id, false)
 		if err != nil {
 			logctx.Error(ctx, "could not get order by orderId", logger.Error(err))
 			return nil, err
@@ -39,7 +38,7 @@ func (s *Service) CancelOrder(ctx context.Context, userPubKey string, id uuid.UU
 	}
 
 	if order == nil {
-		logctx.Warn(ctx, "order not found", logger.String("id", id.String()), logger.Bool("isClientOId", isClientOId))
+		logctx.Warn(ctx, "order not found", logger.String("id", input.Id.String()), logger.Bool("isClientOId", input.IsClientOId))
 		return nil, models.ErrOrderNotFound
 	}
 
@@ -48,8 +47,8 @@ func (s *Service) CancelOrder(ctx context.Context, userPubKey string, id uuid.UU
 		return nil, models.ErrOrderNotOpen
 	}
 
-	if user.Id != order.UserId {
-		logctx.Warn(ctx, "user trying to cancel another user's order", logger.String("orderId", order.Id.String()), logger.String("requestUserId", user.Id.String()), logger.String("orderUserId", order.UserId.String()))
+	if input.UserId != order.UserId {
+		logctx.Warn(ctx, "user trying to cancel another user's order", logger.String("orderId", order.Id.String()), logger.String("requestUserId", input.UserId.String()), logger.String("orderUserId", order.UserId.String()))
 		return nil, models.ErrUnauthorized
 	}
 
