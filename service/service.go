@@ -30,9 +30,14 @@ type OrderBookService interface {
 	GetAmountOut(ctx context.Context, auctionID uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 }
 
+type BlockChainService interface {
+	VerifySignature(message, signature string, publicKey []byte) (bool, error)
+}
+
 // Service contains methods that implement the business logic for the application.
 type Service struct {
 	orderBookStore store.OrderBookStore
+	// blockchainClient BlockChainService
 }
 
 // New creates a new Service with injected dependencies.
@@ -40,6 +45,10 @@ func New(store store.OrderBookStore) (*Service, error) {
 	if store == nil {
 		return nil, errors.New("store cannot be nil")
 	}
+
+	// if blockchainClient == nil {
+	// 	return nil, errors.New("blockchainClient cannot be nil")
+	// }
 
 	return &Service{orderBookStore: store}, nil
 }
