@@ -109,7 +109,7 @@ func placeOrder(side string, price, size decimal.Decimal) {
 	req.Header.Add("X-Public-Key", pubKey)
 
 	res, err := client.Do(req)
-	fmt.Printf("res is ------->: %#v\n", res)
+	//fmt.Printf("res is ------->: %#v\n", res)
 	if err != nil {
 		log.Fatalf("error post: %v", err)
 	}
@@ -124,10 +124,11 @@ func updateOrders(price decimal.Decimal) {
 	cancelAllOrders()
 	factor := decimal.NewFromFloat(1.001)
 	curPrice := price
+	fmt.Println("------ Market Price: ", price.String())
 	// ASK
 	for i := 0; i < depthSize; i++ {
 		curPrice = curPrice.Mul(factor)
-		fmt.Println("Price: ", curPrice.String())
+		fmt.Println("Ask Price: ", curPrice.String())
 		curSize := decimal.NewFromFloat(float64(i+1) * 10)
 		placeOrder("sell", curPrice, curSize)
 	}
@@ -136,7 +137,7 @@ func updateOrders(price decimal.Decimal) {
 	curPrice = price
 	for i := 0; i < depthSize; i++ {
 		curPrice = curPrice.Mul(factor)
-		fmt.Println("Price: ", curPrice.String())
+		fmt.Println("Bid Price: ", curPrice.String())
 		curSize := decimal.NewFromFloat(float64(i+1) * 10)
 		placeOrder("buy", curPrice, curSize)
 	}
