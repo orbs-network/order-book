@@ -132,7 +132,7 @@ func updateOrders(price decimal.Decimal) {
 		placeOrder("sell", curPrice, curSize)
 	}
 	// BIDS
-	factor = decimal.NewFromFloat(0.009)
+	factor = decimal.NewFromFloat(0.999)
 	curPrice = price
 	for i := 0; i < depthSize; i++ {
 		curPrice = curPrice.Mul(factor)
