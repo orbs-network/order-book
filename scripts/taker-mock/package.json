@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +16,7 @@
     "node": ">=18.0.0 <17.0.0"
   },
   "dependencies": {
+    "dotenv": "^16.3.1",
     "node-fetch": "^3.3.2"
   }
 }
