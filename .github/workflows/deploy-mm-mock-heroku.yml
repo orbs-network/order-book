@@ -1,9 +1,9 @@
 name: Maker Mock - Deploy to Heroku
 
 on:
-  push
-#     branches:
-#       - main
+  push:
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
@@ -19,7 +19,7 @@ jobs:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
       - name: Build and Push Docker Image
-        run: |                    
+        run: |
           docker build -t registry.heroku.com/order-book-maker-mock/worker -f cmd/maker-mock.Dockerfile .
           docker push registry.heroku.com/order-book-maker-mock/worker
         env:
