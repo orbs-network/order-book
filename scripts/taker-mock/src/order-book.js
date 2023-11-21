@@ -22,6 +22,14 @@ class Orderbook {
             }
             const response = await fetch(url, req);
 
+            // error
+            if (response.status >= 400) {
+                const message = await response.text()
+                console.error(message)
+
+                return null
+            }
+
             // Parse and work with the JSON response
             return await response.json();
         }
