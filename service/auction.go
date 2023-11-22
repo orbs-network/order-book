@@ -30,7 +30,7 @@ func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 	if order.Status != models.STATUS_OPEN {
 		return false
 	}
-	// order.size - (Order.filled + prder.pending) >= frag.size
+	// order.size - (Order.filled + Order.pending) >= frag.size
 	return order.GetAvailableSize().GreaterThanOrEqual(frag.Size)
 }
 
@@ -39,7 +39,7 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 	if order.Status != models.STATUS_OPEN {
 		return false
 	}
-	// order.Size pending should be greater or equal to orderFrag: (Order.sizePending + prder.pending) >= frag.size
+	// order.Size pending should be greater or equal to orderFrag: (Order.sizePending + Order.pending) >= frag.size
 	return order.SizePending.GreaterThanOrEqual(frag.Size)
 }
 
