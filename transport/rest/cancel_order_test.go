@@ -81,6 +81,13 @@ func TestHandler_CancelOrderByOrderId(t *testing.T) {
 			"Error cancelling order. Try again later\n",
 		},
 		{
+			"cannot currently cancel due to pending fill",
+			&mocks.MockOrderBookService{Error: models.ErrOrderPending},
+			fmt.Sprintf("/order/%s", orderId.String()),
+			http.StatusConflict,
+			"Cannot cancel order due to pending fill\n",
+		},
+		{
 			"successful cancel",
 			&mocks.MockOrderBookService{Order: &models.Order{Id: orderId}},
 			fmt.Sprintf("/order/%s", orderId.String()),

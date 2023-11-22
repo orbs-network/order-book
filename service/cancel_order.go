@@ -7,6 +7,7 @@ import (
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
+	"github.com/shopspring/decimal"
 )
 
 type CancelOrderInput struct {
@@ -42,6 +43,11 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (canc
 		return nil, models.ErrOrderNotFound
 	}
 
+	if order.SizePending.GreaterThan(decimal.Zero) {
+		logctx.Warn(ctx, "cancelling order not possible when order is pending", logger.String("orderId", order.Id.String()), logger.String("sizePending", order.SizePending.String()))
+		return nil, models.ErrOrderPending
+	}
+
 	if order.Status != models.STATUS_OPEN {
 		logctx.Warn(ctx, "trying to cancel order that is not open", logger.String("orderId", order.Id.String()), logger.String("status", order.Status.String()))
 		return nil, models.ErrOrderNotOpen
@@ -58,6 +64,6 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (canc
 		return nil, err
 	}
 
-	logctx.Info(ctx, "order removed", logger.String("orderId", order.Id.String()))
+	logctx.Info(ctx, "order removed", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
 	return &order.Id, nil
 }

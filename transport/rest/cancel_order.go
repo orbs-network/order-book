@@ -111,6 +111,12 @@ func (h *Handler) handleCancelOrder(input hInput) {
 		return
 	}
 
+	if err == models.ErrOrderPending {
+		logctx.Warn(input.ctx, "cancelling order not possible when order is pending", logger.String("id", input.id.String()))
+		http.Error(input.w, "Cannot cancel order due to pending fill", http.StatusConflict)
+		return
+	}
+
 	if err != nil {
 		logctx.Error(input.ctx, "failed to cancel order", logger.Error(err))
 		http.Error(input.w, "Error cancelling order. Try again later", http.StatusInternalServerError)
