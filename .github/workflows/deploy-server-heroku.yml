@@ -2,8 +2,8 @@ name: Server - Deploy to Heroku
 
 on:
   push:
-    # branches:
-    #   - main
+    branches:
+      - main
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
