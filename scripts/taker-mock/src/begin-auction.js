@@ -1,58 +1,56 @@
-
-function delay(time) {
-    return new Promise(resolve => setTimeout(resolve, time));
-}
-
-
-async function beginAuction(ob) {
-    // BUY
-    let depth = await ob.marketDepth()
-    console.log(depth)
+async function test(ob, side, extra) {
+    console.log(`--- behinAuction ${side} ${extra ? 'expect insufficient' : ''}`)
+    const depth = await ob.marketDepth()
+    const buySide = side === "BUY"
+    let orders = buySide ? depth.asks : depth.bids
     let sumBToken = 0
     let sumAToken = 0
-    for (const ask of depth.asks) {
+    for (const ask of orders) {
         const price = parseFloat(ask[0])
         const size = parseFloat(ask[1])
         sumAToken += size
         sumBToken += size * price
 
     }
-    let res = await ob.beginAuction("ETH-USD", "BUY", sumBToken)
-    if (!res) {
-        console.error('beginAuction BUY failed')
+    let sumToken = buySide ? sumBToken : sumAToken
+    const sumTokenOposite = buySide ? sumAToken : sumBToken
+
+    if (extra) {
+        sumToken += 1;
     }
-    else if (parseFloat(res.amountOut) === sumAToken) {
-        console.log('SUCCESS BUY amount-out IS equal to sum of size', res.amountOut, sumAToken)
+    let res = await ob.beginAuction("ETH-USD", side, sumToken)
+    // expected error
+    if (extra && !res) {
+        console.log(`SUCCESS ${side}\texpected null res`)
+        return true
+    }
+    else if (!res) {
+        console.error(`beginAuction ${side} failed`)
+    }
+    else if (parseFloat(res.amountOut) === sumTokenOposite) {
+        console.log(`SUCCESS ${side}\tamount-out IS equal to sum of size `, res.amountOut, sumTokenOposite)
     }
     else {
-        console.error('BUY amount out is NOT equal not to sum of size', res.amountOut, sumAToken)
+        console.error(`FAIL ${side} amount out is NOT  equal not to sum of size`, res.amountOut, sumTokenOposite)
         return false;
     }
-
-    // SELL (reset)
-    depth = await ob.marketDepth()
-    sumAToken = 0
-    sumBToken = 0
-    for (const bid of depth.bids) {
-        const price = parseFloat(bid[0])
-        const size = parseFloat(bid[1])
-        sumAToken += size
-        sumBToken += size * price
-
-    }
-    res = await ob.beginAuction("ETH-USD", "SELL", sumAToken)
-    if (!res) {
-        console.error('beginAuction SELL failed')
-    }
-    else if (parseFloat(res.amountOut) === sumBToken) {
-        console.log('SUCCESS SELL amount-out IS equal to sum of size', res.amountOut, sumBToken)
-        return true;
-    }
-    else {
-        console.error('SELL amount out is NOT equal not to sum of size', res.amountOut, sumBToken)
+    return true
+}
+async function beginAuctionTest(ob) {
+    if (!await test(ob, "BUY"))
         return false;
-    }
+
+    if (!await test(ob, "SELL"))
+        return false;
+
+    // insufficiant liquidity
+    if (!await test(ob, "BUY", true))
+        return false;
+
+    // insufficiant liquidity
+    if (!await test(ob, "SELL", true))
+        return false;
 
     return true
 }
-export default beginAuction
+export default beginAuctionTest
