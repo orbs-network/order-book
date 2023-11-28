@@ -27,3 +27,8 @@ test:
 lint:
 	@echo "Running linter..."
 	golangci-lint run
+
+coverage:
+	@echo "Generating test coverage report..."
+	@go test -coverprofile=coverage.out ./...
+	@go tool cover -html=coverage.out

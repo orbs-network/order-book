@@ -21,6 +21,7 @@ func (r *redisRepository) FindOrderById(ctx context.Context, id uuid.UUID, isCli
 		orderIdStr, err := r.client.Get(ctx, CreateClientOIDKey(id)).Result()
 		if err != nil {
 			if err == redis.Nil {
+				logctx.Info(ctx, "no order found for clientOId", logger.String("clientOId", id.String()))
 				return nil, models.ErrOrderNotFound
 			}
 			logctx.Error(ctx, "could not get order ID by clientOId", logger.Error(err))
