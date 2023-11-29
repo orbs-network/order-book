@@ -26,12 +26,18 @@ class Orderbook {
             if (response.status >= 400) {
                 const message = await response.text()
                 console.error(message)
-
                 return null
             }
 
-            // Parse and work with the JSON response
-            return await response.json();
+            // Check if the response has a JSON body
+            const contentType = response.headers.get('Content-Type');
+            if (contentType && contentType.includes('application/json')) {
+                // Parse and work with the JSON response
+                return await response.json();
+            } else {
+                // Response does not have a JSON body, it might be empty or in a different format
+                return response.status;
+            }
         }
         catch (error) {
             // Handle any errors that occurred during the fetch
@@ -56,6 +62,20 @@ class Orderbook {
             "side": side
         }
         return await this.apiCall('POST', `/lh/v1/begin_auction/${auctionId}`, body)
+    }
+    async createOrder(symbol, side, price, size, cOId) {
+        const body = {
+            price: String(price),
+            size: String(size),
+            side: side,
+            symbol: symbol,
+            ClientOrderId: cOId,
+        }
+        const jsonResponse = await this.apiCall('POST', '/api/v1/order', body)
+        return jsonResponse !== null && jsonResponse.orderId.length > 0;
+    }
+    async cancelOrders() {
+        return await this.apiCall('DELETE', `/api/v1/orders`)
     }
 
 }
