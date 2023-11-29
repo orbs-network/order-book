@@ -15,8 +15,8 @@ type Order struct {
 	Price       decimal.Decimal `json:"price"`
 	Symbol      Symbol          `json:"symbol"`
 	Size        decimal.Decimal `json:"size"`
-	SizePending decimal.Decimal `json:"sizePending"`
-	SizeFilled  decimal.Decimal `json:"sizeFilled"`
+	SizePending decimal.Decimal `json:"-"`
+	SizeFilled  decimal.Decimal `json:"-"`
 	Signature   string          `json:"-" ` // EIP 712
 	Status      Status          `json:"-"`  // when order is pending, it should not be updateable
 	Side        Side            `json:"side"`
