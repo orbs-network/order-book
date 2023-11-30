@@ -4,13 +4,15 @@ import (
 	"fmt"
 
 	"github.com/gorilla/mux"
+	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/transport/middleware"
 )
 
 type Handler struct {
-	svc    service.OrderBookService
-	Router *mux.Router
+	svc      service.OrderBookService
+	pairMngr *models.PairMngr
+	Router   *mux.Router
 }
 
 func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
@@ -23,8 +25,9 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 	}
 
 	return &Handler{
-		svc:    svc,
-		Router: r,
+		svc:      svc,
+		Router:   r,
+		pairMngr: models.NewPairMngr(),
 	}, nil
 }
 
@@ -71,4 +74,20 @@ func (h *Handler) Init() {
 	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("GET")
 	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("POST")
 	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("POST")
+
+	/////////////////////////////////////////////////////////////////////
+	// LH TAKER side -  to replace auction
+	takerApi := h.Router.PathPrefix("/taker/v1").Subrouter()
+	// returns potential amountOut
+	takerApi.HandleFunc("/quote", h.quote).Methods("GET")
+	// returns fresh amountOut
+	// locks orders
+	// returns swapID to be used by abort and txsend
+	takerApi.HandleFunc("/swap", h.swap).Methods("GET")
+	// release locked orders of start to be used by other match
+	// called when
+	// lh doesnt want to use swap amountOut
+	takerApi.HandleFunc("/abort/{swapId}", h.abortAuction).Methods("POST")
+	// all swaps are confirmed on-chain TXHASH
+	takerApi.HandleFunc("/txsend/{swapId}", h.auctionMined).Methods("POST")
 }
