@@ -27,9 +27,6 @@ type QuoteRes struct {
 }
 
 func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) {
-	// if auctionID exists, its a full_rfq
-	auctionId := handleAuctionId(w, r)
-
 	var req QuoteReq
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -51,7 +48,8 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 	side := pair.GetSide(req.InToken)
 
-	amountOutRes, err := h.svc.GetAmountOut(r.Context(), *auctionId, pair.Symbol(), side, inAmount)
+	//amountOutRes, err := h.svc.GetAmountOut(r.Context(), nil, pair.Symbol(), side, inAmount)
+	amountOutRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

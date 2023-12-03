@@ -71,6 +71,9 @@ func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId u
 func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 	return m.AmountOut, m.Error
 }
+func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
+	return m.AmountOut, m.Error
+}
 func (m *MockOrderBookService) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (service.ConfirmAuctionRes, error) {
 	return service.ConfirmAuctionRes{}, nil
 }
@@ -80,4 +83,9 @@ func (m *MockOrderBookService) RevertAuction(ctx context.Context, auctionId uuid
 
 func (m *MockOrderBookService) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	return nil
+}
+
+// taker api instead of auction
+func (m *MockOrderBookService) BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error) {
+	return models.BeginSwapRes{}, nil
 }

@@ -23,11 +23,14 @@ type OrderBookService interface {
 	CancelOrdersForUser(ctx context.Context, userId uuid.UUID) error
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)
 	GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
-
+	// auction API - DEPRACTED
 	ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error)
 	RevertAuction(ctx context.Context, auctionId uuid.UUID) error
 	AuctionMined(ctx context.Context, auctionId uuid.UUID) error
 	GetAmountOut(ctx context.Context, auctionID uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
+	// taker api - INSTEAD
+	GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
+	BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error)
 }
 
 // Service contains methods that implement the business logic for the application.
