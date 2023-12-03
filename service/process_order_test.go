@@ -16,6 +16,7 @@ import (
 func TestService_ProcessOrder(t *testing.T) {
 
 	ctx := context.Background()
+	mockBcClient := &mocks.MockBcClient{IsVerified: true}
 
 	symbol, _ := models.StrToSymbol("USDC-ETH")
 	userId := uuid.MustParse("a577273e-12de-4acc-a4f8-de7fb5b86e37")
@@ -40,7 +41,7 @@ func TestService_ProcessOrder(t *testing.T) {
 			ClientOrderID: orderId,
 		}
 
-		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Error: assert.AnError})
+		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Error: assert.AnError}, mockBcClient)
 
 		order, err := svc.ProcessOrder(ctx, input)
 
@@ -58,7 +59,7 @@ func TestService_ProcessOrder(t *testing.T) {
 			ClientOrderID: orderId,
 		}
 
-		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: nil})
+		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: nil}, mockBcClient)
 
 		newOrder, err := svc.ProcessOrder(ctx, input)
 
@@ -85,7 +86,7 @@ func TestService_ProcessOrder(t *testing.T) {
 			ClientOrderID: orderId,
 		}
 
-		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: &models.Order{UserId: uuid.MustParse("b577273e-12de-4acc-a4f8-de7fb5b86e37")}})
+		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: &models.Order{UserId: uuid.MustParse("b577273e-12de-4acc-a4f8-de7fb5b86e37")}}, mockBcClient)
 
 		order, err := svc.ProcessOrder(ctx, input)
 
@@ -103,7 +104,7 @@ func TestService_ProcessOrder(t *testing.T) {
 			ClientOrderID: orderId,
 		}
 
-		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: &models.Order{ClientOId: orderId, UserId: userId}})
+		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: &models.Order{ClientOId: orderId, UserId: userId}}, mockBcClient)
 
 		order, err := svc.ProcessOrder(ctx, input)
 

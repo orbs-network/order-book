@@ -31,24 +31,24 @@ type OrderBookService interface {
 }
 
 type BlockChainService interface {
-	VerifySignature(message, signature string, publicKey []byte) (bool, error)
+	VerifySignature(ctx context.Context, input VerifySignatureInput) (bool, error)
 }
 
 // Service contains methods that implement the business logic for the application.
 type Service struct {
-	orderBookStore store.OrderBookStore
-	// blockchainClient BlockChainService
+	orderBookStore   store.OrderBookStore
+	blockchainClient BlockChainService
 }
 
 // New creates a new Service with injected dependencies.
-func New(store store.OrderBookStore) (*Service, error) {
+func New(store store.OrderBookStore, bcClient BlockChainService) (*Service, error) {
 	if store == nil {
 		return nil, errors.New("store cannot be nil")
 	}
 
-	// if blockchainClient == nil {
-	// 	return nil, errors.New("blockchainClient cannot be nil")
-	// }
+	if bcClient == nil {
+		return nil, errors.New("bcClient cannot be nil")
+	}
 
-	return &Service{orderBookStore: store}, nil
+	return &Service{orderBookStore: store, blockchainClient: bcClient}, nil
 }
