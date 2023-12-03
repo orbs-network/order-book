@@ -12,6 +12,7 @@ var ErrUnauthorized = errors.New("user not allowed to perform this action")
 var ErrOrderNotOpen = errors.New("order must be status open to perform this action")
 var ErrTransactionFailed = errors.New("transaction failed")
 var ErrInsufficientLiquity = errors.New("not enough liquidity in book to satisfy amountIn")
+var ErrInAmount = errors.New("amountIn should be positive")
 var ErrAuctionInvalid = errors.New("orders in the auction can not fill any longer")
 var ErrOrderPending = errors.New("order is pending")
 

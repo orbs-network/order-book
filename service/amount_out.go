@@ -12,6 +12,11 @@ import (
 )
 
 func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
+
+	// make sure amountIn is positivr
+	if !amountIn.IsPositive() {
+		return models.AmountOut{}, models.ErrInAmount
+	}
 	var it models.OrderIter
 	var res models.AmountOut
 	var err error
