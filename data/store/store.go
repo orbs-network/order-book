@@ -28,4 +28,8 @@ type OrderBookStore interface {
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
 	UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error
+	// taker side
+	//UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error
+	StoreSwap(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error
+	RemoveSwap(ctx context.Context, auctionID uuid.UUID) error
 }

@@ -83,7 +83,7 @@ func (h *Handler) Init() {
 	// returns fresh amountOut
 	// locks orders
 	// returns swapID to be used by abort and txsend
-	takerApi.HandleFunc("/swap", h.swap).Methods("GET")
+	takerApi.HandleFunc("/swap", h.swap).Methods("POST")
 	// release locked orders of start to be used by other match
 	// called when
 	// lh doesnt want to use swap amountOut

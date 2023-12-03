@@ -77,6 +77,15 @@ func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UU
 	return nil
 }
 
+func (m *MockOrderBookStore) StoreSwap(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error {
+	if m.Error != nil {
+		return m.Error
+	}
+	// save auction
+	m.Frags = frags
+	return nil
+}
+
 func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
 	if m.Error != nil {
 		return nil, 0, m.Error
@@ -107,6 +116,11 @@ func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID
 }
 
 func (m *MockOrderBookStore) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {
+	m.Frags = []models.OrderFrag{}
+	return nil
+}
+
+func (m *MockOrderBookStore) RemoveSwap(ctx context.Context, auctionID uuid.UUID) error {
 	m.Frags = []models.OrderFrag{}
 	return nil
 }
