@@ -1,5 +1,5 @@
-// Usage: go run scripts/signing/main.go
 // A quick script to test EIP712 signature verification
+// Usage: go run scripts/signing/main.go
 
 package main
 
