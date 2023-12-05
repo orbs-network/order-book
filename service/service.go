@@ -31,6 +31,8 @@ type OrderBookService interface {
 	// taker api - INSTEAD
 	GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 	BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error)
+	AbortSwap(ctx context.Context, swapId uuid.UUID) error
+	//txSent(ctx context.Context, swapId uuid.UUID) error
 }
 
 // Service contains methods that implement the business logic for the application.

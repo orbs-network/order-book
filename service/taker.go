@@ -34,7 +34,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 			_ = s.orderBookStore.RemoveSwap(ctx, swapId)
 
 			// return empty
-			logctx.Warn(ctx, err.Error())
+			logctx.Warn(ctx, "failed to validate order frag")
 			return models.BeginSwapRes{}, models.ErrAuctionInvalid
 		} else {
 			// success- append
@@ -50,7 +50,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 	}
 	err := s.orderBookStore.StoreOrders(ctx, res.Orders)
 	if err != nil {
-		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
 		return models.BeginSwapRes{}, err
 	}
 
@@ -59,3 +59,11 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 
 	return res, nil
 }
+
+func (m *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
+	return nil
+}
+
+// func (m *Service) txSent(ctx context.Context, swapId uuid.UUID) error {
+// 	return nil
+// }

@@ -87,7 +87,7 @@ func (h *Handler) Init() {
 	// release locked orders of start to be used by other match
 	// called when
 	// lh doesnt want to use swap amountOut
-	takerApi.HandleFunc("/abort/{swapId}", h.abortAuction).Methods("POST")
+	takerApi.HandleFunc("/abort/{swapId}", h.abortSwap).Methods("POST")
 	// all swaps are confirmed on-chain TXHASH
-	takerApi.HandleFunc("/txsend/{swapId}", h.auctionMined).Methods("POST")
+	takerApi.HandleFunc("/txsent/{swapId}", h.txSent).Methods("POST")
 }

@@ -38,17 +38,12 @@ func TestTaker_Quote(t *testing.T) {
 		res, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
 		assert.True(t, res.Size.Equals(outAmount))
 		assert.NoError(t, err)
-		//for _, frag := range res.OrderFrags {
-		//order, err := svc.GetOrderById(ctx, frag.OrderId)
-		//assert.NoError(t, err)
-		//}
 	})
 }
 func TestTaker_BeginSwap(t *testing.T) {
 	ctx := context.Background()
 
-	t.Run("BeginSwap Should return the same as quote", func(t *testing.T) {
-
+	t.Run("BeginSwap Should return the same as quote, second quote returns diff amount", func(t *testing.T) {
 		mock := mocks.CreateAuctionMock()
 		svc, _ := service.New(mock)
 
@@ -59,16 +54,18 @@ func TestTaker_BeginSwap(t *testing.T) {
 		assert.True(t, oaRes.Size.Equals(outAmount))
 		assert.NoError(t, err)
 
-		// amount out should be equal
 		swapRes, err := svc.BeginSwap(ctx, oaRes)
 		assert.NoError(t, err)
 		assert.Greater(t, len(swapRes.Orders), 0)
 		assert.Greater(t, len(swapRes.Fragments), 0)
+		// amount out should be equal in quote and swap requests
+		assert.True(t, oaRes.Size.Equals(swapRes.OutAmount))
 
-		//for _, frag := range res.OrderFrags {
-		//order, err := svc.GetOrderById(ctx, frag.OrderId)
-		//assert.NoError(t, err)
-		//}
+		// second quote however should return different amountOut as first order has already been filled
+		// second quote should get
+		oaRes2, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
+		assert.NoError(t, err)
+		assert.NotEqual(t, oaRes.Size, oaRes2.Size)
 	})
 }
 

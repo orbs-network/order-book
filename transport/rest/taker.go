@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
@@ -109,4 +111,43 @@ func (h *Handler) quote(w http.ResponseWriter, r *http.Request) {
 // SWAP METHOD GET
 func (h *Handler) swap(w http.ResponseWriter, r *http.Request) {
 	h.handleQuote(w, r, true)
+}
+
+// Helper
+func handleSwapId(w http.ResponseWriter, r *http.Request) *uuid.UUID {
+	vars := mux.Vars(r)
+	swapId := vars["swapId"]
+	ctx := r.Context()
+	if swapId == "" {
+		logctx.Error(ctx, "swapID is empty")
+		http.Error(w, "swapId is empty", http.StatusBadRequest)
+		return nil
+	}
+	res, err := uuid.Parse(swapId)
+	if err != nil {
+		logctx.Error(ctx, fmt.Sprintf("invalid swapID: %s", swapId), logger.Error(err))
+		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		return nil
+	}
+	return &res
+
+}
+
+// POST
+func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
+	swapId := handleSwapId(w, r)
+	if swapId == nil {
+		return
+	}
+	h.svc.AbortSwap(r.Context(), *swapId)
+}
+
+// POST
+func (h *Handler) txSent(w http.ResponseWriter, r *http.Request) {
+	swapId := handleSwapId(w, r)
+	if swapId == nil {
+		return
+	}
+
+	//h.svc.txSent(r.Context(), swapId)
 }

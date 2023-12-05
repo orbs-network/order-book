@@ -89,3 +89,11 @@ func (m *MockOrderBookService) AuctionMined(ctx context.Context, auctionId uuid.
 func (m *MockOrderBookService) BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error) {
 	return models.BeginSwapRes{}, nil
 }
+
+func (m *MockOrderBookService) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
+	return nil
+}
+
+func (m *MockOrderBookService) txSent(ctx context.Context, swapId uuid.UUID) error {
+	return nil
+}
