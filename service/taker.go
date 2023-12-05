@@ -60,10 +60,52 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 	return res, nil
 }
 
-func (m *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
-	return nil
+func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
+	// returns error if already confirmed
+	err := s.orderBookStore.UpdateAuctionTracker(ctx, models.SWAP_ABORDTED, swapId)
+
+	if err != nil {
+		if err == models.ErrValAlreadyInSet {
+			logctx.Warn(ctx, "AbortSwap re-entry!", logger.String("swapId: ", swapId.String()))
+		} else {
+			logctx.Warn(ctx, "AbortSwap UpdateAuctionTracker Failed", logger.String("swapId: ", swapId.String()), logger.Error(err))
+		}
+		return err
+	}
+
+	// get auction from store
+	frags, err := s.orderBookStore.GetAuction(ctx, swapId) // TODO: rename auction
+	if err != nil {
+		logctx.Warn(ctx, "GetSwap Failed", logger.Error(err))
+		return err
+	}
+
+	orders := []models.Order{}
+	// validate all pending orders fragments of auction
+	for _, frag := range frags {
+		// get order by ID
+		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
+		// no return during erros as what can be revert, should
+		if err != nil {
+			logctx.Error(ctx, "order not found while reverting an auction", logger.Error(err))
+		} else if !validatePendingFrag(frag, order) {
+			logctx.Error(ctx, "Auction fragments should be valid during a revert request", logger.Error(err))
+		} else {
+			// success
+			order.SizePending = order.SizePending.Sub(frag.Size)
+			orders = append(orders, *order)
+		}
+	}
+	// store orders
+	err = s.orderBookStore.StoreOrders(ctx, orders)
+	if err != nil {
+		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		return err
+	}
+
+	return s.orderBookStore.RemoveAuction(ctx, swapId) // TODO: rename auction
 }
 
-// func (m *Service) txSent(ctx context.Context, swapId uuid.UUID) error {
+// func (s *Service) txSent(ctx context.Context, swapId uuid.UUID) error {
 // 	return nil
 // }

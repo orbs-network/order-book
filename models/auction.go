@@ -15,7 +15,8 @@ const (
 	AUCTION_MINED     AuctionStatus = "mined"
 	AUCTION_REVERTED  AuctionStatus = "reverted"
 	// taker
-	SWAP_STARTED AuctionStatus = "swap_started"
+	SWAP_STARTED  AuctionStatus = "swap_started"
+	SWAP_ABORDTED AuctionStatus = "swap_aborted"
 )
 
 func (a AuctionStatus) String() string {

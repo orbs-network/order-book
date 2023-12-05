@@ -69,54 +69,38 @@ func TestTaker_BeginSwap(t *testing.T) {
 	})
 }
 
-// func TestService_RevertAuction(t *testing.T) {
-// 	ctx := context.Background()
+func TestService_AbortSwap(t *testing.T) {
+	ctx := context.Background()
 
-// 	t.Run("RevertAuction HappyPath", func(t *testing.T) {
-// 		auctionId, _ := uuid.NewUUID()
-// 		mock := mocks.CreateAuctionMock()
-// 		svc, _ := service.New(mock)
-// 		res, err := svc.ConfirmAuction(ctx, auctionId)
-// 		assert.NoError(t, err)
+	t.Run("AbortSwap HappyPath", func(t *testing.T) {
+		mock := mocks.CreateAuctionMock()
+		svc, _ := service.New(mock)
 
-// 		// all orders have pending size - no greater than the order itself
-// 		for _, order := range res.Orders {
-// 			assert.True(t, order.Size.GreaterThanOrEqual(order.SizePending))
-// 			assert.True(t, order.SizePending.GreaterThan(decimal.Zero))
-// 		}
+		inAmount := decimal.NewFromInt(1000)
+		outAmount := decimal.NewFromInt(1)
+		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
+		assert.True(t, oaRes.Size.Equals(outAmount))
+		assert.NoError(t, err)
 
-// 		err = svc.RevertAuction(ctx, auctionId)
-// 		assert.NoError(t, err)
+		swapRes, err := svc.BeginSwap(ctx, oaRes)
+		assert.NoError(t, err)
+		assert.Greater(t, len(swapRes.Orders), 0)
+		assert.Greater(t, len(swapRes.Fragments), 0)
 
-// 		// all orders should not have pending size
-// 		for _, order := range res.Orders {
-// 			updatedOrder, err := svc.GetStore().FindOrderById(ctx, order.Id, false)
-// 			assert.NoError(t, err)
-// 			assert.True(t, updatedOrder.SizePending.Equal(decimal.Zero))
-// 		}
-// 	})
-// }
-// func TestService_AuctionMined(t *testing.T) {
-// 	ctx := context.Background()
+		// all orders have pending size - no greater than the order itself
+		for _, order := range swapRes.Orders {
+			assert.True(t, order.Size.GreaterThanOrEqual(order.SizePending))
+			assert.True(t, order.SizePending.GreaterThan(decimal.Zero))
+		}
 
-// 	t.Run("AuctionMined HappyPath", func(t *testing.T) {
-// 		auctionId, _ := uuid.NewUUID()
-// 		// creates the auction
-// 		mock := mocks.CreateAuctionMock()
-// 		svc, _ := service.New(mock)
-// 		// confirm
-// 		res, err := svc.ConfirmAuction(ctx, auctionId)
-// 		assert.NoError(t, err)
-// 		// mined
-// 		err = svc.AuctionMined(ctx, auctionId)
-// 		assert.NoError(t, err)
+		err = svc.AbortSwap(ctx, swapRes.SwapId)
+		assert.NoError(t, err)
 
-// 		// all orders should not have pending size
-// 		for _, order := range res.Orders {
-// 			updatedOrder, err := svc.GetStore().FindOrderById(ctx, order.Id, false)
-// 			assert.NoError(t, err)
-// 			assert.True(t, updatedOrder.SizePending.Equal(decimal.Zero))
-// 		}
-// 	})
-
-// }
+		// all orders should not have pending size
+		for _, order := range swapRes.Orders {
+			updatedOrder, err := svc.GetOrderById(ctx, order.Id)
+			assert.NoError(t, err)
+			assert.True(t, updatedOrder.SizePending.Equal(decimal.Zero))
+		}
+	})
+}
