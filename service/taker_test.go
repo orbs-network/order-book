@@ -30,16 +30,41 @@ func TestTaker_Quote(t *testing.T) {
 	})
 
 	t.Run("QUOTE HappyPath", func(t *testing.T) {
-
 		mock := mocks.CreateAuctionMock()
 		svc, _ := service.New(mock)
-		ctx := context.Background()
 
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
 		res, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
-		assert.Equal(t, res.Size, outAmount)
+		assert.True(t, res.Size.Equals(outAmount))
 		assert.NoError(t, err)
+		//for _, frag := range res.OrderFrags {
+		//order, err := svc.GetOrderById(ctx, frag.OrderId)
+		//assert.NoError(t, err)
+		//}
+	})
+}
+func TestTaker_BeginSwap(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("BeginSwap Should return the same as quote", func(t *testing.T) {
+
+		mock := mocks.CreateAuctionMock()
+		svc, _ := service.New(mock)
+
+		// get quote does not lock liquidity
+		inAmount := decimal.NewFromInt(1000)
+		outAmount := decimal.NewFromInt(1)
+		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
+		assert.True(t, oaRes.Size.Equals(outAmount))
+		assert.NoError(t, err)
+
+		// amount out should be equal
+		swapRes, err := svc.BeginSwap(ctx, oaRes)
+		assert.NoError(t, err)
+		assert.Greater(t, len(swapRes.Orders), 0)
+		assert.Greater(t, len(swapRes.Fragments), 0)
+
 		//for _, frag := range res.OrderFrags {
 		//order, err := svc.GetOrderById(ctx, frag.OrderId)
 		//assert.NoError(t, err)

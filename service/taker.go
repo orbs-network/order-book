@@ -18,7 +18,8 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 	// storeSwap
 
 	res := models.BeginSwapRes{
-		SwapId: swapId,
+		OutAmount: data.Size,
+		SwapId:    swapId,
 	}
 
 	// validate all orders of auction
@@ -41,7 +42,8 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 			res.Fragments = append(res.Fragments, frag)
 		}
 	}
-	// lock liquidity- set order fragments as Pending
+	// lock liquidity - Only after fragments were validated
+	// set order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
 		res.Orders[i].SizePending = res.Fragments[i].Size

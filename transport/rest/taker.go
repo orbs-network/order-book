@@ -28,14 +28,17 @@ type QuoteRes struct {
 
 func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) {
 	var req QuoteReq
+	ctx := r.Context()
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		logctx.Error(ctx, "handleQuote - failed to decode body", logger.Error(err))
 		http.Error(w, "Quote invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
 	inAmount, err := decimal.NewFromString(req.InAmount)
 	if err != nil {
+		logctx.Error(ctx, "'Quote::inAmount' is not a valid number format", logger.Error(err))
 		http.Error(w, "'Quote::inAmount' is not a valid number format", http.StatusBadRequest)
 		return
 	}
@@ -43,14 +46,12 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	pair := h.pairMngr.Resolve(req.InToken, req.OutToken)
 	if pair != nil {
 		msg := fmt.Sprintf("no suppoerted pair with found with the following tokens %s, %s", req.InToken, req.OutToken)
+		logctx.Error(ctx, msg, logger.Error(err))
 		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 	side := pair.GetSide(req.InToken)
-
-	//amountOutRes, err := h.svc.GetAmountOut(r.Context(), nil, pair.Symbol(), side, inAmount)
 	amountOutRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount)
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -80,6 +81,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			}
 			quoteRes.Fragments = append(quoteRes.Fragments, frag)
 		}
+		quoteRes.SwapId = swapData.SwapId.String()
 	}
 
 	resp, err := json.Marshal(quoteRes)
@@ -99,20 +101,12 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 }
 
-// METHOD GET
+// Quote METHOD GET
 func (h *Handler) quote(w http.ResponseWriter, r *http.Request) {
 	h.handleQuote(w, r, false)
 }
 
-// 	if quoteRes == nil {
-// 		return // http error has already been handled
-// 	}
-
-// 	h.svc.BeginSwap(quoteRes)
-
-// }
-
-// METHOD GET
+// SWAP METHOD GET
 func (h *Handler) swap(w http.ResponseWriter, r *http.Request) {
 	h.handleQuote(w, r, true)
 }
