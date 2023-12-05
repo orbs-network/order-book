@@ -28,10 +28,25 @@ type MockOrderBookStore struct {
 
 func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order) error {
 
+	source, err := m.FindOrderById(ctx, order.Id, false)
+	if err != nil {
+		return err
+	}
+
+	//source.SizePending = order.SizePending
+	*source = order
+
 	return m.Error
 }
 
 func (m *MockOrderBookStore) StoreOrders(ctx context.Context, orders []models.Order) error {
+	// update the orders
+	for _, order := range orders {
+		err := m.StoreOrder(ctx, order)
+		if err != nil {
+			return err
+		}
+	}
 	return m.Error
 }
 
@@ -39,9 +54,37 @@ func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order
 	return m.Error
 }
 
+func findOrder(orders []models.Order, id uuid.UUID) *models.Order {
+	//for i, order := range *orders {
+	for i := 0; i < len(orders); i++ { // := range *orders {
+		if orders[i].Id == id {
+			res := &orders[i]
+			return res
+		}
+	}
+	return nil
+}
 func (m *MockOrderBookStore) FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error) {
 	if m.Error != nil {
 		return nil, m.Error
+	}
+
+	order := findOrder(m.Asks, id)
+	if order != nil {
+		return order, nil
+	}
+
+	order = findOrder(m.Bids, id)
+	if order != nil {
+		return order, nil
+	}
+
+	order = findOrder(m.Orders, id)
+	if order != nil {
+		return order, nil
+	}
+	if m.Order == nil {
+		return nil, models.ErrOrderNotFound
 	}
 
 	return m.Order, nil
@@ -98,14 +141,14 @@ func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uui
 }
 
 func (m *MockOrderBookStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {
-	if m.ErrUser != nil {
-		return nil, m.ErrUser
+	if m.Error != nil {
+		return nil, m.Error
 	}
 	return m.User, nil
 }
 
 func (m *MockOrderBookStore) StoreUserByPublicKey(ctx context.Context, user models.User) error {
-	return m.ErrUser
+	return m.Error
 }
 
 func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error) {
