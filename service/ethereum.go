@@ -89,21 +89,18 @@ func (e *EthereumClient) VerifySignature(ctx context.Context, input VerifySignat
 			{Name: "spender", Type: "address"},
 			{Name: "nonce", Type: "uint256"},
 			{Name: "deadline", Type: "uint256"},
-			{Name: "witness", Type: "ExclusiveDutchOrder"},
+			{Name: "witness", Type: "PartialOrder"},
 		},
 		"TokenPermissions": {
 			{Name: "token", Type: "address"},
 			{Name: "amount", Type: "uint256"},
 		},
-		"ExclusiveDutchOrder": {
+		"PartialOrder": {
 			{Name: "info", Type: "OrderInfo"},
-			{Name: "decayStartTime", Type: "uint256"},
-			{Name: "decayEndTime", Type: "uint256"},
 			{Name: "exclusiveFiller", Type: "address"},
 			{Name: "exclusivityOverrideBps", Type: "uint256"},
-			{Name: "inputToken", Type: "address"},
-			{Name: "inputStartAmount", Type: "uint256"},
-			{Name: "inputEndAmount", Type: "uint256"},
+			{Name: "input", Type: "PartialInput"},
+			{Name: "outputs", Type: "PartialOutput[]"},
 		},
 		"OrderInfo": {
 			{Name: "reactor", Type: "address"},
@@ -112,6 +109,15 @@ func (e *EthereumClient) VerifySignature(ctx context.Context, input VerifySignat
 			{Name: "deadline", Type: "uint256"},
 			{Name: "additionalValidationContract", Type: "address"},
 			{Name: "additionalValidationData", Type: "bytes"},
+		},
+		"PartialInput": {
+			{Name: "token", Type: "address"},
+			{Name: "amount", Type: "uint256"},
+		},
+		"PartialOutput": {
+			{Name: "token", Type: "address"},
+			{Name: "amount", Type: "uint256"},
+			{Name: "recipient", Type: "address"},
 		},
 	}
 
