@@ -29,7 +29,7 @@ func ValidateUserMiddleware(getUserByApiKey GetUserByApiKeyFunc) func(http.Handl
 
 			user, err := getUserByApiKey(r.Context(), key)
 			if err != nil {
-				if err == models.ErrUserNotFound {
+				if err == models.ErrNotFound {
 					logctx.Warn(r.Context(), "user not found by api key")
 					http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				} else {

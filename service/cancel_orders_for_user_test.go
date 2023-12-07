@@ -25,13 +25,13 @@ func TestService_CancelOrdersForUser(t *testing.T) {
 	})
 
 	t.Run("should return error if no orders found for user", func(t *testing.T) {
-		store := &mocks.MockOrderBookStore{User: &mocks.User, Orders: []models.Order{}, Error: models.ErrNoOrdersFound}
+		store := &mocks.MockOrderBookStore{User: &mocks.User, Orders: []models.Order{}, Error: models.ErrNotFound}
 
 		s, _ := service.New(store, mockBcClient)
 
 		orderIds, err := s.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.Empty(t, orderIds)
-		assert.ErrorIs(t, err, models.ErrNoOrdersFound)
+		assert.ErrorIs(t, err, models.ErrNotFound)
 	})
 
 	t.Run("should return error on unexpected error", func(t *testing.T) {

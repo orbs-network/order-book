@@ -23,7 +23,7 @@ func (r *redisRepository) GetUserByApiKey(ctx context.Context, apiKey string) (*
 
 	if len(fields) == 0 {
 		logctx.Warn(ctx, "user not found by api key")
-		return nil, models.ErrUserNotFound
+		return nil, models.ErrNotFound
 	}
 
 	userId, err := uuid.Parse(fields["id"])

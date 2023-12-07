@@ -13,7 +13,7 @@ func (s *Service) GetUserByApiKey(ctx context.Context, apiKey string) (*models.U
 
 	user, err := s.userStore.GetUserByApiKey(ctx, apiKey)
 
-	if err == models.ErrUserNotFound {
+	if err == models.ErrNotFound {
 		logctx.Warn(ctx, "user not found", logger.Error(err))
 		return nil, err
 	}

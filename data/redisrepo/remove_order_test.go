@@ -53,7 +53,7 @@ func TestRedisRepository_RemoveOrder(t *testing.T) {
 
 		err := repo.RemoveOrder(ctx, order)
 
-		assert.ErrorIs(t, err, models.ErrTransactionFailed)
+		assert.ErrorContains(t, err, "failed to remove order")
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 

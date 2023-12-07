@@ -38,7 +38,7 @@ func (r *redisRepository) GetBestPriceFor(ctx context.Context, symbol models.Sym
 	}
 
 	if len(orderIDs) == 0 {
-		return models.Order{}, models.ErrOrderNotFound
+		return models.Order{}, models.ErrNotFound
 	}
 
 	orderIDStr := orderIDs[0]

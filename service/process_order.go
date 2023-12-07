@@ -29,7 +29,7 @@ func (s *Service) ProcessOrder(ctx context.Context, input ProcessOrderInput) (mo
 
 	existingOrder, err := s.orderBookStore.FindOrderById(ctx, input.ClientOrderID, true)
 
-	if err != nil && err != models.ErrOrderNotFound {
+	if err != nil && err != models.ErrNotFound {
 		logctx.Error(ctx, "unexpected error when finding order by clientOrderId", logger.Error(err))
 		return models.Order{}, models.ErrUnexpectedError
 	}

@@ -79,7 +79,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		assert.ErrorContains(t, err, "failed to get order IDs for user")
 	})
 
-	t.Run("should return `ErrNoOrdersFound` error if no orders are found for the user", func(t *testing.T) {
+	t.Run("should return `ErrNotFound` error if no orders are found for the user", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
@@ -90,7 +90,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 
 		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.Empty(t, orderIds)
-		assert.ErrorIs(t, err, models.ErrNoOrdersFound)
+		assert.ErrorIs(t, err, models.ErrNotFound)
 	})
 
 	t.Run("should exit with error if failed to parse order ID", func(t *testing.T) {
@@ -113,7 +113,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		}
 
 		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String(), orderTwo.Id.String()})
-		mock.ExpectHGetAll(CreateOrderIDKey(orderTwo.Id)).SetErr(models.ErrOrderNotFound) // order not found - break out of loop iteration
+		mock.ExpectHGetAll(CreateOrderIDKey(orderTwo.Id)).SetErr(models.ErrNotFound) // order not found - break out of loop iteration
 
 		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.Empty(t, orderIds)

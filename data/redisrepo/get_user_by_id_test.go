@@ -52,7 +52,7 @@ func TestRedisRepository_GetUserById(t *testing.T) {
 		_, err := repo.GetUserById(ctx, mocks.UserId)
 
 		assert.Error(t, err)
-		assert.Equal(t, err, models.ErrUserNotFound)
+		assert.Equal(t, err, models.ErrNotFound)
 	})
 
 	t.Run("should return error on unexpected error getting user by ID", func(t *testing.T) {

@@ -22,7 +22,7 @@ func (r *redisRepository) GetUserById(ctx context.Context, userId uuid.UUID) (*m
 
 	if len(fields) == 0 {
 		logctx.Error(ctx, "user not found by ID", logger.String("userId", userId.String()))
-		return nil, models.ErrUserNotFound
+		return nil, models.ErrNotFound
 	}
 
 	userType, err := models.StrToUserType(fields["type"])

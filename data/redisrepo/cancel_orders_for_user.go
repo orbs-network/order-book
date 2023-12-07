@@ -22,7 +22,7 @@ func (r *redisRepository) CancelOrdersForUser(ctx context.Context, userId uuid.U
 
 	if len(orderIdStrs) == 0 {
 		logctx.Warn(ctx, "no orders found for user", logger.String("userId", userId.String()))
-		return nil, models.ErrNoOrdersFound
+		return nil, models.ErrNotFound
 	}
 
 	// Convert string IDs to UUIDs

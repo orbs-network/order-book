@@ -2,6 +2,7 @@ package redisrepo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
@@ -43,7 +44,7 @@ func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) e
 
 	if err != nil {
 		logctx.Error(ctx, "failed to remove order from Redis", logger.Error(err), logger.String("orderId", order.Id.String()))
-		return models.ErrTransactionFailed
+		return fmt.Errorf("failed to remove order from Redis: %w", err)
 	}
 	// --- END TRANSACTION ---
 
