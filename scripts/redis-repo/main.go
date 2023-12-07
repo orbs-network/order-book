@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -102,6 +103,28 @@ func main() {
 					}
 
 					getUserById(userId)
+					return nil
+				},
+			},
+			{
+				Name:  "getOrdersByIds",
+				Usage: "Get multiple orders by their IDs",
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:     "ids",
+						Usage:    "order IDs",
+						Required: true,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					ids := c.StringSlice("ids")
+					fmt.Printf("ids: %#v\n", ids)
+
+					if ids == nil {
+						log.Fatalf("ids is empty")
+					}
+
+					getOrdersByIds(ids)
 					return nil
 				},
 			},
@@ -236,10 +259,14 @@ func removeOrders() {
 		log.Fatalf("error creating repository: %v", err)
 	}
 
-	err = repository.CancelOrdersForUser(ctx, userId)
+	cancelledOrderIds, err := repository.CancelOrdersForUser(ctx, userId)
 	if err != nil {
 		log.Fatalf("error removing orders: %v", err)
 	}
+
+	log.Print("--------------------------")
+	log.Printf("cancelledOrderIds: %v", cancelledOrderIds)
+	log.Print("--------------------------")
 }
 
 func createUser(apiKey string) {
@@ -279,6 +306,31 @@ func getUserById(userIdFlag string) {
 	log.Printf("userType: %v", retrievedUser.Type)
 	log.Printf("userPubKey: %v", retrievedUser.PubKey)
 	log.Print("--------------------------")
+}
+
+func getOrdersByIds(orderIds []string) {
+	ids := make([]uuid.UUID, len(orderIds))
+	for i, id := range orderIds {
+		ids[i] = uuid.MustParse(id)
+	}
+
+	orders, err := repository.FindOrdersByIds(ctx, ids)
+	if err != nil {
+		log.Fatalf("error getting users: %v", err)
+	}
+	for _, order := range orders {
+		log.Print("--------------------------")
+		log.Printf("orderId: %v", order.Id)
+		log.Printf("orderClientOId: %v", order.ClientOId)
+		log.Printf("orderUserId: %v", order.UserId)
+		log.Printf("orderPrice: %v", order.Price)
+		log.Printf("orderSymbol: %v", order.Symbol)
+		log.Printf("orderSize: %v", order.Size)
+		log.Printf("orderStatus: %v", order.Status)
+		log.Printf("orderSide: %v", order.Side)
+		log.Printf("orderTimestamp: %v", order.Timestamp)
+		log.Print("--------------------------")
+	}
 }
 
 func updateUser(newApiKey string) {
