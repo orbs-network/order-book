@@ -54,7 +54,7 @@ func TestHandler_CancelOrderByOrderId(t *testing.T) {
 		},
 		{
 			"order not found",
-			&mocks.MockOrderBookService{Error: models.ErrOrderNotFound},
+			&mocks.MockOrderBookService{Error: models.ErrNotFound},
 			fmt.Sprintf("/order/%s", orderId.String()),
 			http.StatusNotFound,
 			"Order not found\n",
@@ -165,7 +165,7 @@ func TestHandler_CancelOrderByClientOId(t *testing.T) {
 		},
 		{
 			"order not found",
-			&mocks.MockOrderBookService{Error: models.ErrOrderNotFound},
+			&mocks.MockOrderBookService{Error: models.ErrNotFound},
 			fmt.Sprintf("/order/client-order/%s", clientOId.String()),
 			http.StatusNotFound,
 			"Order not found\n",

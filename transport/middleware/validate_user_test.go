@@ -38,7 +38,7 @@ func TestValidateUserMiddleware(t *testing.T) {
 		{
 			name:           "should return error if user not found",
 			apiKey:         validApiKey,
-			getUserFunc:    func(ctx context.Context, apiKey string) (*models.User, error) { return nil, models.ErrUserNotFound },
+			getUserFunc:    func(ctx context.Context, apiKey string) (*models.User, error) { return nil, models.ErrNotFound },
 			expectedStatus: http.StatusUnauthorized,
 			expectedBody:   "Unauthorized\n",
 		},

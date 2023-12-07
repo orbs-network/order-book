@@ -93,7 +93,7 @@ func (h *Handler) handleCancelOrder(input hInput) {
 		UserId:      input.userId,
 	})
 
-	if err == models.ErrOrderNotFound {
+	if err == models.ErrNotFound {
 		logctx.Warn(input.ctx, "order not found", logger.String("id", input.id.String()))
 		http.Error(input.w, "Order not found", http.StatusNotFound)
 		return

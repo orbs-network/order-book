@@ -40,7 +40,7 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (canc
 
 	if order == nil {
 		logctx.Warn(ctx, "order not found", logger.String("id", input.Id.String()), logger.Bool("isClientOId", input.IsClientOId))
-		return nil, models.ErrOrderNotFound
+		return nil, models.ErrNotFound
 	}
 
 	if order.SizePending.GreaterThan(decimal.Zero) {

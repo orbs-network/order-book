@@ -79,7 +79,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 				logctx.Warn(ctx, "Remove Auction", logger.Error(err))
 			}
 
-			return ConfirmAuctionRes{}, models.ErrOrderNotFound
+			return ConfirmAuctionRes{}, models.ErrNotFound
 		} else if !validateOrderFrag(frag, order) {
 			// cancel auction
 			_ = s.orderBookStore.RemoveAuction(ctx, auctionId)
@@ -190,7 +190,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 				logctx.Error(ctx, err.Error())
 			}
 			// return empty
-			return models.ErrOrderNotFound
+			return models.ErrNotFound
 		} else if !validatePendingFrag(frag, order) {
 			// cancel auction
 			err = s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen

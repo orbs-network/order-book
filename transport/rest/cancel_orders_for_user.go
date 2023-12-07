@@ -27,7 +27,7 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	logctx.Info(ctx, "user trying to cancel all their orders", logger.String("userId", user.Id.String()))
 	orderIds, err := h.svc.CancelOrdersForUser(ctx, user.Id)
 
-	if err == models.ErrNoOrdersFound {
+	if err == models.ErrNotFound {
 		logctx.Info(ctx, "no orders found for user", logger.String("userId", user.Id.String()))
 		http.Error(w, "No orders found", http.StatusNotFound)
 		return

@@ -14,7 +14,7 @@ func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) (or
 
 	orderIds, err = s.orderBookStore.CancelOrdersForUser(ctx, userId)
 
-	if err == models.ErrNoOrdersFound {
+	if err == models.ErrNotFound {
 		logctx.Info(ctx, "no orders found for user", logger.String("userId", userId.String()))
 		return []uuid.UUID{}, err
 	}

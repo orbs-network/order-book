@@ -45,7 +45,7 @@ func TestHandler_CancelOrdersForUser(t *testing.T) {
 	}{
 		{
 			"no orders found for user",
-			&mocks.MockOrderBookService{Error: models.ErrNoOrdersFound},
+			&mocks.MockOrderBookService{Error: models.ErrNotFound},
 			http.StatusNotFound,
 			"No orders found\n",
 		},

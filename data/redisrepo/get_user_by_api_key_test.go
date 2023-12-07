@@ -54,7 +54,7 @@ func TestRedisRepository_GetUserByPublicKey(t *testing.T) {
 		user, err := repo.GetUserByApiKey(ctx, mockApiKey)
 
 		assert.Nil(t, user)
-		assert.ErrorIs(t, err, models.ErrUserNotFound)
+		assert.ErrorIs(t, err, models.ErrNotFound)
 	})
 
 	t.Run("should return error on unexpected error getting user by api key", func(t *testing.T) {

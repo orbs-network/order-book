@@ -30,7 +30,7 @@ func TestService_GetOrderByClientOId(t *testing.T) {
 	})
 
 	t.Run("order not found - should return nil", func(t *testing.T) {
-		svc, _ := service.New(&mocks.MockOrderBookStore{Error: models.ErrOrderNotFound}, mockBcClient)
+		svc, _ := service.New(&mocks.MockOrderBookStore{Error: models.ErrNotFound}, mockBcClient)
 
 		order, err := svc.GetOrderByClientOId(ctx, clientOId)
 
