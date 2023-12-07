@@ -39,6 +39,13 @@ func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order
 	return m.Error
 }
 
+func (m *MockOrderBookStore) FindOrdersByIds(ctx context.Context, ids []uuid.UUID) ([]models.Order, error) {
+	if m.Error != nil {
+		return nil, m.Error
+	}
+	return m.Orders, nil
+}
+
 func (m *MockOrderBookStore) FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error) {
 	if m.Error != nil {
 		return nil, m.Error
@@ -84,8 +91,12 @@ func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.U
 	return m.Orders, len(m.Orders), nil
 }
 
-func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) error {
-	return m.Error
+func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
+	var orderIds []uuid.UUID
+	for _, order := range m.Orders {
+		orderIds = append(orderIds, order.Id)
+	}
+	return orderIds, m.Error
 }
 
 func (m *MockOrderBookStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {

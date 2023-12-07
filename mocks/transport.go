@@ -64,8 +64,12 @@ func (m *MockOrderBookService) GetOrdersForUser(ctx context.Context, userId uuid
 	return m.Orders, len(m.Orders), m.Error
 }
 
-func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) error {
-	return m.Error
+func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) (orderIds []uuid.UUID, err error) {
+	var ids []uuid.UUID
+	for _, order := range m.Orders {
+		ids = append(ids, order.Id)
+	}
+	return ids, m.Error
 }
 
 func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {

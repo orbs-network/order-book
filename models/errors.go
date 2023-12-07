@@ -4,6 +4,7 @@ import "errors"
 
 var ErrOrderAlreadyExists = errors.New("order already exists")
 var ErrOrderNotFound = errors.New("order not found")
+var ErrNoOrdersFound = errors.New("no orders found")
 var ErrUnexpectedError = errors.New("unexpected error")
 var ErrMarshalError = errors.New("marshal error")
 var ErrUserAlreadyExists = errors.New("user already exists")

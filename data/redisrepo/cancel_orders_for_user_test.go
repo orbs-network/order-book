@@ -32,7 +32,9 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		mock.ExpectDel(CreateUserOrdersKey(mocks.UserId)).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
-		err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		assert.Equal(t, mocks.OrderId, orderIds[0])
+		assert.Len(t, orderIds, 1)
 		assert.NoError(t, err)
 	})
 
@@ -56,7 +58,10 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		mock.ExpectDel(CreateUserOrdersKey(mocks.UserId)).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
-		err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		assert.Equal(t, mocks.OrderId, orderIds[0])
+		assert.Equal(t, orderTwo.Id, orderIds[1])
+		assert.Len(t, orderIds, 2)
 		assert.NoError(t, err)
 	})
 
@@ -68,11 +73,13 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		}
 
 		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetErr(assert.AnError)
-		err := repo.CancelOrdersForUser(ctx, mocks.UserId)
-		assert.ErrorContains(t, err, "failed to fetch user order IDs. Reason: assert.AnError")
+		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+
+		assert.Empty(t, orderIds)
+		assert.ErrorContains(t, err, "failed to get order IDs for user")
 	})
 
-	t.Run("should exit without error if no orders found for user", func(t *testing.T) {
+	t.Run("should return `ErrNoOrdersFound` error if no orders are found for the user", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
@@ -81,8 +88,9 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 
 		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{})
 
-		err := repo.CancelOrdersForUser(ctx, mocks.UserId)
-		assert.NoError(t, err)
+		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		assert.Empty(t, orderIds)
+		assert.ErrorIs(t, err, models.ErrNoOrdersFound)
 	})
 
 	t.Run("should exit with error if failed to parse order ID", func(t *testing.T) {
@@ -93,12 +101,11 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		}
 
 		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{"invalid"})
-		err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		_, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.ErrorContains(t, err, "failed to parse order ID: invalid UUID length: 7")
 	})
 
-	// TODO: confirm whether this is the behaviour we want
-	t.Run("should continue removing other orders if one order is not found by ID", func(t *testing.T) {
+	t.Run("should immediately return error if one order is not found by ID", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
@@ -107,30 +114,10 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 
 		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String(), orderTwo.Id.String()})
 		mock.ExpectHGetAll(CreateOrderIDKey(orderTwo.Id)).SetErr(models.ErrOrderNotFound) // order not found - break out of loop iteration
-		mock.ExpectHGetAll(CreateOrderIDKey(orderTwo.Id)).SetVal(mocks.Order.OrderToMap())
-		mock.ExpectTxPipeline()
-		mock.ExpectDel(CreateClientOIDKey(orderTwo.ClientOId)).SetVal(1)
-		mock.ExpectZRem(CreateBuySidePricesKey(orderTwo.Symbol), orderTwo.Id.String()).SetVal(1)
-		mock.ExpectDel(CreateOrderIDKey(orderTwo.Id)).SetVal(1)
-		mock.ExpectDel(CreateUserOrdersKey(orderTwo.UserId)).SetVal(1)
-		mock.ExpectTxPipelineExec()
 
-		err := repo.CancelOrdersForUser(ctx, mocks.UserId)
-		assert.NoError(t, err)
-	})
-
-	t.Run("should exit with error if failed to get order by ID", func(t *testing.T) {
-		db, mock := redismock.NewClientMock()
-
-		repo := &redisRepository{
-			client: db,
-		}
-
-		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String()})
-		mock.ExpectHGetAll(CreateOrderIDKey(mocks.OrderId)).SetErr(assert.AnError)
-
-		err := repo.CancelOrdersForUser(ctx, mocks.UserId)
-		assert.ErrorContains(t, err, "unexpected error finding order by ID: assert.AnError")
+		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		assert.Empty(t, orderIds)
+		assert.ErrorContains(t, err, "failed to find orders by IDs")
 	})
 
 	t.Run("an error should be returned if transaction failed", func(t *testing.T) {
@@ -149,7 +136,8 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		mock.ExpectDel(CreateUserOrdersKey(mocks.UserId)).SetErr(assert.AnError)
 		mock.ExpectTxPipelineExec().SetErr(assert.AnError)
 
-		err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		assert.Empty(t, orderIds)
 		assert.ErrorContains(t, err, "failed to remove user's orders in Redis. Reason: assert.AnError")
 	})
 
