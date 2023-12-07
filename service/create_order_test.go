@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestService_ProcessOrder(t *testing.T) {
+func TestService_CreateOrder(t *testing.T) {
 
 	ctx := context.Background()
 	mockBcClient := &mocks.MockBcClient{IsVerified: true}
@@ -32,7 +32,7 @@ func TestService_ProcessOrder(t *testing.T) {
 	}
 
 	t.Run("unexpected error from store - should return `ErrUnexpectedError` error", func(t *testing.T) {
-		input := service.ProcessOrderInput{
+		input := service.CreateOrderInput{
 			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
@@ -43,14 +43,14 @@ func TestService_ProcessOrder(t *testing.T) {
 
 		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Error: assert.AnError}, mockBcClient)
 
-		order, err := svc.ProcessOrder(ctx, input)
+		order, err := svc.CreateOrder(ctx, input)
 
 		assert.ErrorIs(t, err, models.ErrUnexpectedError)
 		assert.Equal(t, models.Order{}, order)
 	})
 
 	t.Run("no previous order - should create new order", func(t *testing.T) {
-		input := service.ProcessOrderInput{
+		input := service.CreateOrderInput{
 			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
@@ -61,7 +61,7 @@ func TestService_ProcessOrder(t *testing.T) {
 
 		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: nil}, mockBcClient)
 
-		newOrder, err := svc.ProcessOrder(ctx, input)
+		newOrder, err := svc.CreateOrder(ctx, input)
 
 		assert.NoError(t, err)
 		// TODO: I am not asserting against the full order as timestamp is always different
@@ -77,7 +77,7 @@ func TestService_ProcessOrder(t *testing.T) {
 	})
 
 	t.Run("existing order with different userId - should return `ErrClashingOrderId` error", func(t *testing.T) {
-		input := service.ProcessOrderInput{
+		input := service.CreateOrderInput{
 			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
@@ -88,14 +88,14 @@ func TestService_ProcessOrder(t *testing.T) {
 
 		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: &models.Order{UserId: uuid.MustParse("b577273e-12de-4acc-a4f8-de7fb5b86e37")}}, mockBcClient)
 
-		order, err := svc.ProcessOrder(ctx, input)
+		order, err := svc.CreateOrder(ctx, input)
 
 		assert.ErrorIs(t, err, service.ErrClashingOrderId)
 		assert.Equal(t, models.Order{}, order)
 	})
 
 	t.Run("existing order with same clientOrderId - should return `ErrOrderAlreadyExists` error", func(t *testing.T) {
-		input := service.ProcessOrderInput{
+		input := service.CreateOrderInput{
 			UserId:        userId,
 			Price:         price,
 			Symbol:        symbol,
@@ -106,7 +106,7 @@ func TestService_ProcessOrder(t *testing.T) {
 
 		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: &models.Order{ClientOId: orderId, UserId: userId}}, mockBcClient)
 
-		order, err := svc.ProcessOrder(ctx, input)
+		order, err := svc.CreateOrder(ctx, input)
 
 		assert.ErrorIs(t, err, models.ErrOrderAlreadyExists)
 		assert.Equal(t, models.Order{}, order)

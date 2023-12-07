@@ -12,7 +12,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type ProcessOrderInput struct {
+type CreateOrderInput struct {
 	UserId        uuid.UUID
 	Price         decimal.Decimal
 	Symbol        models.Symbol
@@ -25,7 +25,7 @@ var (
 	ErrClashingOrderId = errors.New("order with that ID already exists")
 )
 
-func (s *Service) ProcessOrder(ctx context.Context, input ProcessOrderInput) (models.Order, error) {
+func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (models.Order, error) {
 
 	existingOrder, err := s.orderBookStore.FindOrderById(ctx, input.ClientOrderID, true)
 
@@ -49,12 +49,12 @@ func (s *Service) ProcessOrder(ctx context.Context, input ProcessOrderInput) (mo
 		return models.Order{}, models.ErrOrderAlreadyExists
 	}
 
-	logctx.Error(ctx, "did not follow any cases when processing order", logger.String("clientOrderId", input.ClientOrderID.String()), logger.String("userId", input.UserId.String()), logger.String("price", input.Price.String()), logger.String("size", input.Size.String()), logger.String("symbol", input.Symbol.String()), logger.String("side", input.Side.String()))
+	logctx.Error(ctx, "did not follow any cases when creating order", logger.String("clientOrderId", input.ClientOrderID.String()), logger.String("userId", input.UserId.String()), logger.String("price", input.Price.String()), logger.String("size", input.Size.String()), logger.String("symbol", input.Symbol.String()), logger.String("side", input.Side.String()))
 
 	return models.Order{}, models.ErrUnexpectedError
 }
 
-func (s *Service) createNewOrder(ctx context.Context, input ProcessOrderInput, userId uuid.UUID) (models.Order, error) {
+func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, userId uuid.UUID) (models.Order, error) {
 	orderId := uuid.New()
 
 	logctx.Info(ctx, "creating new order", logger.String("orderId", orderId.String()), logger.String("clientOrderId", input.ClientOrderID.String()))

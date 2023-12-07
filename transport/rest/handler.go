@@ -43,7 +43,7 @@ func (h *Handler) initMMRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 
 	// ------- CREATE -------
 	// Place a new order
-	mmApi.HandleFunc("/order", h.ProcessOrder).Methods("POST")
+	mmApi.HandleFunc("/order", h.CreateOrder).Methods("POST")
 
 	// ------- READ -------
 	// Get an order by client order ID

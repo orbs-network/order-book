@@ -26,7 +26,7 @@ type CreateOrderResponse struct {
 	OrderId string `json:"orderId"`
 }
 
-func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
@@ -90,7 +90,7 @@ func (h *Handler) ProcessOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logctx.Info(ctx, "user trying to create order", logger.String("userId", user.Id.String()), logger.String("price", roundedDecPrice.String()), logger.String("size", decSize.String()), logger.String("clientOrderId", clientOrderId.String()))
-	order, err := h.svc.ProcessOrder(ctx, service.ProcessOrderInput{
+	order, err := h.svc.CreateOrder(ctx, service.CreateOrderInput{
 		UserId:        user.Id,
 		Price:         roundedDecPrice,
 		Symbol:        symbol,

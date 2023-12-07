@@ -24,7 +24,7 @@ func (m *MockOrderBookService) GetUserByPublicKey(ctx context.Context, publicKey
 	return m.User, m.Error
 }
 
-func (m *MockOrderBookService) ProcessOrder(ctx context.Context, input service.ProcessOrderInput) (models.Order, error) {
+func (m *MockOrderBookService) CreateOrder(ctx context.Context, input service.CreateOrderInput) (models.Order, error) {
 	return *m.Order, m.Error
 }
 
