@@ -25,8 +25,9 @@ var httpServer *rest.HTTPServer
 
 func runAuctionServer(t *testing.T) {
 	repository := mocks.CreateAuctionMock()
+	mockBcClient := &mocks.MockBcClient{IsVerified: true}
 
-	service, err := service.New(repository)
+	service, err := service.New(repository, mockBcClient)
 	if err != nil {
 		log.Fatalf("error creating service: %v", err)
 	}

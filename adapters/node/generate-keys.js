@@ -1,28 +1,28 @@
 const crypto = require('crypto');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
 
-// Generate a secp256k1 key pair
-const keyPair = crypto.generateKeyPairSync('ec', {
-  namedCurve: 'secp256k1'  // Name of the curve
-});
+// Generate a random private key
+let privKey;
+do {
+  privKey = crypto.randomBytes(32);
+} while (crypto.createECDH('secp256k1').setPrivateKey(privKey, 'hex').getPublicKey() === null);
 
-// Export the private key as a PEM-formatted string
-const privateKey = keyPair.privateKey.export({
-  type: 'sec1',
-  format: 'pem',
-});
+// Get the ECDH object and set the private key
+const ecdh = crypto.createECDH('secp256k1');
+ecdh.setPrivateKey(privKey);
 
-// Export the public key as a PEM-formatted string
-const publicKey = keyPair.publicKey.export({
-  type: 'spki',
-  format: 'pem',
-});
+// Get the public key in uncompressed format
+const pubKey = ecdh.getPublicKey('hex', 'uncompressed');
 
-// Specify the paths where the keys will be saved
-const privateKeyPath = path.resolve(__dirname, 'privateKey.pem')
-const publicKeyPath = path.resolve(__dirname, 'publicKey.pem')
+const privateKeyPath = path.join(__dirname, 'privateKey.txt');
+const publicKeyPath = path.join(__dirname, 'publicKey.txt');
 
-// Write the keys to disk
-fs.writeFileSync(privateKeyPath, privateKey);
-fs.writeFileSync(publicKeyPath, publicKey);
+// Write private key to disk
+fs.writeFileSync(privateKeyPath, privKey.toString('hex'));
+
+// Write public key to disk
+fs.writeFileSync(publicKeyPath, pubKey);
+
+console.log(`Private key saved to ${privateKeyPath}`);
+console.log(`Public key saved to ${publicKeyPath}`);

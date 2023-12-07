@@ -42,7 +42,10 @@ func setup() {
 		log.Fatalf("error creating repository: %v", err)
 	}
 
-	service, err := service.New(repository)
+	// TODO: add CLI flag to easily switch between blockchains
+	ethClient := &service.EthereumClient{}
+
+	service, err := service.New(repository, ethClient)
 	if err != nil {
 		log.Fatalf("error creating service: %v", err)
 	}

@@ -1,32 +1,62 @@
-const path = require('path');
-const crypto = require('crypto');
 const fs = require('fs');
+const path = require('path');
+const {
+  signTypedData
+} = require("@metamask/eth-sig-util");
 
-// Load the private key from disk
-const privateKeyPath = path.resolve(__dirname, 'privateKey.pem')
-const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+// Define the path to the private key file
+const privateKeyPath = path.join(__dirname, 'privateKey.txt');
 
-const requestPayload = {
-  symbol: "BTCUSD",
-  orderType: "limit",
-  side: "buy",
-  quantity: "1.0",
-  price: "50000.00",
-  timestamp: "1697813554"
+// Read the private key from the file
+const privateKeyHex = fs.readFileSync(privateKeyPath, 'utf8');
+
+
+const order = {
+  price: "20.99",
+  size: "1000",
+  symbol: "BTC-ETH",
+  side: "sell",
+  clientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37"
 };
 
-const jsonString = JSON.stringify(requestPayload);
+const domain = {
+  name: 'orderbook',
+  version: '1.0',
+  chainId: 1, // Mainnet ID, change accordingly if you're using a different network
+  verifyingContract: '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC' // Replace with your contract address
+};
 
-// Create a hash of the JSON string
-const hash = crypto.createHash('sha256').update(jsonString).digest();
+const types = {
+  Order: [
+    { name: 'price', type: 'string' },
+    { name: 'size', type: 'string' },
+    { name: 'symbol', type: 'string' },
+    { name: 'side', type: 'string' },
+    { name: 'clientOrderId', type: 'string' }
+  ]
+};
 
-// Create a signing object
-const sign = crypto.createSign('SHA256');
+const data = {
+  types: {
+    EIP712Domain: [
+      { name: 'name', type: 'string' },
+      { name: 'version', type: 'string' },
+      { name: 'chainId', type: 'uint256' },
+      { name: 'verifyingContract', type: 'address' }
+    ],
+    ...types
+  },
+  primaryType: 'Order',
+  domain: domain,
+  message: order
+};
 
-// Update the signing object with the hash
-sign.update(hash);
+// Sign the EIP-712 structured data
+const signature = signTypedData({
+  // Remove the 0x prefix if present
+  privateKey: Buffer.from(privateKeyHex.startsWith('0x') ? privateKeyHex.slice(2) : privateKeyHex, "hex"),
+  data: data,
+  version: "V4",
+});
 
-// Generate the signature using the private key
-const signature = sign.sign(privateKey, 'hex');
-
-console.log('signature :', signature);
+console.log('EIP-712 Signature:', signature);

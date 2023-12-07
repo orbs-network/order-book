@@ -11,11 +11,12 @@ import (
 
 func TestService_CancelOrdersForUser(t *testing.T) {
 	ctx := context.Background()
+	mockBcClient := &mocks.MockBcClient{IsVerified: true}
 
 	t.Run("should successfully cancel all orders for a user", func(t *testing.T) {
 		store := &mocks.MockOrderBookStore{User: &mocks.User}
 
-		s, _ := service.New(store)
+		s, _ := service.New(store, mockBcClient)
 
 		err := s.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.Equal(t, err, nil)
@@ -24,7 +25,7 @@ func TestService_CancelOrdersForUser(t *testing.T) {
 	t.Run("should return error on unexpected error", func(t *testing.T) {
 		store := &mocks.MockOrderBookStore{User: nil, Error: assert.AnError}
 
-		s, _ := service.New(store)
+		s, _ := service.New(store, mockBcClient)
 
 		err := s.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.ErrorContains(t, err, "could not cancel orders for user")

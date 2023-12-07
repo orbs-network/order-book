@@ -20,6 +20,8 @@ func TestService_CancelOrder(t *testing.T) {
 	clientOId := uuid.MustParse("f577273e-12de-4acc-a4f8-de7fb5b86e37")
 	order := &models.Order{Id: orderId, UserId: userId, Status: models.STATUS_OPEN, ClientOId: clientOId}
 
+	mockBcClient := &mocks.MockBcClient{IsVerified: true}
+
 	testCases := []struct {
 		name            string
 		order           *models.Order
@@ -41,7 +43,7 @@ func TestService_CancelOrder(t *testing.T) {
 	for _, c := range testCases {
 		t.Run(c.name, func(t *testing.T) {
 			fmt.Print(c.name)
-			svc, _ := service.New(&mocks.MockOrderBookStore{Order: c.order, Error: c.err})
+			svc, _ := service.New(&mocks.MockOrderBookStore{Order: c.order, Error: c.err}, mockBcClient)
 
 			input := service.CancelOrderInput{Id: orderId, IsClientOId: false, UserId: userId}
 
