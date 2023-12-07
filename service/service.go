@@ -13,7 +13,7 @@ import (
 )
 
 type OrderBookService interface {
-	ProcessOrder(ctx context.Context, input ProcessOrderInput) (models.Order, error)
+	CreateOrder(ctx context.Context, input CreateOrderInput) (models.Order, error)
 	CancelOrder(ctx context.Context, input CancelOrderInput) (cancelledOrderId *uuid.UUID, err error)
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
 	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
