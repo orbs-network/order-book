@@ -1,50 +1,58 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateUserMiddleware(t *testing.T) {
 
+	validApiKey := "Bearer some-api-key"
+
 	tests := []struct {
 		name           string
-		publicKey      string
-		mockService    mocks.MockOrderBookService
+		apiKey         string
+		getUserFunc    GetUserByApiKeyFunc
 		expectedStatus int
 		expectedBody   string
 	}{
 		{
-			name:           "should return error if no public key header",
-			publicKey:      "",
-			mockService:    mocks.MockOrderBookService{},
+			name:           "should return error if no api key header",
+			apiKey:         "",
+			getUserFunc:    func(ctx context.Context, apiKey string) (*models.User, error) { return nil, nil },
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   "Missing public key\n",
+			expectedBody:   "Invalid API key (ensure the format is 'Bearer YOUR-API-KEY')\n",
+		},
+		{
+			name:           "should return error if no 'Bearer' keyword",
+			apiKey:         "some-api-key",
+			getUserFunc:    func(ctx context.Context, apiKey string) (*models.User, error) { return nil, nil },
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   "Invalid API key (ensure the format is 'Bearer YOUR-API-KEY')\n",
 		},
 		{
 			name:           "should return error if user not found",
-			publicKey:      "some-public-key",
-			mockService:    mocks.MockOrderBookService{Error: models.ErrUserNotFound},
+			apiKey:         validApiKey,
+			getUserFunc:    func(ctx context.Context, apiKey string) (*models.User, error) { return nil, models.ErrUserNotFound },
 			expectedStatus: http.StatusUnauthorized,
 			expectedBody:   "Unauthorized\n",
 		},
 		{
 			name:           "should return error if unexpected error getting user by public key",
-			publicKey:      "some-public-key",
-			mockService:    mocks.MockOrderBookService{Error: assert.AnError},
+			apiKey:         validApiKey,
+			getUserFunc:    func(ctx context.Context, apiKey string) (*models.User, error) { return nil, assert.AnError },
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   "Internal server error\n",
 		},
 		{
-			name:      "should set user in context when user found",
-			publicKey: "some-public-key",
-			mockService: mocks.MockOrderBookService{
-				User: &mocks.User},
+			name:           "should set user in context when user found",
+			apiKey:         validApiKey,
+			getUserFunc:    func(ctx context.Context, apiKey string) (*models.User, error) { return &models.User{}, nil },
 			expectedStatus: http.StatusOK,
 			expectedBody:   "",
 		},
@@ -57,13 +65,13 @@ func TestValidateUserMiddleware(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			if tc.publicKey != "" {
-				req.Header.Set("X-Public-Key", tc.publicKey)
+			if tc.apiKey != "" {
+				req.Header.Set("X-API-KEY", tc.apiKey)
 			}
 
 			rr := httptest.NewRecorder()
 
-			middleware := ValidateUserMiddleware(&tc.mockService)
+			middleware := ValidateUserMiddleware(tc.getUserFunc)
 			handler := middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// This is the next handler in the chain, it would normally process the request
 				// if the middleware passes it through

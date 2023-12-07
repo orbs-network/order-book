@@ -24,8 +24,18 @@
 				"method": "POST",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer abcdef12345",
+						"type": "text"
+					},
+					{
+						"key": "X-API-SIGN",
+						"value": "0x27648e03bad3cf550a79e0fa469be3508c3cc3b1099bc8f5eccd379b912cf98b0f944d3b1bd895b8b6195e333ebc763ba35a854d6cfc4f12788fdc40bd508ce91b",
+						"type": "text"
+					},
+					{
+						"key": "X-API-EIP712-MSG",
+						"value": "{\"permitted\": {\"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\", \"amount\": 10000000}, \"spender\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\", \"nonce\": 2696605318, \"deadline\": 1709638189, \"witness\": {\"info\": {\"reactor\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\", \"swapper\": \"0xE3682CCecefBb3C3fe524BbFF1598B2BBaC0d6E3\", \"nonce\": 2696605318, \"deadline\": 1709638189, \"additionalValidationContract\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\", \"additionalValidationData\": \"0x\"}, \"exclusiveFiller\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\", \"exclusivityOverrideBps\": 0, \"input\": {\"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\", \"amount\": 10000000}, \"outputs\": [{\"token\": \"0x11cd37bb86f65419713f30673a480ea33c826872\", \"amount\": 99999999999999991611392, \"recipient\": \"0x8fd379246834eac74B8419FfdA202CF8051F7A03\"}]}}",
 						"type": "text"
 					}
 				],
@@ -57,8 +67,18 @@
 						"method": "POST",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer abcdef12345",
+								"type": "text"
+							},
+							{
+								"key": "X-API-SIGN",
+								"value": "0x27648e03bad3cf550a79e0fa469be3508c3cc3b1099bc8f5eccd379b912cf98b0f944d3b1bd895b8b6195e333ebc763ba35a854d6cfc4f12788fdc40bd508ce91b",
+								"type": "text"
+							},
+							{
+								"key": "X-API-EIP712-MSG",
+								"value": "{\"permitted\": {\"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\", \"amount\": 10000000}, \"spender\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\", \"nonce\": 2696605318, \"deadline\": 1709638189, \"witness\": {\"info\": {\"reactor\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\", \"swapper\": \"0xE3682CCecefBb3C3fe524BbFF1598B2BBaC0d6E3\", \"nonce\": 2696605318, \"deadline\": 1709638189, \"additionalValidationContract\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\", \"additionalValidationData\": \"0x\"}, \"exclusiveFiller\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\", \"exclusivityOverrideBps\": 0, \"input\": {\"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\", \"amount\": 10000000}, \"outputs\": [{\"token\": \"0x11cd37bb86f65419713f30673a480ea33c826872\", \"amount\": 99999999999999991611392, \"recipient\": \"0x8fd379246834eac74B8419FfdA202CF8051F7A03\"}]}}",
 								"type": "text"
 							}
 						],
@@ -111,8 +131,8 @@
 				"method": "DELETE",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer abcdef12345",
 						"type": "text"
 					}
 				],
@@ -136,8 +156,8 @@
 						"method": "DELETE",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer abcdef12345",
 								"type": "text"
 							}
 						],
@@ -182,8 +202,8 @@
 				"method": "DELETE",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer abcdef12345",
 						"type": "text"
 					}
 				],
@@ -208,8 +228,8 @@
 						"method": "DELETE",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer abcdef12345",
 								"type": "text"
 							}
 						],
@@ -255,8 +275,8 @@
 				"method": "DELETE",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer abcdef12345",
 						"type": "text"
 					}
 				],
@@ -279,8 +299,8 @@
 						"method": "DELETE",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer abcdef12345",
 								"type": "text"
 							}
 						],
@@ -320,8 +340,8 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer abcdef12345",
 						"type": "text"
 					}
 				],
@@ -344,8 +364,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer abcdef12345",
 								"type": "text"
 							}
 						],
@@ -389,8 +409,8 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer abcdef12345",
 						"type": "text"
 					}
 				],
@@ -414,8 +434,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer abcdef12345",
 								"type": "text"
 							}
 						],
@@ -460,8 +480,8 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer abcdef12345",
 						"type": "text"
 					}
 				],
@@ -486,8 +506,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer abcdef12345",
 								"type": "text"
 							}
 						],
@@ -533,8 +553,8 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer abcdef12345",
 						"type": "text"
 					}
 				],
@@ -564,8 +584,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer abcdef12345",
 								"type": "text"
 							}
 						],
@@ -616,8 +636,8 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer abcdef12345",
 						"type": "text"
 					}
 				],
@@ -650,8 +670,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer abcdef12345",
 								"type": "text"
 							}
 						],
@@ -703,13 +723,7 @@
 			"name": "Begin auction",
 			"request": {
 				"method": "POST",
-				"header": [
-					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
-						"type": "text"
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": "{\n    \"amountIn\": \"10\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\"\n}",

@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/data/redisrepo"
+	"github.com/orbs-network/order-book/data/storeuser"
 	"github.com/orbs-network/order-book/models"
 	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
@@ -42,18 +43,87 @@ func main() {
 				},
 			},
 			{
-				Name:  "storeUserByPubKey",
-				Usage: "Store user by public key",
+				Name:  "createUser",
+				Usage: "Create a new user",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "apiKey",
+						Usage:    "user API key",
+						Required: true,
+					},
+				},
 				Action: func(c *cli.Context) error {
-					storeUserByPublicKey()
+					apiKey := c.String("apiKey")
+
+					if apiKey == "" {
+						log.Fatalf("apiKey is empty")
+					}
+
+					createUser(apiKey)
 					return nil
 				},
 			},
 			{
-				Name:  "getUserByPubKey",
-				Usage: "Get user by public key",
+				Name:  "getUserByApiKey",
+				Usage: "Get user by their API key",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "apiKey",
+						Usage:    "user API key",
+						Required: true,
+					},
+				},
 				Action: func(c *cli.Context) error {
-					getUserByPublicKey()
+					apiKey := c.String("apiKey")
+
+					if apiKey == "" {
+						log.Fatalf("apiKey is empty")
+					}
+
+					getUserByApiKey(apiKey)
+					return nil
+				},
+			},
+			{
+				Name:  "getUserById",
+				Usage: "Get user by their ID",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "id",
+						Usage:    "user ID",
+						Required: true,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					userId := c.String("id")
+
+					if userId == "" {
+						log.Fatalf("userId is empty")
+					}
+
+					getUserById(userId)
+					return nil
+				},
+			},
+			{
+				Name:  "updateUser",
+				Usage: "Updates a user's API key",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "newApiKey",
+						Usage:    "The desired new user API key",
+						Required: true,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					newApiKey := c.String("newApiKey")
+
+					if newApiKey == "" {
+						log.Fatalf("newApiKey is empty")
+					}
+
+					updateUser(newApiKey)
+
 					return nil
 				},
 			},
@@ -172,15 +242,22 @@ func removeOrders() {
 	}
 }
 
-func storeUserByPublicKey() {
-	err := repository.StoreUserByPublicKey(ctx, user)
+func createUser(apiKey string) {
+	user.ApiKey = apiKey
+	user, err := repository.CreateUser(ctx, user)
 	if err != nil {
 		log.Fatalf("error storing user: %v", err)
 	}
+	log.Print("--------------------------")
+	log.Printf("userId: %v", user.Id)
+	log.Printf("userType: %v", user.Type)
+	log.Printf("userPubKey: %v", user.PubKey)
+	log.Printf("userApiKey: %v", user.ApiKey)
+	log.Print("--------------------------")
 }
 
-func getUserByPublicKey() {
-	retrievedUser, err := repository.GetUserByPublicKey(ctx, publicKey)
+func getUserByApiKey(apiKey string) {
+	retrievedUser, err := repository.GetUserByApiKey(ctx, apiKey)
 	if err != nil {
 		log.Fatalf("error getting user: %v", err)
 	}
@@ -189,4 +266,32 @@ func getUserByPublicKey() {
 	log.Printf("userType: %v", retrievedUser.Type)
 	log.Printf("userPubKey: %v", retrievedUser.PubKey)
 	log.Print("--------------------------")
+}
+
+func getUserById(userIdFlag string) {
+	userId := uuid.MustParse(userIdFlag)
+	retrievedUser, err := repository.GetUserById(ctx, userId)
+	if err != nil {
+		log.Fatalf("error getting user: %v", err)
+	}
+	log.Print("--------------------------")
+	log.Printf("userId: %v", retrievedUser.Id)
+	log.Printf("userType: %v", retrievedUser.Type)
+	log.Printf("userPubKey: %v", retrievedUser.PubKey)
+	log.Print("--------------------------")
+}
+
+func updateUser(newApiKey string) {
+
+	err := repository.UpdateUser(ctx, storeuser.UpdateUserInput{
+		UserId: userId,
+		PubKey: publicKey,
+		ApiKey: newApiKey,
+	})
+
+	if err != nil {
+		log.Fatalf("error updating user: %v", err)
+	}
+
+	log.Printf("user %q updated", userId)
 }

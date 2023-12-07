@@ -17,7 +17,7 @@
             "modified": "2023-11-16T08:49:48.608Z",
             "headers": [
                 {
-                    "name": "X-Public-Key",
+                    "name": "X-API-Key",
                     "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
                 }
             ],
@@ -50,7 +50,7 @@
             "modified": "2023-11-16T08:49:48.609Z",
             "headers": [
                 {
-                    "name": "X-Public-Key",
+                    "name": "X-API-Key",
                     "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
                 }
             ]
@@ -67,7 +67,7 @@
             "modified": "2023-11-16T08:49:48.610Z",
             "headers": [
                 {
-                    "name": "X-Public-Key",
+                    "name": "X-API-Key",
                     "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
                 }
             ]
@@ -84,7 +84,7 @@
             "modified": "2023-11-16T08:49:48.611Z",
             "headers": [
                 {
-                    "name": "X-Public-Key",
+                    "name": "X-API-Key",
                     "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
                 }
             ]
@@ -189,7 +189,7 @@
             "modified": "2023-11-16T08:49:48.618Z",
             "headers": [
                 {
-                    "name": "X-Public-Key",
+                    "name": "X-API-Key",
                     "value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
                 }
             ],

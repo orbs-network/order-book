@@ -1,12 +1,12 @@
 import fetch from "node-fetch";
 
 const ORDERBOOK_HOST = process.env.ORDERBOOK_HOST || "http://localhost:8080/"
-const PUB_KEY = process.env.PUB_KEY || "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+const API_KEY = process.env.API_KEY || "abcdef12345"
 const url = `${ORDERBOOK_HOST}/api/v1/orderbook/ETH-USD?limit=20`
 
 
 const headers = {
-    "X-Public-KEY": PUB_KEY,
+    "X-API-Key": `Bearer ${API_KEY}`,
     "Content-Type": "application/json", // Assuming you are expecting JSON in response
 };
 
