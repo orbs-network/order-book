@@ -60,5 +60,34 @@ func TestRedisRepository_GetAuction(t *testing.T) {
 }
 
 func TestRedisRepository_RemoveAuction(t *testing.T) {
+	auctionID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
 
+	t.Run("should remove auction", func(t *testing.T) {
+
+		db, mock := redismock.NewClientMock()
+
+		repo := &redisRepository{
+			client: db,
+		}
+
+		mock.ExpectDel(CreateAuctionKey(auctionID)).SetVal(1)
+
+		err := repo.RemoveAuction(ctx, auctionID)
+
+		assert.NoError(t, err)
+	})
+
+	t.Run("should return error in case of a Redis error", func(t *testing.T) {
+		db, mock := redismock.NewClientMock()
+
+		repo := &redisRepository{
+			client: db,
+		}
+
+		mock.ExpectDel(CreateAuctionKey(auctionID)).SetErr(assert.AnError)
+
+		err := repo.RemoveAuction(ctx, auctionID)
+
+		assert.Equal(t, assert.AnError, err)
+	})
 }

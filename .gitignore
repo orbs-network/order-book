@@ -4,3 +4,4 @@ __debug_*
 *secret*
 *.pem
 *Key.txt
+coverage.out
