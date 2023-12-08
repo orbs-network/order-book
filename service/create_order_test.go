@@ -31,7 +31,7 @@ func TestService_CreateOrder(t *testing.T) {
 		Type:   models.MARKET_MAKER,
 	}
 
-	t.Run("unexpected error from store - should return `ErrUnexpectedError` error", func(t *testing.T) {
+	t.Run("unexpected error from store - should return error", func(t *testing.T) {
 		input := service.CreateOrderInput{
 			UserId:        userId,
 			Price:         price,
@@ -45,7 +45,7 @@ func TestService_CreateOrder(t *testing.T) {
 
 		order, err := svc.CreateOrder(ctx, input)
 
-		assert.ErrorIs(t, err, models.ErrUnexpectedError)
+		assert.ErrorContains(t, err, "unexpected error when finding order by clientOrderId")
 		assert.Equal(t, models.Order{}, order)
 	})
 
@@ -90,11 +90,11 @@ func TestService_CreateOrder(t *testing.T) {
 
 		order, err := svc.CreateOrder(ctx, input)
 
-		assert.ErrorIs(t, err, service.ErrClashingOrderId)
+		assert.ErrorIs(t, err, models.ErrClashingOrderId)
 		assert.Equal(t, models.Order{}, order)
 	})
 
-	t.Run("existing order with same clientOrderId - should return `ErrOrderAlreadyExists` error", func(t *testing.T) {
+	t.Run("existing order with same clientOrderId - should return `ErrClashingClientOrderId` error", func(t *testing.T) {
 		input := service.CreateOrderInput{
 			UserId:        userId,
 			Price:         price,
@@ -108,7 +108,7 @@ func TestService_CreateOrder(t *testing.T) {
 
 		order, err := svc.CreateOrder(ctx, input)
 
-		assert.ErrorIs(t, err, models.ErrOrderAlreadyExists)
+		assert.ErrorIs(t, err, models.ErrClashingClientOrderId)
 		assert.Equal(t, models.Order{}, order)
 	})
 }
