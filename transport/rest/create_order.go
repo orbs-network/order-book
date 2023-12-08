@@ -62,6 +62,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		logctx.Warn(ctx, "failed to parse order fields", logger.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -159,12 +160,10 @@ type pFInput struct {
 func parseFields(w http.ResponseWriter, input pFInput) (*pfParsed, error) {
 	decPrice, err := decimal.NewFromString(input.price)
 	if err != nil {
-		http.Error(w, "'price' is not a valid number format", http.StatusBadRequest)
-		return nil, err
+		return nil, fmt.Errorf("'price' is not a valid number format")
 	}
 	if decPrice.IsNegative() {
-		http.Error(w, "'price' must be positive", http.StatusBadRequest)
-		return nil, err
+		return nil, fmt.Errorf("'price' must be positive")
 	}
 
 	// TODO: Am I OK to always round?
@@ -172,31 +171,26 @@ func parseFields(w http.ResponseWriter, input pFInput) (*pfParsed, error) {
 
 	decSize, err := decimal.NewFromString(input.size)
 	if err != nil {
-		http.Error(w, "'size' is not a valid number format", http.StatusBadRequest)
-		return nil, err
+		return nil, fmt.Errorf("'size' is not a valid number format")
 	}
 
 	if decSize.IsNegative() {
-		http.Error(w, "'size' must be positive", http.StatusBadRequest)
-		return nil, err
+		return nil, fmt.Errorf("'size' must be positive")
 	}
 
 	symbol, err := models.StrToSymbol(input.symbol)
 	if err != nil {
-		http.Error(w, "'symbol' is not valid", http.StatusBadRequest)
-		return nil, err
+		return nil, fmt.Errorf("'symbol' is not valid")
 	}
 
 	side, err := models.StrToSide(input.side)
 	if err != nil {
-		http.Error(w, "'side' is not valid", http.StatusBadRequest)
-		return nil, err
+		return nil, fmt.Errorf("'side' is not valid")
 	}
 
 	clientOrderId, err := uuid.Parse(input.clientOrderId)
 	if err != nil {
-		http.Error(w, "'clientOrderId' is not valid", http.StatusBadRequest)
-		return nil, err
+		return nil, fmt.Errorf("'clientOrderId' is not valid")
 	}
 
 	return &pfParsed{

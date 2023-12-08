@@ -27,11 +27,13 @@ type CreateOrdersRequest struct {
 }
 
 type CreateOrdersResponse struct {
-	Symbol        string          `json:"symbol"`
-	Created       []*models.Order `json:"created"`
-	Status        status          `json:"status"`
-	FailureReason string          `json:"failureReason"`
+	Symbol        string         `json:"symbol"`
+	Created       []models.Order `json:"created"`
+	Status        status         `json:"status"`
+	FailureReason string         `json:"failureReason"`
 }
+
+// TODO: use goroutines to create orders in parallel
 
 func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -59,21 +61,27 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var response CreateOrdersResponse
+	response.Symbol = args.Symbol
+
+	createdOrders := []models.Order{}
+
 	for _, order := range args.Orders {
-		if err := handleValidateRequiredFields(hVRFArgs{
+		if err = handleValidateRequiredFields(hVRFArgs{
 			price:         order.Price,
 			size:          order.Size,
 			symbol:        args.Symbol,
 			side:          order.Side,
 			clientOrderId: order.ClientOrderId,
 		}); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			logctx.Warn(ctx, "failed to validate required fields", logger.Error(err), logger.String("userId", user.Id.String()))
+			response.Status = FAIL
+			response.FailureReason = err.Error()
+			response.Created = createdOrders
+			writeJSONResponse(ctx, w, http.StatusBadRequest, response, logger.String("userId", user.Id.String()))
 			return
 		}
 	}
-
-	var createdOrders []*models.Order
-	var response CreateOrdersResponse
 
 	for _, order := range args.Orders {
 		parsedFields, err := parseFields(w, pFInput{
@@ -84,7 +92,11 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 			clientOrderId: order.ClientOrderId,
 		})
 		if err != nil {
-			return
+			logctx.Warn(ctx, "failed to parse fields", logger.Error(err), logger.String("userId", user.Id.String()))
+			response.Status = FAIL
+			response.FailureReason = err.Error()
+			response.Created = createdOrders
+			break
 		}
 
 		order, err := h.svc.CreateOrder(ctx, service.CreateOrderInput{
@@ -97,28 +109,28 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 		})
 
 		if err == models.ErrClashingClientOrderId {
-			logctx.Warn(ctx, "order already exists", logger.Error(err), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
+			logctx.Warn(ctx, "order with clientOrderId already exists", logger.Error(err), logger.String("clientOrderId", parsedFields.clientOrderId.String()), logger.String("userId", user.Id.String()))
 			response.Status = FAIL
 			response.FailureReason = fmt.Sprintf("Order with clientOrderId %q already exists. You must first cancel this order", order.ClientOId.String())
 			break
 		}
 
 		if err == models.ErrClashingOrderId {
-			logctx.Warn(ctx, "unexpected clash of order ids", logger.Error(err))
+			logctx.Warn(ctx, "order with orderId already exists", logger.Error(err), logger.String("clientOrderId", parsedFields.clientOrderId.String()), logger.String("userId", user.Id.String()))
 			response.Status = FAIL
 			response.FailureReason = "Clashing order details. Please retry"
 			break
 		}
 
 		if err != nil {
-			logctx.Error(ctx, "failed to create order", logger.Error(err))
+			logctx.Error(ctx, "failed to create order", logger.Error(err), logger.String("clientOrderId", parsedFields.clientOrderId.String()), logger.String("userId", user.Id.String()))
 			response.Status = FAIL
 			response.FailureReason = fmt.Sprintf("Error creating order with clientOrderId %q. Try again later", order.ClientOId.String())
 			break
 		}
 
 		logctx.Info(ctx, "user created order", logger.String("userId", user.Id.String()), logger.String("price", parsedFields.roundedDecPrice.String()), logger.String("size", parsedFields.decSize.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
-		createdOrders = append(createdOrders, &order)
+		createdOrders = append(createdOrders, order)
 	}
 
 	response.Symbol = args.Symbol
