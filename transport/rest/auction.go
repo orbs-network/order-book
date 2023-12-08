@@ -26,9 +26,10 @@ type BeginAuctionRes struct {
 }
 
 type Fragment struct {
-	OrderId   string `json:"orderId"`
-	AmountOut string `json:"amountOut"`
-	Signature string `json:"signature"`
+	OrderId       string                 `json:"orderId"`
+	AmountOut     string                 `json:"amountOut"`
+	Eip712Sig     string                 `json:"eip712Sig"`
+	Eip712MsgData map[string]interface{} `json:"eip712MsgData"`
 }
 type ConfirmAuctionRes struct {
 	AuctionId     string     `json:"auctionId"`
@@ -132,9 +133,10 @@ func (h *Handler) confirmAuction(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := 0; i < len(caRes.Fragments); i++ {
 		frag := Fragment{
-			AmountOut: caRes.Fragments[i].Size.String(),
-			OrderId:   caRes.Orders[i].Id.String(),
-			Signature: caRes.Orders[i].Signature,
+			AmountOut:     caRes.Fragments[i].Size.String(),
+			OrderId:       caRes.Orders[i].Id.String(),
+			Eip712Sig:     caRes.Orders[i].Signature.Eip712Sig,
+			Eip712MsgData: caRes.Orders[i].Signature.Eip712MsgData,
 		}
 		respObj.Fragments = append(respObj.Fragments, frag)
 	}

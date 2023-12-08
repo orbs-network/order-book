@@ -15,11 +15,13 @@ import (
 )
 
 type CreateOrderRequest struct {
-	Price         string `json:"price"`
-	Size          string `json:"size"`
-	Symbol        string `json:"symbol"`
-	Side          string `json:"side"`
-	ClientOrderId string `json:"clientOrderId"`
+	Price         string                 `json:"price"`
+	Size          string                 `json:"size"`
+	Symbol        string                 `json:"symbol"`
+	Side          string                 `json:"side"`
+	ClientOrderId string                 `json:"clientOrderId"`
+	Eip712Sig     string                 `json:"eip712Sig"`
+	Eip712MsgData map[string]interface{} `json:"eip712MsgData"`
 }
 
 type CreateOrderResponse struct {
@@ -38,6 +40,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	var args CreateOrderRequest
 	err := json.NewDecoder(r.Body).Decode(&args)
 	if err != nil {
+		logctx.Warn(ctx, "invalid JSON body", logger.Error(err))
 		http.Error(w, "invalid JSON body", http.StatusBadRequest)
 		return
 	}
@@ -48,6 +51,8 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		symbol:        args.Symbol,
 		side:          args.Side,
 		clientOrderId: args.ClientOrderId,
+		eip712Sig:     args.Eip712Sig,
+		eip712MsgData: &args.Eip712MsgData,
 	}); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -74,7 +79,21 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		Size:          parsedFields.decSize,
 		Side:          parsedFields.side,
 		ClientOrderID: parsedFields.clientOrderId,
+		Eip712Sig:     args.Eip712Sig,
+		Eip712MsgData: args.Eip712MsgData,
 	})
+
+	if err == models.ErrSignatureVerificationError {
+		logctx.Warn(ctx, "signature verification error", logger.Error(err), logger.String("userId", user.Id.String()))
+		http.Error(w, "Signature verification error", http.StatusBadRequest)
+		return
+	}
+
+	if err == models.ErrSignatureVerificationFailed {
+		logctx.Warn(ctx, "signature verification failed", logger.String("userId", user.Id.String()))
+		http.Error(w, "Signature verification failed", http.StatusUnauthorized)
+		return
+	}
 
 	if err == models.ErrClashingOrderId {
 		http.Error(w, "Clashing order ID. Please retry", http.StatusConflict)
@@ -117,6 +136,8 @@ type hVRFArgs struct {
 	symbol        string
 	side          string
 	clientOrderId string
+	eip712Sig     string
+	eip712MsgData *map[string]interface{}
 }
 
 func handleValidateRequiredFields(args hVRFArgs) error {
@@ -135,6 +156,12 @@ func handleValidateRequiredFields(args hVRFArgs) error {
 
 	case args.clientOrderId == "":
 		return fmt.Errorf("missing required field 'clientOrderId'")
+
+	case args.eip712Sig == "":
+		return fmt.Errorf("missing required field 'eip712Sig'")
+
+	case args.eip712MsgData == nil || *args.eip712MsgData == nil:
+		return fmt.Errorf("missing required field 'eip712MsgData'")
 
 	default:
 		return nil

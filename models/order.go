@@ -1,12 +1,19 @@
 package models
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
+
+// EIP712 signature components
+type Signature struct {
+	Eip712Sig     string                 `json:"eip712Sig"`
+	Eip712MsgData map[string]interface{} `json:"eip712MsgData"`
+}
 
 type Order struct {
 	Id          uuid.UUID       `json:"orderId"`
@@ -17,24 +24,28 @@ type Order struct {
 	Size        decimal.Decimal `json:"size"`
 	SizePending decimal.Decimal `json:"-"`
 	SizeFilled  decimal.Decimal `json:"-"`
-	Signature   string          `json:"-" ` // EIP 712
 	Side        Side            `json:"side"`
 	Timestamp   time.Time       `json:"timestamp"`
+	Signature   Signature       `json:"-" `
 }
 
 func (o *Order) OrderToMap() map[string]string {
+	// error can be ignored here because we know the data is valid
+	eip712MsgDataBytes, _ := json.Marshal(o.Signature.Eip712MsgData)
+	eip712MsgDataStr := string(eip712MsgDataBytes)
 	return map[string]string{
-		"id":          o.Id.String(),
-		"clientOId":   o.ClientOId.String(),
-		"userId":      o.UserId.String(),
-		"price":       o.Price.String(),
-		"symbol":      o.Symbol.String(),
-		"size":        o.Size.String(),
-		"sizePending": o.SizePending.String(),
-		"sizeFilled":  o.SizeFilled.String(),
-		"signature":   o.Signature,
-		"side":        o.Side.String(),
-		"timestamp":   o.Timestamp.Format(time.RFC3339),
+		"id":            o.Id.String(),
+		"clientOId":     o.ClientOId.String(),
+		"userId":        o.UserId.String(),
+		"price":         o.Price.String(),
+		"symbol":        o.Symbol.String(),
+		"size":          o.Size.String(),
+		"sizePending":   o.SizePending.String(),
+		"sizeFilled":    o.SizeFilled.String(),
+		"side":          o.Side.String(),
+		"timestamp":     o.Timestamp.Format(time.RFC3339),
+		"eip712Sig":     o.Signature.Eip712Sig,
+		"eip712MsgData": eip712MsgDataStr,
 	}
 }
 
@@ -83,9 +94,14 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("no sizeFilled provided")
 	}
 
-	signatureStr, exists := data["signature"]
+	signatureStr, exists := data["eip712Sig"]
 	if !exists {
 		return fmt.Errorf("no signature provided")
+	}
+
+	messageData, exists := data["eip712MsgData"]
+	if !exists {
+		return fmt.Errorf("no messageData provided")
 	}
 
 	sideStr, exists := data["side"]
@@ -148,6 +164,12 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("invalid timestamp: %v", err)
 	}
 
+	eip712MsgData := map[string]interface{}{}
+
+	if err := json.Unmarshal([]byte(messageData), &eip712MsgData); err != nil {
+		return fmt.Errorf("invalid eip712MsgData: %v", err)
+	}
+
 	o.Id = id
 	o.ClientOId = clientOId
 	o.UserId = userId
@@ -156,7 +178,10 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	o.Size = size
 	o.SizePending = sizePending
 	o.SizeFilled = sizeFilled
-	o.Signature = signatureStr
+	o.Signature = Signature{
+		Eip712Sig:     signatureStr,
+		Eip712MsgData: eip712MsgData,
+	}
 	o.Side = side
 	o.Timestamp = timestamp
 

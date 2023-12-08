@@ -73,6 +73,8 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 			symbol:        args.Symbol,
 			side:          order.Side,
 			clientOrderId: order.ClientOrderId,
+			eip712Sig:     order.Eip712Sig,
+			eip712MsgData: &order.Eip712MsgData,
 		}); err != nil {
 			logctx.Warn(ctx, "failed to validate required fields", logger.Error(err), logger.String("userId", user.Id.String()))
 			response.Status = FAIL
@@ -106,7 +108,23 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 			Size:          parsedFields.decSize,
 			Side:          parsedFields.side,
 			ClientOrderID: parsedFields.clientOrderId,
+			Eip712Sig:     order.Eip712Sig,
+			Eip712MsgData: order.Eip712MsgData,
 		})
+
+		if err == models.ErrSignatureVerificationError {
+			logctx.Warn(ctx, "signature verification error", logger.Error(err), logger.String("userId", user.Id.String()))
+			response.Status = FAIL
+			response.FailureReason = "Signature verification error"
+			break
+		}
+
+		if err == models.ErrSignatureVerificationFailed {
+			logctx.Warn(ctx, "signature verification failed", logger.String("userId", user.Id.String()))
+			response.Status = FAIL
+			response.FailureReason = "Signature verification failed"
+			return
+		}
 
 		if err == models.ErrClashingClientOrderId {
 			logctx.Warn(ctx, "order with clientOrderId already exists", logger.Error(err), logger.String("clientOrderId", parsedFields.clientOrderId.String()), logger.String("userId", user.Id.String()))
