@@ -42,70 +42,46 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := handleValidateRequiredFields(args); err != nil {
+	if err := handleValidateRequiredFields(hVRFArgs{
+		price:         args.Price,
+		size:          args.Size,
+		symbol:        args.Symbol,
+		side:          args.Side,
+		clientOrderId: args.ClientOrderId,
+	}); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	decPrice, err := decimal.NewFromString(args.Price)
+	parsedFields, err := parseFields(w, pFInput{
+		price:         args.Price,
+		size:          args.Size,
+		symbol:        args.Symbol,
+		side:          args.Side,
+		clientOrderId: args.ClientOrderId,
+	})
 	if err != nil {
-		http.Error(w, "'price' is not a valid number format", http.StatusBadRequest)
-		return
-	}
-	if decPrice.IsNegative() {
-		http.Error(w, "'price' must be positive", http.StatusBadRequest)
+		logctx.Warn(ctx, "failed to parse order fields", logger.Error(err))
 		return
 	}
 
-	// TODO: Am I OK to always round?
-	roundedDecPrice := decPrice.Round(2)
-
-	decSize, err := decimal.NewFromString(args.Size)
-	if err != nil {
-		http.Error(w, "'size' is not a valid number format", http.StatusBadRequest)
-		return
-	}
-
-	if decSize.IsNegative() {
-		http.Error(w, "'size' must be positive", http.StatusBadRequest)
-		return
-	}
-
-	symbol, err := models.StrToSymbol(args.Symbol)
-	if err != nil {
-		http.Error(w, "'symbol' is not valid", http.StatusBadRequest)
-		return
-	}
-
-	side, err := models.StrToSide(args.Side)
-	if err != nil {
-		http.Error(w, "'side' is not valid", http.StatusBadRequest)
-		return
-	}
-
-	clientOrderId, err := uuid.Parse(args.ClientOrderId)
-	if err != nil {
-		http.Error(w, "'clientOrderId' is not valid", http.StatusBadRequest)
-		return
-	}
-
-	logctx.Info(ctx, "user trying to create order", logger.String("userId", user.Id.String()), logger.String("price", roundedDecPrice.String()), logger.String("size", decSize.String()), logger.String("clientOrderId", clientOrderId.String()))
+	logctx.Info(ctx, "user trying to create order", logger.String("userId", user.Id.String()), logger.String("price", parsedFields.roundedDecPrice.String()), logger.String("size", parsedFields.decSize.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
 	order, err := h.svc.CreateOrder(ctx, service.CreateOrderInput{
 		UserId:        user.Id,
-		Price:         roundedDecPrice,
-		Symbol:        symbol,
-		Size:          decSize,
-		Side:          side,
-		ClientOrderID: clientOrderId,
+		Price:         parsedFields.roundedDecPrice,
+		Symbol:        parsedFields.symbol,
+		Size:          parsedFields.decSize,
+		Side:          parsedFields.side,
+		ClientOrderID: parsedFields.clientOrderId,
 	})
 
-	if err == models.ErrOrderAlreadyExists {
-		http.Error(w, "Order already exists. You must first cancel existing order", http.StatusConflict)
+	if err == models.ErrClashingOrderId {
+		http.Error(w, "Clashing order ID. Please retry", http.StatusConflict)
 		return
 	}
 
-	if err == service.ErrClashingOrderId {
-		http.Error(w, "Clashing 'clientOrderId'. Retry with a different UUID", http.StatusConflict)
+	if err == models.ErrClashingClientOrderId {
+		http.Error(w, fmt.Sprintf("Order with clientOrderId %q already exists. You must first cancel this order", args.ClientOrderId), http.StatusConflict)
 		return
 	}
 
@@ -129,29 +105,105 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	if _, err := w.Write(resp); err != nil {
-		logctx.Error(ctx, "failed to write response", logger.Error(err), logger.String("orderId", clientOrderId.String()))
+		logctx.Error(ctx, "failed to write response", logger.Error(err), logger.String("orderId", parsedFields.clientOrderId.String()))
 		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
 	}
 }
 
-func handleValidateRequiredFields(args CreateOrderRequest) error {
+type hVRFArgs struct {
+	price         string
+	size          string
+	symbol        string
+	side          string
+	clientOrderId string
+}
+
+func handleValidateRequiredFields(args hVRFArgs) error {
 	switch {
-	case args.Price == "":
+	case args.price == "":
 		return fmt.Errorf("missing required field 'price'")
 
-	case args.Size == "":
+	case args.size == "":
 		return fmt.Errorf("missing required field 'size'")
 
-	case args.Symbol == "":
+	case args.symbol == "":
 		return fmt.Errorf("missing required field 'symbol'")
 
-	case args.Side == "":
+	case args.side == "":
 		return fmt.Errorf("missing required field 'side'")
 
-	case args.ClientOrderId == "":
+	case args.clientOrderId == "":
 		return fmt.Errorf("missing required field 'clientOrderId'")
 
 	default:
 		return nil
 	}
+}
+
+type pfParsed struct {
+	roundedDecPrice decimal.Decimal
+	decSize         decimal.Decimal
+	symbol          models.Symbol
+	side            models.Side
+	clientOrderId   uuid.UUID
+}
+
+type pFInput struct {
+	price         string
+	size          string
+	symbol        string
+	side          string
+	clientOrderId string
+}
+
+func parseFields(w http.ResponseWriter, input pFInput) (*pfParsed, error) {
+	decPrice, err := decimal.NewFromString(input.price)
+	if err != nil {
+		http.Error(w, "'price' is not a valid number format", http.StatusBadRequest)
+		return nil, err
+	}
+	if decPrice.IsNegative() {
+		http.Error(w, "'price' must be positive", http.StatusBadRequest)
+		return nil, err
+	}
+
+	// TODO: Am I OK to always round?
+	roundedDecPrice := decPrice.Round(2)
+
+	decSize, err := decimal.NewFromString(input.size)
+	if err != nil {
+		http.Error(w, "'size' is not a valid number format", http.StatusBadRequest)
+		return nil, err
+	}
+
+	if decSize.IsNegative() {
+		http.Error(w, "'size' must be positive", http.StatusBadRequest)
+		return nil, err
+	}
+
+	symbol, err := models.StrToSymbol(input.symbol)
+	if err != nil {
+		http.Error(w, "'symbol' is not valid", http.StatusBadRequest)
+		return nil, err
+	}
+
+	side, err := models.StrToSide(input.side)
+	if err != nil {
+		http.Error(w, "'side' is not valid", http.StatusBadRequest)
+		return nil, err
+	}
+
+	clientOrderId, err := uuid.Parse(input.clientOrderId)
+	if err != nil {
+		http.Error(w, "'clientOrderId' is not valid", http.StatusBadRequest)
+		return nil, err
+	}
+
+	return &pfParsed{
+		roundedDecPrice: roundedDecPrice,
+		decSize:         decSize,
+		symbol:          symbol,
+		side:            side,
+		clientOrderId:   clientOrderId,
+	}, nil
 }

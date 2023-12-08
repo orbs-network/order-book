@@ -42,6 +42,8 @@ func (h *Handler) initMMRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 	mmApi.Use(middlewareValidUser)
 
 	// ------- CREATE -------
+	// Place multiple orders
+	mmApi.HandleFunc("/orders", h.CreateOrders).Methods("POST")
 	// Place a new order
 	mmApi.HandleFunc("/order", h.CreateOrder).Methods("POST")
 

@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,17 +21,13 @@ type CreateOrderInput struct {
 	ClientOrderID uuid.UUID
 }
 
-var (
-	ErrClashingOrderId = errors.New("order with that ID already exists")
-)
-
 func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (models.Order, error) {
 
 	existingOrder, err := s.orderBookStore.FindOrderById(ctx, input.ClientOrderID, true)
 
 	if err != nil && err != models.ErrNotFound {
 		logctx.Error(ctx, "unexpected error when finding order by clientOrderId", logger.Error(err))
-		return models.Order{}, models.ErrUnexpectedError
+		return models.Order{}, fmt.Errorf("unexpected error when finding order by clientOrderId: %s", err)
 	}
 
 	if existingOrder == nil {
@@ -41,12 +37,12 @@ func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (mode
 
 	if existingOrder.UserId != input.UserId {
 		logctx.Warn(ctx, "order already exists with different userId", logger.Error(err))
-		return models.Order{}, ErrClashingOrderId
+		return models.Order{}, models.ErrClashingOrderId
 	}
 
 	if existingOrder.ClientOId == input.ClientOrderID {
 		logctx.Warn(ctx, "order already exists with same clientOrderId", logger.Error(err), logger.String("clientOrderId", input.ClientOrderID.String()))
-		return models.Order{}, models.ErrOrderAlreadyExists
+		return models.Order{}, models.ErrClashingClientOrderId
 	}
 
 	logctx.Error(ctx, "did not follow any cases when creating order", logger.String("clientOrderId", input.ClientOrderID.String()), logger.String("userId", input.UserId.String()), logger.String("price", input.Price.String()), logger.String("size", input.Size.String()), logger.String("symbol", input.Symbol.String()), logger.String("side", input.Side.String()))
