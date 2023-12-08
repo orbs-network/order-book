@@ -99,12 +99,6 @@ func (h *Handler) handleCancelOrder(input hInput) {
 		return
 	}
 
-	if err == models.ErrOrderNotOpen {
-		logctx.Warn(input.ctx, "user trying to cancel order that is not open", logger.String("id", input.id.String()))
-		http.Error(input.w, "Order not found", http.StatusNotFound)
-		return
-	}
-
 	if err == models.ErrUnauthorized {
 		logctx.Warn(input.ctx, "user not authorized to cancel order", logger.String("id", input.id.String()))
 		http.Error(input.w, "Not authorized", http.StatusUnauthorized)

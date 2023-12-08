@@ -39,7 +39,6 @@ func TestRedisRepository_FindOrderById(t *testing.T) {
 		SizeFilled:  zero,
 		Symbol:      symbol,
 		Side:        models.BUY,
-		Status:      models.STATUS_OPEN,
 	}
 
 	t.Run("order found by orderID", func(t *testing.T) {

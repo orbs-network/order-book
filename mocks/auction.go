@@ -14,7 +14,6 @@ func newOrder(price, size int64) models.Order {
 		Size:        decimal.NewFromInt(size),
 		SizePending: decimal.Zero,
 		SizeFilled:  decimal.Zero,
-		Status:      models.STATUS_OPEN,
 	}
 }
 

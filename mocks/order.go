@@ -14,7 +14,6 @@ var UserId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var Price = decimal.NewFromFloat(10000.55)
 var Symbol, _ = models.StrToSymbol("USDC-ETH")
 var Size, _ = decimal.NewFromString("126")
-var Status = models.STATUS_OPEN
 var Side = models.BUY
 var Timestamp = time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)
 
@@ -25,7 +24,6 @@ var Order = models.Order{
 	Price:     Price,
 	Symbol:    Symbol,
 	Size:      Size,
-	Status:    Status,
 	Side:      Side,
 	Timestamp: Timestamp,
 }

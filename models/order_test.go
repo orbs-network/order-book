@@ -25,7 +25,6 @@ func TestOrder_OrderToMap(t *testing.T) {
 		SizeFilled:  decimal.NewFromInt(600),
 		SizePending: decimal.NewFromInt(400),
 		Signature:   "signature",
-		Status:      STATUS_OPEN,
 		Side:        BUY,
 		Timestamp:   timestamp,
 	}
@@ -40,7 +39,6 @@ func TestOrder_OrderToMap(t *testing.T) {
 		"sizePending": order.SizePending.String(),
 		"sizeFilled":  order.SizeFilled.String(),
 		"signature":   order.Signature,
-		"status":      order.Status.String(),
 		"side":        order.Side.String(),
 		"timestamp":   order.Timestamp.Format(time.RFC3339),
 	}
@@ -64,7 +62,6 @@ func TestOrder_MapToOrder(t *testing.T) {
 			"sizePending":   "0",
 			"sizeFilled":    "0",
 			"signature":     "signature",
-			"status":        "OPEN",
 			"side":          "buy",
 			"timestamp":     "2021-01-01T00:00:00Z",
 			"clientOrderId": id.String(),
@@ -84,7 +81,6 @@ func TestOrder_MapToOrder(t *testing.T) {
 		assert.Equal(t, "USDC-ETH", order.Symbol.String())
 		assert.Equal(t, sizeDec, order.Size)
 		assert.Equal(t, "signature", order.Signature)
-		assert.Equal(t, "OPEN", order.Status.String())
 		assert.Equal(t, "buy", order.Side.String())
 		assert.Equal(t, "2021-01-01 00:00:00 +0000 UTC", order.Timestamp.String())
 	})
@@ -96,7 +92,6 @@ func TestOrder_MapToOrder(t *testing.T) {
 			"price":     "10.0",
 			"size":      "42343324",
 			"signature": "signature",
-			"status":    "OPEN",
 			"side":      "buy",
 		}
 
@@ -112,7 +107,6 @@ func TestOrder_MapToOrder(t *testing.T) {
 			"symbol":    "invalid-symbol",
 			"size":      "invalid-decimal",
 			"signature": "signature",
-			"status":    "invalid-status",
 			"side":      "invalid-side",
 		}
 
