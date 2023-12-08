@@ -24,23 +24,31 @@ func TestOrder_OrderToMap(t *testing.T) {
 		Size:        decimal.NewFromInt(1000),
 		SizeFilled:  decimal.NewFromInt(600),
 		SizePending: decimal.NewFromInt(400),
-		Signature:   "signature",
-		Side:        BUY,
-		Timestamp:   timestamp,
+		Signature: Signature{
+			Eip712Sig: "signature",
+			Eip712MsgData: map[string]interface{}{
+				"message": "data",
+			},
+		},
+		Side:      BUY,
+		Timestamp: timestamp,
 	}
 
+	eip712MsgDataStr := "{\"message\":\"data\"}"
+
 	expectedMap := map[string]string{
-		"id":          order.Id.String(),
-		"clientOId":   order.ClientOId.String(),
-		"userId":      order.UserId.String(),
-		"price":       order.Price.String(),
-		"symbol":      order.Symbol.String(),
-		"size":        order.Size.String(),
-		"sizePending": order.SizePending.String(),
-		"sizeFilled":  order.SizeFilled.String(),
-		"signature":   order.Signature,
-		"side":        order.Side.String(),
-		"timestamp":   order.Timestamp.Format(time.RFC3339),
+		"id":            order.Id.String(),
+		"clientOId":     order.ClientOId.String(),
+		"userId":        order.UserId.String(),
+		"price":         order.Price.String(),
+		"symbol":        order.Symbol.String(),
+		"size":          order.Size.String(),
+		"sizePending":   order.SizePending.String(),
+		"sizeFilled":    order.SizeFilled.String(),
+		"side":          order.Side.String(),
+		"timestamp":     order.Timestamp.Format(time.RFC3339),
+		"eip712Sig":     order.Signature.Eip712Sig,
+		"eip712MsgData": eip712MsgDataStr,
 	}
 
 	actualMap := order.OrderToMap()
@@ -61,10 +69,11 @@ func TestOrder_MapToOrder(t *testing.T) {
 			"size":          "1000",
 			"sizePending":   "0",
 			"sizeFilled":    "0",
-			"signature":     "signature",
 			"side":          "buy",
 			"timestamp":     "2021-01-01T00:00:00Z",
 			"clientOrderId": id.String(),
+			"eip712Sig":     "signature",
+			"eip712MsgData": "{\"message\":\"data\"}",
 		}
 
 		err := order.MapToOrder(data)
@@ -80,7 +89,9 @@ func TestOrder_MapToOrder(t *testing.T) {
 		assert.Equal(t, priceDec, order.Price)
 		assert.Equal(t, "USDC-ETH", order.Symbol.String())
 		assert.Equal(t, sizeDec, order.Size)
-		assert.Equal(t, "signature", order.Signature)
+		assert.Equal(t, Signature{Eip712Sig: "signature", Eip712MsgData: map[string]interface{}{
+			"message": "data",
+		}}, order.Signature)
 		assert.Equal(t, "buy", order.Side.String())
 		assert.Equal(t, "2021-01-01 00:00:00 +0000 UTC", order.Timestamp.String())
 	})

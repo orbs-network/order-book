@@ -175,7 +175,7 @@ var ctx = context.Background()
 var orderId = uuid.New()
 
 var userId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
-var publicKey = "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+var publicKey = "0x6a04ab98d9e4774ad806e302dddeb63bea16b5cb5f223ee77478e861bb583eb336b6fbcb60b5b3d4f1551ac45e5ffc4936466e7d98f6c7c0ec736539f74691a6"
 var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 var size, _ = decimal.NewFromString("10000324.123456789")
 var symbol, _ = models.StrToSymbol("USDC-ETH")

@@ -15,7 +15,7 @@ import (
 
 func TestService_CreateOrder(t *testing.T) {
 
-	ctx := context.Background()
+	ctx := mocks.AddUserToCtx(nil)
 	mockBcClient := &mocks.MockBcClient{IsVerified: true}
 
 	symbol, _ := models.StrToSymbol("USDC-ETH")
@@ -31,15 +31,47 @@ func TestService_CreateOrder(t *testing.T) {
 		Type:   models.MARKET_MAKER,
 	}
 
+	input := service.CreateOrderInput{
+		UserId:        userId,
+		Price:         price,
+		Symbol:        symbol,
+		Size:          size,
+		Side:          models.SELL,
+		ClientOrderID: orderId,
+		Eip712Sig:     "mock-sig",
+		Eip712MsgData: map[string]interface{}{},
+	}
+
+	t.Run("no user in context - should return error", func(t *testing.T) {
+
+		ctxWithoutUser := context.Background()
+
+		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user}, mockBcClient)
+		order, err := svc.CreateOrder(ctxWithoutUser, input)
+
+		assert.ErrorContains(t, err, "user should be in context")
+		assert.Equal(t, models.Order{}, order)
+	})
+
+	t.Run("signature verification error - should return `ErrSignatureVerificationError` error", func(t *testing.T) {
+		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user}, &mocks.MockBcClient{Error: assert.AnError, IsVerified: false})
+
+		order, err := svc.CreateOrder(ctx, input)
+
+		assert.ErrorIs(t, err, models.ErrSignatureVerificationError)
+		assert.Equal(t, models.Order{}, order)
+	})
+
+	t.Run("signature verification failed - should return `ErrSignatureVerificationFailed` error", func(t *testing.T) {
+		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user}, &mocks.MockBcClient{IsVerified: false})
+
+		order, err := svc.CreateOrder(ctx, input)
+
+		assert.ErrorIs(t, err, models.ErrSignatureVerificationFailed)
+		assert.Equal(t, models.Order{}, order)
+	})
+
 	t.Run("unexpected error from store - should return error", func(t *testing.T) {
-		input := service.CreateOrderInput{
-			UserId:        userId,
-			Price:         price,
-			Symbol:        symbol,
-			Size:          size,
-			Side:          models.SELL,
-			ClientOrderID: orderId,
-		}
 
 		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Error: assert.AnError}, mockBcClient)
 
@@ -50,15 +82,6 @@ func TestService_CreateOrder(t *testing.T) {
 	})
 
 	t.Run("no previous order - should create new order", func(t *testing.T) {
-		input := service.CreateOrderInput{
-			UserId:        userId,
-			Price:         price,
-			Symbol:        symbol,
-			Size:          size,
-			Side:          models.SELL,
-			ClientOrderID: orderId,
-		}
-
 		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, Order: nil}, mockBcClient)
 
 		newOrder, err := svc.CreateOrder(ctx, input)
@@ -71,7 +94,7 @@ func TestService_CreateOrder(t *testing.T) {
 		assert.Equal(t, newOrder.Price, price)
 		assert.Equal(t, newOrder.Symbol, symbol)
 		assert.Equal(t, newOrder.Size, size)
-		assert.Equal(t, newOrder.Signature, "")
+		assert.Equal(t, newOrder.Signature, models.Signature{Eip712Sig: "mock-sig", Eip712MsgData: map[string]interface{}{}})
 		assert.Equal(t, newOrder.Side, models.SELL)
 	})
 

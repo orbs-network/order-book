@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -19,8 +18,8 @@ import (
 type EthereumClient struct{}
 
 type VerifySignatureInput struct {
-	// A JSON string representing the message data that was signed
-	MessageData string
+	// The message data map that was signed
+	MessageData map[string]interface{}
 	// The public key of the user that purportedly signed the message
 	PublicKey string
 	// The signature of the message
@@ -37,34 +36,34 @@ func (e *EthereumClient) VerifySignature(ctx context.Context, input VerifySignat
 	// Decode the hex-encoded public key
 	pubKeyBytes, err := hex.DecodeString(fullPubKey)
 	if err != nil {
-		logctx.Error(ctx, "error decoding hex public key", logger.Error(err), logger.String("publicKey", fullPubKey), logger.String("signature", input.Signature), logger.String("messageData", input.MessageData))
+		logctx.Error(ctx, "error decoding hex public key", logger.Error(err), logger.String("publicKey", fullPubKey))
 		return false, fmt.Errorf("error decoding hex public key: %v", err)
 	}
 
 	// Validate the format and length of the public key
 	if len(pubKeyBytes) != 65 || pubKeyBytes[0] != 4 {
-		logctx.Error(ctx, "invalid public key format", logger.String("publicKey", fullPubKey), logger.String("signature", input.Signature), logger.String("messageData", input.MessageData))
+		logctx.Error(ctx, "invalid public key format", logger.String("publicKey", fullPubKey))
 		return false, fmt.Errorf("invalid public key format")
 	}
 
 	// Convert the byte representation of the public key to an ECDSA public key
 	pubKey, err := crypto.UnmarshalPubkey(pubKeyBytes)
 	if err != nil {
-		logctx.Error(ctx, "failed to unmarshal public key", logger.Error(err), logger.String("publicKey", fullPubKey), logger.String("signature", input.Signature), logger.String("messageData", input.MessageData))
+		logctx.Error(ctx, "failed to unmarshal public key", logger.Error(err), logger.String("publicKey", fullPubKey))
 		return false, fmt.Errorf("failed to unmarshal public key: %v", err)
 	}
 
 	// Decode the hex-encoded signature
 	signatureBytes, err := hex.DecodeString(strings.TrimPrefix(input.Signature, "0x"))
 	if err != nil {
-		logctx.Error(ctx, "error decoding hex signature", logger.Error(err), logger.String("publicKey", fullPubKey), logger.String("signature", input.Signature), logger.String("messageData", input.MessageData))
+		logctx.Error(ctx, "error decoding hex signature", logger.Error(err), logger.String("publicKey", fullPubKey))
 		return false, fmt.Errorf("failed to decode signature: %v", err)
 	}
 
 	// Normalize the `v` value in the signature (adjust for Ethereum's signature format)
 	v := signatureBytes[64]
 	if v == 27 || v == 28 {
-		logctx.Info(ctx, "signature v value is normalized", logger.String("publicKey", fullPubKey), logger.String("signature", input.Signature), logger.String("messageData", input.MessageData))
+		logctx.Info(ctx, "signature v value is normalized", logger.String("publicKey", fullPubKey))
 		v -= 27
 		signatureBytes[64] = v
 	}
@@ -121,32 +120,25 @@ func (e *EthereumClient) VerifySignature(ctx context.Context, input VerifySignat
 		},
 	}
 
-	// Unmarshal the message
-	var message map[string]interface{}
-	if err := json.Unmarshal([]byte(input.MessageData), &message); err != nil {
-		logctx.Error(ctx, "failed to unmarshal message", logger.Error(err), logger.String("publicKey", fullPubKey), logger.String("signature", input.Signature), logger.String("messageData", input.MessageData))
-		return false, fmt.Errorf("failed to unmarshal message: %v", err)
-	}
-
 	// Create the TypedData object
 	typedData := apitypes.TypedData{
 		PrimaryType: "PermitWitnessTransferFrom",
 		Types:       types,
 		Domain:      domain,
-		Message:     message,
+		Message:     input.MessageData,
 	}
 
 	// Hash the message data
 	dataHash, err := typedData.HashStruct(typedData.PrimaryType, typedData.Message)
 	if err != nil {
-		logctx.Error(ctx, "failed to hash structured data", logger.Error(err), logger.String("publicKey", fullPubKey), logger.String("signature", input.Signature), logger.String("messageData", input.MessageData))
+		logctx.Error(ctx, "failed to hash structured data", logger.Error(err), logger.String("publicKey", fullPubKey))
 		return false, fmt.Errorf("failed to hash structured data: %v", err)
 	}
 
 	// Hash the domain separator
 	domainSeparator, err := typedData.HashStruct("EIP712Domain", typedData.Domain.Map())
 	if err != nil {
-		logctx.Error(ctx, "failed to hash domain separator", logger.Error(err), logger.String("publicKey", fullPubKey), logger.String("signature", input.Signature), logger.String("messageData", input.MessageData))
+		logctx.Error(ctx, "failed to hash domain separator", logger.Error(err), logger.String("publicKey", fullPubKey))
 		return false, fmt.Errorf("failed to hash domain separator: %v", err)
 	}
 
@@ -160,7 +152,7 @@ func (e *EthereumClient) VerifySignature(ctx context.Context, input VerifySignat
 	// Recover the public key from the signature
 	recoveredPub, err := crypto.SigToPub(hash.Bytes(), signatureBytes)
 	if err != nil {
-		logctx.Error(ctx, "failed to recover public key from signature", logger.Error(err), logger.String("publicKey", fullPubKey), logger.String("signature", input.Signature), logger.String("messageData", input.MessageData))
+		logctx.Error(ctx, "failed to recover public key from signature", logger.Error(err), logger.String("publicKey", fullPubKey))
 		return false, fmt.Errorf("failed to recover public key from signature: %v", err)
 	}
 

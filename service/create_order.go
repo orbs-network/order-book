@@ -3,10 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
@@ -19,9 +21,39 @@ type CreateOrderInput struct {
 	Size          decimal.Decimal
 	Side          models.Side
 	ClientOrderID uuid.UUID
+	Eip712Sig     string
+	Eip712MsgData map[string]interface{}
 }
 
+var shouldVerifySig = os.Getenv("VERIFY_SIGNATURE")
+
 func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (models.Order, error) {
+
+	if shouldVerifySig == "" || shouldVerifySig == "true" {
+		logctx.Info(ctx, "verifying signature", logger.String("userId", input.UserId.String()))
+
+		user := utils.GetUserCtx(ctx)
+		if user == nil {
+			logctx.Error(ctx, "user should be in context")
+			return models.Order{}, fmt.Errorf("user should be in context")
+		}
+
+		isVerifed, err := s.blockchainClient.VerifySignature(ctx, VerifySignatureInput{
+			MessageData: input.Eip712MsgData,
+			Signature:   input.Eip712Sig,
+			PublicKey:   user.PubKey,
+		})
+
+		if err != nil {
+			logctx.Warn(ctx, "signature verification error", logger.Error(err), logger.String("userId", user.Id.String()))
+			return models.Order{}, models.ErrSignatureVerificationError
+		}
+
+		if !isVerifed {
+			logctx.Warn(ctx, "signature verification failed", logger.String("userId", user.Id.String()))
+			return models.Order{}, models.ErrSignatureVerificationFailed
+		}
+	}
 
 	existingOrder, err := s.orderBookStore.FindOrderById(ctx, input.ClientOrderID, true)
 
@@ -62,7 +94,10 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 		Price:     input.Price,
 		Symbol:    input.Symbol,
 		Size:      input.Size,
-		Signature: "",
+		Signature: models.Signature{
+			Eip712Sig:     input.Eip712Sig,
+			Eip712MsgData: input.Eip712MsgData,
+		},
 		Side:      input.Side,
 		Timestamp: time.Now().UTC(),
 	}
