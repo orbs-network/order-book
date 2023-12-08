@@ -63,7 +63,6 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 		Symbol:    input.Symbol,
 		Size:      input.Size,
 		Signature: "",
-		Status:    models.STATUS_OPEN,
 		Side:      input.Side,
 		Timestamp: time.Now().UTC(),
 	}

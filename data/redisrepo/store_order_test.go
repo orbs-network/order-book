@@ -23,7 +23,6 @@ func TestRedisRepository_StoreOrder(t *testing.T) {
 			Size:      size,
 			Symbol:    symbol,
 			Side:      models.BUY,
-			Status:    models.STATUS_OPEN,
 			Timestamp: timestamp,
 		}
 
@@ -59,7 +58,6 @@ func TestRedisRepository_StoreOrder(t *testing.T) {
 			Size:      size,
 			Symbol:    symbol,
 			Side:      models.SELL,
-			Status:    models.STATUS_OPEN,
 			Timestamp: timestamp,
 		}
 

@@ -242,7 +242,6 @@ func createOrders() {
 		Price:     price,
 		Symbol:    symbol,
 		Size:      size,
-		Status:    models.STATUS_OPEN,
 		Side:      models.BUY,
 		Timestamp: time.Now().UTC(),
 	}
@@ -326,7 +325,6 @@ func getOrdersByIds(orderIds []string) {
 		log.Printf("orderPrice: %v", order.Price)
 		log.Printf("orderSymbol: %v", order.Symbol)
 		log.Printf("orderSize: %v", order.Size)
-		log.Printf("orderStatus: %v", order.Status)
 		log.Printf("orderSide: %v", order.Side)
 		log.Printf("orderTimestamp: %v", order.Timestamp)
 		log.Print("--------------------------")

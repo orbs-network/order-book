@@ -18,7 +18,6 @@ type Order struct {
 	SizePending decimal.Decimal `json:"-"`
 	SizeFilled  decimal.Decimal `json:"-"`
 	Signature   string          `json:"-" ` // EIP 712
-	Status      Status          `json:"-"`  // when order is pending, it should not be updateable
 	Side        Side            `json:"side"`
 	Timestamp   time.Time       `json:"timestamp"`
 }
@@ -34,7 +33,6 @@ func (o *Order) OrderToMap() map[string]string {
 		"sizePending": o.SizePending.String(),
 		"sizeFilled":  o.SizeFilled.String(),
 		"signature":   o.Signature,
-		"status":      o.Status.String(),
 		"side":        o.Side.String(),
 		"timestamp":   o.Timestamp.Format(time.RFC3339),
 	}
@@ -88,11 +86,6 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	signatureStr, exists := data["signature"]
 	if !exists {
 		return fmt.Errorf("no signature provided")
-	}
-
-	statusStr, exists := data["status"]
-	if !exists {
-		return fmt.Errorf("no status provided")
 	}
 
 	sideStr, exists := data["side"]
@@ -150,11 +143,6 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return err
 	}
 
-	status, err := StrToStatus(statusStr)
-	if err != nil {
-		return err
-	}
-
 	timestamp, err := time.Parse(time.RFC3339, timestampStr)
 	if err != nil {
 		return fmt.Errorf("invalid timestamp: %v", err)
@@ -169,14 +157,24 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	o.SizePending = sizePending
 	o.SizeFilled = sizeFilled
 	o.Signature = signatureStr
-	o.Status = status
 	o.Side = side
 	o.Timestamp = timestamp
 
 	return nil
 }
 
+// GetAvailableSize returns the size that is available to be filled
 func (o *Order) GetAvailableSize() decimal.Decimal {
 	used := o.SizePending.Add(o.SizeFilled)
 	return o.Size.Sub(used)
+}
+
+// IsFilled returns true if the order has been filled
+func (o *Order) IsFilled() bool {
+	return o.SizePending.Equal(o.Size)
+}
+
+// IsPending returns true has a pending fill in progress
+func (o *Order) IsPending() bool {
+	return o.SizePending.GreaterThan(decimal.Zero)
 }

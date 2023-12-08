@@ -23,7 +23,6 @@ var buyOrder = models.Order{
 	Size:   decimal.NewFromFloat(1212312.0),
 	Symbol: symbol,
 	Side:   models.BUY,
-	Status: models.STATUS_OPEN,
 }
 
 var sellOrder = models.Order{
@@ -33,7 +32,6 @@ var sellOrder = models.Order{
 	Size:   decimal.NewFromFloat(1212312.0),
 	Symbol: symbol,
 	Side:   models.SELL,
-	Status: models.STATUS_OPEN,
 }
 
 func TestRedisRepository_GetBestPriceFor(t *testing.T) {

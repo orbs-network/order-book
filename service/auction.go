@@ -27,7 +27,8 @@ type ConfirmAuctionRes struct {
 func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 
 	// check if order is still open
-	if order.Status != models.STATUS_OPEN {
+	// TODO: we no longer need this check as we are not storing open orders?
+	if order.IsFilled() {
 		return false
 	}
 	// order.size - (Order.filled + Order.pending) >= frag.size
@@ -36,7 +37,7 @@ func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 
 func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 	// check if order is still open
-	if order.Status != models.STATUS_OPEN {
+	if order.IsFilled() {
 		return false
 	}
 	// order.Size pending should be greater or equal to orderFrag: (Order.sizePending + Order.pending) >= frag.size
@@ -210,13 +211,6 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 		}
 	}
 	// only if all reags successfully filled - continue
-	// close completely filled orders
-	for _, order := range filledOrders {
-		if order.Size.Equal(order.SizeFilled) {
-			order.Status = models.STATUS_FILLED
-			logctx.Info(ctx, fmt.Sprintf("order is completely filled %s", order.Id.String()))
-		}
-	}
 	// TODO: remove order from sell/buy side
 	// Add them to "filled" storage - can be done withn StoreOrders()
 

@@ -72,7 +72,6 @@ func TestService_CreateOrder(t *testing.T) {
 		assert.Equal(t, newOrder.Symbol, symbol)
 		assert.Equal(t, newOrder.Size, size)
 		assert.Equal(t, newOrder.Signature, "")
-		assert.Equal(t, newOrder.Status, models.STATUS_OPEN)
 		assert.Equal(t, newOrder.Side, models.SELL)
 	})
 

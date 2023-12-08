@@ -22,22 +22,9 @@ var order = models.Order{
 	Size:   size,
 	Symbol: symbol,
 	Side:   models.BUY,
-	Status: models.STATUS_OPEN,
 }
 
 func TestRedisRepository_RemoveOrder(t *testing.T) {
-
-	t.Run("only open orders can be removed", func(t *testing.T) {
-		db, _ := redismock.NewClientMock()
-
-		repo := &redisRepository{
-			client: db,
-		}
-
-		err := repo.RemoveOrder(ctx, models.Order{Status: models.STATUS_FILLED})
-
-		assert.ErrorIs(t, err, models.ErrOrderNotOpen)
-	})
 
 	t.Run("fails to remove order", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()

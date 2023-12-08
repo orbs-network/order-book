@@ -19,7 +19,6 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 		UserId: userId,
 		Symbol: "BTC-ETH",
 		Side:   models.BUY,
-		Status: models.STATUS_OPEN,
 	}
 
 	t.Run("should get orders for user", func(t *testing.T) {
