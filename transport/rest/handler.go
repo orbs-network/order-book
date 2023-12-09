@@ -54,8 +54,10 @@ func (h *Handler) initMMRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 	mmApi.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
 	// Get an order by ID
 	mmApi.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
-	// Get all orders for a user
-	mmApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOrdersForUser)).Methods("GET")
+	// Get all open orders for a user
+	mmApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOpenOrdersForUser)).Methods("GET")
+	// Get all filled orders for a user
+	mmApi.HandleFunc("/fills", middleware.PaginationMiddleware(h.GetFilledOrdersForUser)).Methods("GET")
 	// Get all symbols
 	mmApi.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -16,14 +17,15 @@ type Signature struct {
 }
 
 type Order struct {
-	Id          uuid.UUID       `json:"orderId"`
-	ClientOId   uuid.UUID       `json:"clientOrderId"`
-	UserId      uuid.UUID       `json:"userId"`
-	Price       decimal.Decimal `json:"price"`
-	Symbol      Symbol          `json:"symbol"`
-	Size        decimal.Decimal `json:"size"`
-	SizePending decimal.Decimal `json:"-"`
-	SizeFilled  decimal.Decimal `json:"-"`
+	Id        uuid.UUID       `json:"orderId"`
+	ClientOId uuid.UUID       `json:"clientOrderId"`
+	UserId    uuid.UUID       `json:"userId"`
+	Price     decimal.Decimal `json:"price"`
+	Symbol    Symbol          `json:"symbol"`
+	Size      decimal.Decimal `json:"size"`
+	// TODO: do we want to expose pending and filled sizes?
+	SizePending decimal.Decimal `json:"pendingSize"`
+	SizeFilled  decimal.Decimal `json:"filledSize"`
 	Side        Side            `json:"side"`
 	Timestamp   time.Time       `json:"timestamp"`
 	Signature   Signature       `json:"-" `
@@ -196,10 +198,32 @@ func (o *Order) GetAvailableSize() decimal.Decimal {
 
 // IsFilled returns true if the order has been filled
 func (o *Order) IsFilled() bool {
-	return o.SizePending.Equal(o.Size)
+	return o.SizeFilled.Equal(o.Size)
 }
 
 // IsPending returns true has a pending fill in progress
 func (o *Order) IsPending() bool {
 	return o.SizePending.GreaterThan(decimal.Zero)
+}
+
+// Status returns the status of the order
+func (o *Order) Status() string {
+	if o.IsFilled() {
+		return "FILLED"
+	}
+
+	return "OPEN"
+}
+
+// OrderIdsToStrings return a list of string order IDs from a list of orders
+func OrderIdsToStrings(ctx context.Context, orders *[]Order) []string {
+	if orders == nil {
+		return []string{}
+	}
+
+	var orderIds []string
+	for _, order := range *orders {
+		orderIds = append(orderIds, order.Id.String())
+	}
+	return orderIds
 }

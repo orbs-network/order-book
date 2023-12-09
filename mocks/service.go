@@ -26,12 +26,16 @@ type MockOrderBookStore struct {
 	Sets map[string]map[string]struct{}
 }
 
-func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order) error {
+func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
 
 	return m.Error
 }
 
-func (m *MockOrderBookStore) StoreOrders(ctx context.Context, orders []models.Order) error {
+func (m *MockOrderBookStore) StoreOpenOrders(ctx context.Context, orders []models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) StoreFilledOrders(ctx context.Context, orders []models.Order) error {
 	return m.Error
 }
 
@@ -84,7 +88,7 @@ func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UU
 	return nil
 }
 
-func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.UUID, isFilledOrders bool) (orders []models.Order, totalOrders int, err error) {
 	if m.Error != nil {
 		return nil, 0, m.Error
 	}

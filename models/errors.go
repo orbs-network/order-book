@@ -14,6 +14,7 @@ var ErrOrderNotOpen = errors.New("order must be status open to perform this acti
 var ErrInsufficientLiquity = errors.New("not enough liquidity in book to satisfy amountIn")
 var ErrAuctionInvalid = errors.New("orders in the auction can not fill any longer")
 var ErrOrderPending = errors.New("order is pending")
+var ErrOrderFilled = errors.New("order is filled")
 var ErrInvalidInput = errors.New("invalid input")
 var ErrSignatureVerificationError = errors.New("signature verification error")
 var ErrSignatureVerificationFailed = errors.New("signature verification failed")

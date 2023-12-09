@@ -23,13 +23,13 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String()})
+		mock.ExpectZRange(CreateUserOpenOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String()})
 		mock.ExpectHGetAll(CreateOrderIDKey(mocks.OrderId)).SetVal(mocks.Order.OrderToMap())
 		mock.ExpectTxPipeline()
 		mock.ExpectDel(CreateClientOIDKey(mocks.ClientOId)).SetVal(1)
 		mock.ExpectZRem(CreateBuySidePricesKey(mocks.Symbol), mocks.OrderId.String()).SetVal(1)
 		mock.ExpectDel(CreateOrderIDKey(mocks.OrderId)).SetVal(1)
-		mock.ExpectDel(CreateUserOrdersKey(mocks.UserId)).SetVal(1)
+		mock.ExpectDel(CreateUserOpenOrdersKey(mocks.UserId)).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
 		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
@@ -45,7 +45,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String(), orderTwo.Id.String()})
+		mock.ExpectZRange(CreateUserOpenOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String(), orderTwo.Id.String()})
 		mock.ExpectHGetAll(CreateOrderIDKey(mocks.OrderId)).SetVal(mocks.Order.OrderToMap())
 		mock.ExpectHGetAll(CreateOrderIDKey(orderTwo.Id)).SetVal(orderTwo.OrderToMap())
 		mock.ExpectTxPipeline()
@@ -55,7 +55,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		mock.ExpectDel(CreateClientOIDKey(orderTwo.ClientOId)).SetVal(1)
 		mock.ExpectZRem(CreateSellSidePricesKey(orderTwo.Symbol), orderTwo.Id.String()).SetVal(1)
 		mock.ExpectDel(CreateOrderIDKey(orderTwo.Id)).SetVal(1)
-		mock.ExpectDel(CreateUserOrdersKey(mocks.UserId)).SetVal(1)
+		mock.ExpectDel(CreateUserOpenOrdersKey(mocks.UserId)).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
 		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
@@ -72,7 +72,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetErr(assert.AnError)
+		mock.ExpectZRange(CreateUserOpenOrdersKey(mocks.UserId), 0, -1).SetErr(assert.AnError)
 		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
 
 		assert.Empty(t, orderIds)
@@ -86,7 +86,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{})
+		mock.ExpectZRange(CreateUserOpenOrdersKey(mocks.UserId), 0, -1).SetVal([]string{})
 
 		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.Empty(t, orderIds)
@@ -100,7 +100,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{"invalid"})
+		mock.ExpectZRange(CreateUserOpenOrdersKey(mocks.UserId), 0, -1).SetVal([]string{"invalid"})
 		_, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.ErrorContains(t, err, "failed to parse order ID: invalid UUID length: 7")
 	})
@@ -112,7 +112,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String(), orderTwo.Id.String()})
+		mock.ExpectZRange(CreateUserOpenOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String(), orderTwo.Id.String()})
 		mock.ExpectHGetAll(CreateOrderIDKey(orderTwo.Id)).SetErr(models.ErrNotFound) // order not found - break out of loop iteration
 
 		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
@@ -127,13 +127,13 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectZRange(CreateUserOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String()})
+		mock.ExpectZRange(CreateUserOpenOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String()})
 		mock.ExpectHGetAll(CreateOrderIDKey(mocks.OrderId)).SetVal(mocks.Order.OrderToMap())
 		mock.ExpectTxPipeline()
 		mock.ExpectDel(CreateClientOIDKey(mocks.ClientOId)).SetVal(1)
 		mock.ExpectZRem(CreateBuySidePricesKey(mocks.Symbol), mocks.OrderId.String()).SetVal(1)
 		mock.ExpectDel(CreateOrderIDKey(mocks.OrderId)).SetVal(1)
-		mock.ExpectDel(CreateUserOrdersKey(mocks.UserId)).SetErr(assert.AnError)
+		mock.ExpectDel(CreateUserOpenOrdersKey(mocks.UserId)).SetErr(assert.AnError)
 		mock.ExpectTxPipelineExec().SetErr(assert.AnError)
 
 		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
