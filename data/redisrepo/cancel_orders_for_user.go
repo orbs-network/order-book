@@ -11,7 +11,7 @@ import (
 )
 
 func (r *redisRepository) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
-	userOrdersKey := CreateUserOrdersKey(userId)
+	userOrdersKey := CreateUserOpenOrdersKey(userId)
 
 	// Fetch all order IDs for the user
 	orderIdStrs, err := r.client.ZRange(ctx, userOrdersKey, 0, -1).Result()

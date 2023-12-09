@@ -99,9 +99,9 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
 		res.Orders[i].SizePending = res.Fragments[i].Size
 	}
-	err = s.orderBookStore.StoreOrders(ctx, res.Orders)
+	err = s.orderBookStore.StoreOpenOrders(ctx, res.Orders)
 	if err != nil {
-		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		logctx.Warn(ctx, "StoreOpenOrders Failed", logger.Error(err))
 		return ConfirmAuctionRes{}, err
 	}
 
@@ -148,9 +148,9 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 		}
 	}
 	// store orders
-	err = s.orderBookStore.StoreOrders(ctx, orders)
+	err = s.orderBookStore.StoreOpenOrders(ctx, orders)
 	if err != nil {
-		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		logctx.Warn(ctx, "StoreOpenOrders Failed", logger.Error(err))
 		return err
 	}
 
@@ -207,7 +207,10 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 			order.SizeFilled = order.SizeFilled.Add(frag.Size)
 
 			// success - mark as filled
-			filledOrders = append(filledOrders, *order)
+			if order.IsFilled() {
+				logctx.Info(ctx, "Order is filled", logger.String("orderID", order.Id.String()))
+				filledOrders = append(filledOrders, *order)
+			}
 		}
 	}
 	// only if all reags successfully filled - continue
@@ -215,13 +218,11 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 	// Add them to "filled" storage - can be done withn StoreOrders()
 
 	// store orders
-	err = s.orderBookStore.StoreOrders(ctx, filledOrders)
+	err = s.orderBookStore.StoreFilledOrders(ctx, filledOrders)
 	if err != nil {
-		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
+		logctx.Error(ctx, "StoreFilledOrders Failed", logger.Error(err))
 		return err
 	}
-
-	// TODO: remove filled orders
 
 	return s.orderBookStore.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
 }

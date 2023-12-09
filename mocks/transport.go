@@ -60,7 +60,11 @@ func (m *MockOrderBookService) GetSymbols(ctx context.Context) ([]models.Symbol,
 	return m.Symbols, m.Error
 }
 
-func (m *MockOrderBookService) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+func (m *MockOrderBookService) GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+	return m.Orders, len(m.Orders), m.Error
+}
+
+func (m *MockOrderBookService) GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
 	return m.Orders, len(m.Orders), m.Error
 }
 

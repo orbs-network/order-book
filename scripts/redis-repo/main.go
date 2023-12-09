@@ -36,6 +36,14 @@ func main() {
 				},
 			},
 			{
+				Name:  "markOrderAsFilled",
+				Usage: "Mark order as filled",
+				Action: func(c *cli.Context) error {
+					markOrderAsFilled()
+					return nil
+				},
+			},
+			{
 				Name:  "removeOrders",
 				Usage: "Remove orders",
 				Action: func(c *cli.Context) error {
@@ -172,12 +180,12 @@ var rdb = redis.NewClient(&redis.Options{
 var repository, _ = redisrepo.NewRedisRepository(rdb)
 
 var ctx = context.Background()
-var orderId = uuid.New()
+var orderId = uuid.MustParse("9bfc6d29-07e0-4bf7-9189-bc03bdadb1ae")
 
 var userId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var publicKey = "0x6a04ab98d9e4774ad806e302dddeb63bea16b5cb5f223ee77478e861bb583eb336b6fbcb60b5b3d4f1551ac45e5ffc4936466e7d98f6c7c0ec736539f74691a6"
 var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
-var size, _ = decimal.NewFromString("10000324.123456789")
+var size, _ = decimal.NewFromString("1000")
 var symbol, _ = models.StrToSymbol("USDC-ETH")
 var price = decimal.NewFromFloat(10.0)
 
@@ -246,9 +254,28 @@ func createOrders() {
 		Timestamp: time.Now().UTC(),
 	}
 
-	err = repository.StoreOrder(ctx, order)
+	err = repository.StoreOpenOrder(ctx, order)
 	if err != nil {
 		log.Fatalf("error storing order: %v", err)
+	}
+}
+
+func markOrderAsFilled() {
+	repository, err := redisrepo.NewRedisRepository(rdb)
+	if err != nil {
+		log.Fatalf("error creating repository: %v", err)
+	}
+
+	order, err := repository.FindOrderById(ctx, orderId, false)
+	if err != nil {
+		log.Fatalf("error getting order: %v", err)
+	}
+
+	order.SizeFilled = order.Size
+
+	err = repository.StoreFilledOrders(ctx, []models.Order{*order})
+	if err != nil {
+		log.Fatalf("error marking order as filled: %v", err)
 	}
 }
 
