@@ -9,6 +9,7 @@ services:
     environment:
       - REDIS_URL=redis://db:6379/0
       - PORT=8080
+      - VERIFY_SIGNATURE=true
     depends_on:
       - db
     develop:
