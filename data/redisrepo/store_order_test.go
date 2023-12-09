@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRedisRepository_StoreOpenOrder(t *testing.T) {
+func TestRedisRepository_StoreOrder(t *testing.T) {
 
 	timestamp := time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)
 
-	t.Run("store open order success (buy side) - should set user orders set, order ID hash, buy prices sorted set", func(t *testing.T) {
+	t.Run("store order success (buy side) - should set user orders set, order ID hash, buy prices sorted set", func(t *testing.T) {
 		var buyOrder = models.Order{
 			Id:        orderId,
 			ClientOId: clientOId,
@@ -33,7 +33,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(buyOrder.UserId), redis.Z{
+		mock.ExpectZAdd(CreateUserOrdersKey(buyOrder.UserId), redis.Z{
 			Score:  float64(timestamp.UnixNano()),
 			Member: buyOrder.Id.String(),
 		}).SetVal(1)
@@ -45,12 +45,12 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 		}).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
-		err := repo.StoreOpenOrder(ctx, buyOrder)
+		err := repo.StoreOrder(ctx, buyOrder)
 
 		assert.NoError(t, err, "should not return error")
 	})
 
-	t.Run("store open order success (sell side) - should set user orders set, order ID hash, sell prices sorted set", func(t *testing.T) {
+	t.Run("store order success (sell side) - should set user orders set, order ID hash, sell prices sorted set", func(t *testing.T) {
 		var sellOrder = models.Order{
 			Id:        orderId,
 			ClientOId: clientOId,
@@ -68,7 +68,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(sellOrder.UserId), redis.Z{
+		mock.ExpectZAdd(CreateUserOrdersKey(sellOrder.UserId), redis.Z{
 			Score:  float64(timestamp.UnixNano()),
 			Member: sellOrder.Id.String(),
 		}).SetVal(1)
@@ -80,12 +80,12 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 		}).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
-		err := repo.StoreOpenOrder(ctx, sellOrder)
+		err := repo.StoreOrder(ctx, sellOrder)
 
 		assert.NoError(t, err, "should not return error")
 	})
 
-	t.Run("store open order fail - should return error when transaction fails", func(t *testing.T) {
+	t.Run("store order fail - should return error when transaction fails", func(t *testing.T) {
 
 		db, mock := redismock.NewClientMock()
 
@@ -94,7 +94,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(order.UserId), redis.Z{
+		mock.ExpectZAdd(CreateUserOrdersKey(order.UserId), redis.Z{
 			Score:  float64(order.Timestamp.UnixNano()),
 			Member: order.Id.String(),
 		}).SetErr(assert.AnError)
@@ -106,9 +106,9 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 		}).SetVal(1)
 		mock.ExpectTxPipelineExec().SetErr(fmt.Errorf("transaction failed"))
 
-		err := repo.StoreOpenOrder(ctx, order)
+		err := repo.StoreOrder(ctx, order)
 
-		assert.ErrorContains(t, err, "failed to stores open order in Redis", "should return error")
+		assert.ErrorContains(t, err, fmt.Sprintf("transaction failed. Reason: %v", assert.AnError), "should return error")
 	})
 
 }

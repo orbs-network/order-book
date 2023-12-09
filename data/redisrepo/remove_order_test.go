@@ -14,7 +14,6 @@ import (
 var ctx = context.Background()
 var orderId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
-var userId = uuid.MustParse("00000000-0000-0000-0000-000000000003")
 var size, _ = decimal.NewFromString("10000324.123456789")
 
 var order = models.Order{

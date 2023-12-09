@@ -246,7 +246,7 @@ func createOrders() {
 		Timestamp: time.Now().UTC(),
 	}
 
-	err = repository.StoreOpenOrder(ctx, order)
+	err = repository.StoreOrder(ctx, order)
 	if err != nil {
 		log.Fatalf("error storing order: %v", err)
 	}

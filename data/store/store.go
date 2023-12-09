@@ -10,9 +10,8 @@ import (
 
 type OrderBookStore interface {
 	// MM side
-	StoreOpenOrder(ctx context.Context, order models.Order) error
-	StoreOpenOrders(ctx context.Context, orders []models.Order) error
-	StoreFilledOrders(ctx context.Context, orders []models.Order) error
+	StoreOrder(ctx context.Context, order models.Order) error
+	StoreOrders(ctx context.Context, orders []models.Order) error
 	RemoveOrder(ctx context.Context, order models.Order) error
 	FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error)
 	FindOrdersByIds(ctx context.Context, ids []uuid.UUID) ([]models.Order, error)
