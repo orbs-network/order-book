@@ -3,10 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/orbs-network/order-book/featureflags"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
@@ -25,11 +25,9 @@ type CreateOrderInput struct {
 	Eip712MsgData map[string]interface{}
 }
 
-var shouldVerifySig = os.Getenv("VERIFY_SIGNATURE")
-
 func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (models.Order, error) {
 
-	if shouldVerifySig == "" || shouldVerifySig == "true" {
+	if featureflags.ShouldVerifySig == "" || featureflags.ShouldVerifySig == "true" {
 		logctx.Info(ctx, "verifying signature", logger.String("userId", input.UserId.String()))
 
 		user := utils.GetUserCtx(ctx)
