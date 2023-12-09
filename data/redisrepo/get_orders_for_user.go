@@ -18,7 +18,7 @@ import (
 func (r *redisRepository) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
 	start, stop := utils.PaginationBounds(ctx)
 
-	key := CreateUserOrdersKey(userId)
+	key := CreateUserOpenOrdersKey(userId)
 
 	count, err := r.client.ZCard(ctx, key).Result()
 

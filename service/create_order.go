@@ -100,7 +100,7 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 		Timestamp: time.Now().UTC(),
 	}
 
-	if err := s.orderBookStore.StoreOrder(ctx, order); err != nil {
+	if err := s.orderBookStore.StoreOpenOrder(ctx, order); err != nil {
 		logctx.Error(ctx, "failed to add order", logger.Error(err))
 		return models.Order{}, err
 	}

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -202,4 +203,17 @@ func (o *Order) IsFilled() bool {
 // IsPending returns true has a pending fill in progress
 func (o *Order) IsPending() bool {
 	return o.SizePending.GreaterThan(decimal.Zero)
+}
+
+// OrderIdsToStrings return a list of string order IDs from a list of orders
+func OrderIdsToStrings(ctx context.Context, orders *[]Order) []string {
+	if orders == nil {
+		return []string{}
+	}
+
+	var orderIds []string
+	for _, order := range *orders {
+		orderIds = append(orderIds, order.Id.String())
+	}
+	return orderIds
 }
