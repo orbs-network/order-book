@@ -12,7 +12,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const MAX_ORDER_IDS = 100
+const MAX_ORDER_IDS = 500
 
 // FindOrdersByIds finds orders by their IDs. If an order is not found for any of the provided IDs, an error is returned.
 //

@@ -131,7 +131,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		assert.Equal(t, orders, []models.Order{})
 		assert.Equal(t, totalOrders, 0)
-		assert.ErrorContains(t, err, "failed to get order")
+		assert.ErrorContains(t, err, "failed to find orders by ID")
 	})
 
 }
