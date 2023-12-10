@@ -78,8 +78,8 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		for i := 0; i < len(swapData.Fragments); i++ {
 			frag := Fragment{
 				//OutAmount: caRes.Fragments[i].Size.String(),
-				OrderId:   swapData.Orders[i].Id.String(),
-				Signature: swapData.Orders[i].Signature,
+				OrderId: swapData.Orders[i].Id.String(),
+				//Signature: swapData.Orders[i].Signature,
 			}
 			quoteRes.Fragments = append(quoteRes.Fragments, frag)
 		}

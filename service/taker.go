@@ -28,7 +28,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		if err != nil {
 			logctx.Warn(ctx, err.Error())
-			return models.BeginSwapRes{}, models.ErrOrderNotFound
+			return models.BeginSwapRes{}, models.ErrNotFound
 		} else if !validateOrderFrag(frag, order) {
 			// cancel swap
 			_ = s.orderBookStore.RemoveSwap(ctx, swapId)
@@ -48,7 +48,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
 		res.Orders[i].SizePending = res.Fragments[i].Size
 	}
-	err := s.orderBookStore.StoreOrders(ctx, res.Orders)
+	err := s.orderBookStore.StoreOpenOrders(ctx, res.Orders)
 	if err != nil {
 		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
 		return models.BeginSwapRes{}, err
@@ -97,7 +97,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 		}
 	}
 	// store orders
-	err = s.orderBookStore.StoreOrders(ctx, orders)
+	err = s.orderBookStore.StoreOpenOrders(ctx, orders)
 	if err != nil {
 		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
 		return err

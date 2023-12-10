@@ -26,6 +26,11 @@ type MockOrderBookStore struct {
 	Sets map[string]map[string]struct{}
 }
 
+func (m *MockOrderBookStore) FindOrdersByIds(ctx context.Context, ids []uuid.UUID) ([]models.Order, error) {
+	return m.Orders, nil
+
+}
+
 func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
 
 	source, err := m.FindOrderById(ctx, order.Id, false)
@@ -126,7 +131,7 @@ func (m *MockOrderBookStore) StoreSwap(ctx context.Context, auctionID uuid.UUID,
 	return nil
 }
 
-func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.UUID, isFilledOrders bool) (orders []models.Order, totalOrders int, err error) {
 	if m.Error != nil {
 		return nil, 0, m.Error
 	}
