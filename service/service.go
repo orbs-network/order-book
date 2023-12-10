@@ -13,17 +13,17 @@ import (
 )
 
 type OrderBookService interface {
-	GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error)
-	ProcessOrder(ctx context.Context, input ProcessOrderInput) (models.Order, error)
+	CreateOrder(ctx context.Context, input CreateOrderInput) (models.Order, error)
 	CancelOrder(ctx context.Context, input CancelOrderInput) (cancelledOrderId *uuid.UUID, err error)
 	GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error)
 	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 	GetOrderByClientOId(ctx context.Context, clientOId uuid.UUID) (*models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
-	CancelOrdersForUser(ctx context.Context, userId uuid.UUID) error
+	CancelOrdersForUser(ctx context.Context, userId uuid.UUID) (orderIds []uuid.UUID, err error)
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)
-	GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
-	// auction API - DEPRACTED
+	GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
+	GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
+
 	ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error)
 	RevertAuction(ctx context.Context, auctionId uuid.UUID) error
 	AuctionMined(ctx context.Context, auctionId uuid.UUID) error
@@ -35,16 +35,25 @@ type OrderBookService interface {
 	//txSent(ctx context.Context, swapId uuid.UUID) error
 }
 
+type BlockChainService interface {
+	VerifySignature(ctx context.Context, input VerifySignatureInput) (bool, error)
+}
+
 // Service contains methods that implement the business logic for the application.
 type Service struct {
-	orderBookStore store.OrderBookStore
+	orderBookStore   store.OrderBookStore
+	blockchainClient BlockChainService
 }
 
 // New creates a new Service with injected dependencies.
-func New(store store.OrderBookStore) (*Service, error) {
+func New(store store.OrderBookStore, bcClient BlockChainService) (*Service, error) {
 	if store == nil {
 		return nil, errors.New("store cannot be nil")
 	}
 
-	return &Service{orderBookStore: store}, nil
+	if bcClient == nil {
+		return nil, errors.New("bcClient cannot be nil")
+	}
+
+	return &Service{orderBookStore: store, blockchainClient: bcClient}, nil
 }

@@ -18,7 +18,9 @@ func TestService_CancelOrder(t *testing.T) {
 	userId := uuid.MustParse("a577273e-12de-4acc-a4f8-de7fb5b86e37")
 	orderId := uuid.MustParse("e577273e-12de-4acc-a4f8-de7fb5b86e37")
 	clientOId := uuid.MustParse("f577273e-12de-4acc-a4f8-de7fb5b86e37")
-	order := &models.Order{Id: orderId, UserId: userId, Status: models.STATUS_OPEN, ClientOId: clientOId}
+	order := &models.Order{Id: orderId, UserId: userId, ClientOId: clientOId, Size: decimal.NewFromInt(9999999), SizePending: decimal.NewFromFloat(0), SizeFilled: decimal.NewFromFloat(50000)}
+
+	mockBcClient := &mocks.MockBcClient{IsVerified: true}
 
 	testCases := []struct {
 		name            string
@@ -30,9 +32,9 @@ func TestService_CancelOrder(t *testing.T) {
 	}{
 		{name: "unexpected error when finding order by orderId - returns error", isClientOId: false, err: assert.AnError, expectedOrderId: nil, expectedErr: assert.AnError},
 		{name: "unexpected error when finding order by clientOId - returns error", isClientOId: true, err: assert.AnError, expectedOrderId: nil, expectedErr: assert.AnError},
-		{name: "order not found - returns `ErrOrderNotFound` error", isClientOId: false, order: nil, err: nil, expectedOrderId: nil, expectedErr: models.ErrOrderNotFound},
-		{name: "user trying to cancel another user's order - returns `ErrUnauthorized` error", isClientOId: false, order: &models.Order{UserId: uuid.MustParse("00000000-0000-0000-0000-000000000009"), Status: models.STATUS_OPEN}, expectedOrderId: nil, expectedErr: models.ErrUnauthorized},
-		{name: "cancelling order not possible when order is pending", isClientOId: false, order: &models.Order{UserId: userId, SizePending: decimal.NewFromFloat(254), SizeFilled: decimal.NewFromFloat(32323.32)}, expectedOrderId: nil, expectedErr: models.ErrOrderPending},
+		{name: "order not found - returns `ErrNotFound` error", isClientOId: false, order: nil, err: nil, expectedOrderId: nil, expectedErr: models.ErrNotFound},
+		{name: "cancelling order not possible when order is pending", isClientOId: false, order: &models.Order{UserId: userId, Size: decimal.NewFromInt(9999999), SizePending: decimal.NewFromFloat(254), SizeFilled: decimal.NewFromFloat(32323.32)}, expectedOrderId: nil, expectedErr: models.ErrOrderPending},
+		{name: "cancelling order not possible when order is filled", isClientOId: false, order: &models.Order{UserId: userId, SizePending: decimal.NewFromFloat(0), SizeFilled: decimal.NewFromFloat(99999.99), Size: decimal.NewFromFloat(99999.99)}, expectedOrderId: nil, expectedErr: models.ErrOrderFilled},
 		{name: "unexpected error when removing order - returns error", isClientOId: false, order: order, err: assert.AnError, expectedOrderId: nil, expectedErr: assert.AnError},
 		{name: "order removed successfully by orderId - returns cancelled orderId", isClientOId: false, order: order, err: nil, expectedOrderId: &orderId, expectedErr: nil},
 		{name: "order removed successfully by clientOId - returns cancelled orderId", isClientOId: true, order: order, err: nil, expectedOrderId: &orderId, expectedErr: nil},
@@ -41,7 +43,7 @@ func TestService_CancelOrder(t *testing.T) {
 	for _, c := range testCases {
 		t.Run(c.name, func(t *testing.T) {
 			fmt.Print(c.name)
-			svc, _ := service.New(&mocks.MockOrderBookStore{Order: c.order, Error: c.err})
+			svc, _ := service.New(&mocks.MockOrderBookStore{Order: c.order, Error: c.err}, mockBcClient)
 
 			input := service.CancelOrderInput{Id: orderId, IsClientOId: false, UserId: userId}
 

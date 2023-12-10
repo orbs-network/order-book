@@ -39,7 +39,6 @@ func TestRedisRepository_FindOrderById(t *testing.T) {
 		SizeFilled:  zero,
 		Symbol:      symbol,
 		Side:        models.BUY,
-		Status:      models.STATUS_OPEN,
 	}
 
 	t.Run("order found by orderID", func(t *testing.T) {
@@ -65,7 +64,7 @@ func TestRedisRepository_FindOrderById(t *testing.T) {
 		mock.ExpectHGetAll(CreateOrderIDKey(orderID)).SetVal(map[string]string{})
 
 		foundOrder, err := repo.FindOrderById(ctx, nonExistentOrderID, false)
-		assert.Error(t, err, models.ErrOrderNotFound.Error())
+		assert.Error(t, err, models.ErrNotFound.Error())
 		assert.Nil(t, foundOrder)
 	})
 
@@ -74,7 +73,7 @@ func TestRedisRepository_FindOrderById(t *testing.T) {
 		mock.ExpectGet(CreateClientOIDKey(nonExistentClientOId)).RedisNil()
 
 		foundOrder, err := repo.FindOrderById(ctx, nonExistentClientOId, true)
-		assert.Error(t, err, models.ErrOrderNotFound.Error())
+		assert.Error(t, err, models.ErrNotFound.Error())
 		assert.Nil(t, foundOrder)
 	})
 

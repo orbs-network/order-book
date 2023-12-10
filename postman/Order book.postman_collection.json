@@ -8,7 +8,7 @@
 	},
 	"item": [
 		{
-			"name": "Place order",
+			"name": "Create order",
 			"event": [
 				{
 					"listen": "test",
@@ -24,14 +24,14 @@
 				"method": "POST",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
 						"type": "text"
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\"\n}",
+					"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n    \"eip712Sig\": \"0xdbf6d13ed9b1af881499ce25b4a9f40604c74b65ea1a871edec9e762950a4460502d126fe40b23f530caf4af7dc2f8629014b64a12b94fd0cb17c5569b2a05661c\",\n    \"eip712MsgData\": {\n        \"permitted\": {\n            \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n            \"amount\": \"20000000000\"\n        },\n        \"spender\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n        \"nonce\": \"845753781\",\n        \"deadline\": \"1709657651\",\n        \"witness\": {\n            \"info\": {\n                \"reactor\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                \"swapper\": \"0xE3682CCecefBb3C3fe524BbFF1598B2BBaC0d6E3\",\n                \"nonce\": \"845753781\",\n                \"deadline\": \"1709657651\",\n                \"additionalValidationContract\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                \"additionalValidationData\": \"0x\"\n            },\n            \"exclusiveFiller\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n            \"exclusivityOverrideBps\": 0,\n            \"input\": {\n                \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                \"amount\": \"20000000000\"\n            },\n            \"outputs\": [\n                {\n                    \"token\": \"0x11cd37bb86f65419713f30673a480ea33c826872\",\n                    \"amount\": \"10000000000000000000\",\n                    \"recipient\": \"0x8fd379246834eac74B8419FfdA202CF8051F7A03\"\n                }\n            ]\n        }\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -52,19 +52,19 @@
 			},
 			"response": [
 				{
-					"name": "Place order",
+					"name": "Create order",
 					"originalRequest": {
 						"method": "POST",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
 								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\"\n}",
+							"raw": "{\n    \"price\": \"20.99\",\n    \"size\": \"1000\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n    \"eip712Sig\": \"0xdbf6d13ed9b1af881499ce25b4a9f40604c74b65ea1a871edec9e762950a4460502d126fe40b23f530caf4af7dc2f8629014b64a12b94fd0cb17c5569b2a05661c\",\n    \"eip712MsgData\": {\n        \"permitted\": {\n            \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n            \"amount\": \"20000000000\"\n        },\n        \"spender\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n        \"nonce\": \"845753781\",\n        \"deadline\": \"1709657651\",\n        \"witness\": {\n            \"info\": {\n                \"reactor\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                \"swapper\": \"0xE3682CCecefBb3C3fe524BbFF1598B2BBaC0d6E3\",\n                \"nonce\": \"845753781\",\n                \"deadline\": \"1709657651\",\n                \"additionalValidationContract\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                \"additionalValidationData\": \"0x\"\n            },\n            \"exclusiveFiller\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n            \"exclusivityOverrideBps\": 0,\n            \"input\": {\n                \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                \"amount\": \"20000000000\"\n            },\n            \"outputs\": [\n                {\n                    \"token\": \"0x11cd37bb86f65419713f30673a480ea33c826872\",\n                    \"amount\": \"10000000000000000000\",\n                    \"recipient\": \"0x8fd379246834eac74B8419FfdA202CF8051F7A03\"\n                }\n            ]\n        }\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -93,7 +93,7 @@
 						},
 						{
 							"key": "Date",
-							"value": "Tue, 28 Nov 2023 11:02:30 GMT"
+							"value": "Sat, 09 Dec 2023 21:50:06 GMT"
 						},
 						{
 							"key": "Content-Length",
@@ -101,7 +101,157 @@
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"orderId\": \"1e51a6ac-62dc-43ce-91e3-56b67c6d02ae\"\n}"
+					"body": "{\n    \"orderId\": \"625a9f70-7037-49ea-b40e-b6ed892df6cb\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Create (multiple) orders",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"symbol\": \"BTC-ETH\",\n    \"orders\": [\n        {\n            \"price\": \"20.99\",\n            \"size\": \"1000\",\n            \"symbol\": \"BTC-ETH\",\n            \"side\": \"sell\",\n            \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n            \"eip712Sig\": \"0xdbf6d13ed9b1af881499ce25b4a9f40604c74b65ea1a871edec9e762950a4460502d126fe40b23f530caf4af7dc2f8629014b64a12b94fd0cb17c5569b2a05661c\",\n            \"eip712MsgData\": {\n                \"permitted\": {\n                    \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                    \"amount\": \"20000000000\"\n                },\n                \"spender\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                \"nonce\": \"845753781\",\n                \"deadline\": \"1709657651\",\n                \"witness\": {\n                    \"info\": {\n                        \"reactor\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                        \"swapper\": \"0xE3682CCecefBb3C3fe524BbFF1598B2BBaC0d6E3\",\n                        \"nonce\": \"845753781\",\n                        \"deadline\": \"1709657651\",\n                        \"additionalValidationContract\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                        \"additionalValidationData\": \"0x\"\n                    },\n                    \"exclusiveFiller\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                    \"exclusivityOverrideBps\": 0,\n                    \"input\": {\n                        \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                        \"amount\": \"20000000000\"\n                    },\n                    \"outputs\": [\n                        {\n                            \"token\": \"0x11cd37bb86f65419713f30673a480ea33c826872\",\n                            \"amount\": \"10000000000000000000\",\n                            \"recipient\": \"0x8fd379246834eac74B8419FfdA202CF8051F7A03\"\n                        }\n                    ]\n                }\n            }\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/orders",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"orders"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Success",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"symbol\": \"BTC-ETH\",\n    \"orders\": [\n        {\n            \"price\": \"20.99\",\n            \"size\": \"1000\",\n            \"symbol\": \"BTC-ETH\",\n            \"side\": \"sell\",\n            \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n            \"eip712Sig\": \"0xdbf6d13ed9b1af881499ce25b4a9f40604c74b65ea1a871edec9e762950a4460502d126fe40b23f530caf4af7dc2f8629014b64a12b94fd0cb17c5569b2a05661c\",\n            \"eip712MsgData\": {\n                \"permitted\": {\n                    \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                    \"amount\": \"20000000000\"\n                },\n                \"spender\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                \"nonce\": \"845753781\",\n                \"deadline\": \"1709657651\",\n                \"witness\": {\n                    \"info\": {\n                        \"reactor\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                        \"swapper\": \"0xE3682CCecefBb3C3fe524BbFF1598B2BBaC0d6E3\",\n                        \"nonce\": \"845753781\",\n                        \"deadline\": \"1709657651\",\n                        \"additionalValidationContract\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                        \"additionalValidationData\": \"0x\"\n                    },\n                    \"exclusiveFiller\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                    \"exclusivityOverrideBps\": 0,\n                    \"input\": {\n                        \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                        \"amount\": \"20000000000\"\n                    },\n                    \"outputs\": [\n                        {\n                            \"token\": \"0x11cd37bb86f65419713f30673a480ea33c826872\",\n                            \"amount\": \"10000000000000000000\",\n                            \"recipient\": \"0x8fd379246834eac74B8419FfdA202CF8051F7A03\"\n                        }\n                    ]\n                }\n            }\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/orders",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 09 Dec 2023 21:51:49 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "368"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"symbol\": \"BTC-ETH\",\n    \"created\": [\n        {\n            \"orderId\": \"21665fa2-18d2-40fe-a369-2fee1b2aec99\",\n            \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n            \"userId\": \"00000000-0000-0000-0000-000000000001\",\n            \"price\": \"20.99\",\n            \"symbol\": \"BTC-ETH\",\n            \"size\": \"1000\",\n            \"pendingSize\": \"0\",\n            \"filledSize\": \"0\",\n            \"side\": \"sell\",\n            \"timestamp\": \"2023-12-09T21:51:49.101809968Z\"\n        }\n    ],\n    \"status\": \"success\",\n    \"failureReason\": \"\"\n}"
+				},
+				{
+					"name": "Partial failure (invalid signaure)",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"symbol\": \"BTC-ETH\",\n    \"orders\": [\n        {\n            \"price\": \"20.99\",\n            \"size\": \"1000\",\n            \"symbol\": \"BTC-ETH\",\n            \"side\": \"sell\",\n            \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n            \"eip712Sig\": \"0xdbf6d13ed9b1af881499ce25b4a9f40604c74b65ea1a871edec9e762950a4460502d126fe40b23f530caf4af7dc2f8629014b64a12b94fd0cb17c5569b2a05661c\",\n            \"eip712MsgData\": {\n                \"permitted\": {\n                    \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                    \"amount\": \"20000000000\"\n                },\n                \"spender\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                \"nonce\": \"845753781\",\n                \"deadline\": \"1709657651\",\n                \"witness\": {\n                    \"info\": {\n                        \"reactor\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                        \"swapper\": \"0xE3682CCecefBb3C3fe524BbFF1598B2BBaC0d6E3\",\n                        \"nonce\": \"845753781\",\n                        \"deadline\": \"1709657651\",\n                        \"additionalValidationContract\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                        \"additionalValidationData\": \"0x\"\n                    },\n                    \"exclusiveFiller\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                    \"exclusivityOverrideBps\": 0,\n                    \"input\": {\n                        \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                        \"amount\": \"20000000000\"\n                    },\n                    \"outputs\": [\n                        {\n                            \"token\": \"0x11cd37bb86f65419713f30673a480ea33c826872\",\n                            \"amount\": \"10000000000000000000\",\n                            \"recipient\": \"0x8fd379246834eac74B8419FfdA202CF8051F7A03\"\n                        }\n                    ]\n                }\n            }\n        },\n        {\n            \"price\": \"20.99\",\n            \"size\": \"1000\",\n            \"symbol\": \"BTC-ETH\",\n            \"side\": \"sell\",\n            \"clientOrderId\": \"b677273e-12de-4acc-a4f8-de7fb5b86e37\",\n            \"eip712Sig\": \"0xsbf6d13ed9b1af881499ce25b4a9f40604c74b65ea1a871edec9e762950a4460502d126fe40b23f530caf4af7dc2f8629014b64a12b94fd0cb17c5569b2a05661c\",\n            \"eip712MsgData\": {\n                \"permitted\": {\n                    \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                    \"amount\": \"20000000000\"\n                },\n                \"spender\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                \"nonce\": \"845753781\",\n                \"deadline\": \"1709657651\",\n                \"witness\": {\n                    \"info\": {\n                        \"reactor\": \"0x21Da9737764527e75C17F1AB26Cb668b66dEE0a0\",\n                        \"swapper\": \"0xE3682CCecefBb3C3fe524BbFF1598B2BBaC0d6E3\",\n                        \"nonce\": \"845753781\",\n                        \"deadline\": \"1709657651\",\n                        \"additionalValidationContract\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                        \"additionalValidationData\": \"0x\"\n                    },\n                    \"exclusiveFiller\": \"0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e\",\n                    \"exclusivityOverrideBps\": 0,\n                    \"input\": {\n                        \"token\": \"0x3c499c542cef5e3811e1192ce70d8cc03d5c3359\",\n                        \"amount\": \"20000000000\"\n                    },\n                    \"outputs\": [\n                        {\n                            \"token\": \"0x11cd37bb86f65419713f30673a480ea33c826872\",\n                            \"amount\": \"10000000000000000000\",\n                            \"recipient\": \"0x8fd379246834eac74B8419FfdA202CF8051F7A03\"\n                        }\n                    ]\n                }\n            }\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/orders",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"orders"
+							]
+						}
+					},
+					"status": "Bad Request",
+					"code": 400,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Date",
+							"value": "Fri, 08 Dec 2023 22:21:01 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "358"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"symbol\": \"BTC-ETH\",\n    \"created\": [\n        {\n            \"orderId\": \"eaffd2e6-5143-4e35-b606-2b404585f406\",\n            \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n            \"userId\": \"00000000-0000-0000-0000-000000000001\",\n            \"price\": \"20.99\",\n            \"symbol\": \"BTC-ETH\",\n            \"size\": \"1000\",\n            \"side\": \"sell\",\n            \"timestamp\": \"2023-12-08T22:21:01.892331459Z\"\n        }\n    ],\n    \"status\": \"fail\",\n    \"failureReason\": \"Signature verification error\"\n}"
 				}
 			]
 		},
@@ -111,8 +261,8 @@
 				"method": "DELETE",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
 						"type": "text"
 					}
 				],
@@ -136,8 +286,8 @@
 						"method": "DELETE",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
 								"type": "text"
 							}
 						],
@@ -182,13 +332,13 @@
 				"method": "DELETE",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
 						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "{{BASE_URL}}/api/v1/order/client-order/a677273e-12de-4acc-a4f8-de7fb5b86e37",
+					"raw": "{{BASE_URL}}/api/v1/order/client-order/00000000-0000-0000-0000-000000000002",
 					"host": [
 						"{{BASE_URL}}"
 					],
@@ -197,7 +347,7 @@
 						"v1",
 						"order",
 						"client-order",
-						"a677273e-12de-4acc-a4f8-de7fb5b86e37"
+						"00000000-0000-0000-0000-000000000002"
 					]
 				}
 			},
@@ -208,8 +358,8 @@
 						"method": "DELETE",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
 								"type": "text"
 							}
 						],
@@ -255,8 +405,8 @@
 				"method": "DELETE",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
 						"type": "text"
 					}
 				],
@@ -279,8 +429,8 @@
 						"method": "DELETE",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
 								"type": "text"
 							}
 						],
@@ -298,19 +448,23 @@
 					},
 					"status": "OK",
 					"code": 200,
-					"_postman_previewlanguage": "plain",
+					"_postman_previewlanguage": "json",
 					"header": [
 						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
 							"key": "Date",
-							"value": "Tue, 28 Nov 2023 11:03:28 GMT"
+							"value": "Thu, 07 Dec 2023 15:25:27 GMT"
 						},
 						{
 							"key": "Content-Length",
-							"value": "0"
+							"value": "62"
 						}
 					],
 					"cookie": [],
-					"body": null
+					"body": "{\n    \"cancelledOrderIds\": [\n        \"be97ad1c-8dd7-4779-94f1-dd2e1247335b\"\n    ]\n}"
 				}
 			]
 		},
@@ -320,8 +474,8 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
 						"type": "text"
 					}
 				],
@@ -344,8 +498,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
 								"type": "text"
 							}
 						],
@@ -389,13 +543,13 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
 						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "{{BASE_URL}}/api/v1/order/174ca976-7000-437a-ace9-755d76fd5f25",
+					"raw": "{{BASE_URL}}/api/v1/order/21665fa2-18d2-40fe-a369-2fee1b2aec99",
 					"host": [
 						"{{BASE_URL}}"
 					],
@@ -403,7 +557,7 @@
 						"api",
 						"v1",
 						"order",
-						"174ca976-7000-437a-ace9-755d76fd5f25"
+						"21665fa2-18d2-40fe-a369-2fee1b2aec99"
 					]
 				}
 			},
@@ -414,13 +568,13 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": "{{BASE_URL}}/api/v1/order/174ca976-7000-437a-ace9-755d76fd5f25",
+							"raw": "{{BASE_URL}}/api/v1/order/21665fa2-18d2-40fe-a369-2fee1b2aec99",
 							"host": [
 								"{{BASE_URL}}"
 							],
@@ -428,7 +582,7 @@
 								"api",
 								"v1",
 								"order",
-								"174ca976-7000-437a-ace9-755d76fd5f25"
+								"21665fa2-18d2-40fe-a369-2fee1b2aec99"
 							]
 						}
 					},
@@ -442,15 +596,15 @@
 						},
 						{
 							"key": "Date",
-							"value": "Tue, 28 Nov 2023 11:06:26 GMT"
+							"value": "Sat, 09 Dec 2023 21:53:43 GMT"
 						},
 						{
 							"key": "Content-Length",
-							"value": "251"
+							"value": "286"
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"orderId\": \"174ca976-7000-437a-ace9-755d76fd5f25\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n    \"userId\": \"00000000-0000-0000-0000-000000000001\",\n    \"price\": \"20.99\",\n    \"symbol\": \"BTC-ETH\",\n    \"size\": \"1000\",\n    \"side\": \"sell\",\n    \"timestamp\": \"2023-11-28T11:04:53Z\"\n}"
+					"body": "{\n    \"orderId\": \"21665fa2-18d2-40fe-a369-2fee1b2aec99\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n    \"userId\": \"00000000-0000-0000-0000-000000000001\",\n    \"price\": \"20.99\",\n    \"symbol\": \"BTC-ETH\",\n    \"size\": \"1000\",\n    \"pendingSize\": \"0\",\n    \"filledSize\": \"0\",\n    \"side\": \"sell\",\n    \"timestamp\": \"2023-12-09T21:51:49Z\"\n}"
 				}
 			]
 		},
@@ -460,8 +614,8 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
 						"type": "text"
 					}
 				],
@@ -486,8 +640,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
 								"type": "text"
 							}
 						],
@@ -515,15 +669,15 @@
 						},
 						{
 							"key": "Date",
-							"value": "Tue, 28 Nov 2023 11:07:03 GMT"
+							"value": "Sat, 09 Dec 2023 21:53:25 GMT"
 						},
 						{
 							"key": "Content-Length",
-							"value": "251"
+							"value": "286"
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"orderId\": \"174ca976-7000-437a-ace9-755d76fd5f25\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n    \"userId\": \"00000000-0000-0000-0000-000000000001\",\n    \"price\": \"20.99\",\n    \"symbol\": \"BTC-ETH\",\n    \"size\": \"1000\",\n    \"side\": \"sell\",\n    \"timestamp\": \"2023-11-28T11:04:53Z\"\n}"
+					"body": "{\n    \"orderId\": \"21665fa2-18d2-40fe-a369-2fee1b2aec99\",\n    \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n    \"userId\": \"00000000-0000-0000-0000-000000000001\",\n    \"price\": \"20.99\",\n    \"symbol\": \"BTC-ETH\",\n    \"size\": \"1000\",\n    \"pendingSize\": \"0\",\n    \"filledSize\": \"0\",\n    \"side\": \"sell\",\n    \"timestamp\": \"2023-12-09T21:51:49Z\"\n}"
 				}
 			]
 		},
@@ -533,8 +687,8 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
 						"type": "text"
 					}
 				],
@@ -564,8 +718,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
 								"type": "text"
 							}
 						],
@@ -616,8 +770,8 @@
 				"method": "GET",
 				"header": [
 					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
 						"type": "text"
 					}
 				],
@@ -650,8 +804,8 @@
 						"method": "GET",
 						"header": [
 							{
-								"key": "X-Public-Key",
-								"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
 								"type": "text"
 							}
 						],
@@ -687,15 +841,84 @@
 						},
 						{
 							"key": "Date",
-							"value": "Tue, 28 Nov 2023 11:07:27 GMT"
+							"value": "Sat, 09 Dec 2023 21:52:55 GMT"
 						},
 						{
 							"key": "Content-Length",
-							"value": "310"
+							"value": "345"
 						}
 					],
 					"cookie": [],
-					"body": "{\n    \"data\": [\n        {\n            \"orderId\": \"174ca976-7000-437a-ace9-755d76fd5f25\",\n            \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n            \"userId\": \"00000000-0000-0000-0000-000000000001\",\n            \"price\": \"20.99\",\n            \"symbol\": \"BTC-ETH\",\n            \"size\": \"1000\",\n            \"side\": \"sell\",\n            \"timestamp\": \"2023-11-28T11:04:53Z\"\n        }\n    ],\n    \"page\": 1,\n    \"pageSize\": 10,\n    \"total\": 1,\n    \"totalPages\": 1\n}"
+					"body": "{\n    \"data\": [\n        {\n            \"orderId\": \"21665fa2-18d2-40fe-a369-2fee1b2aec99\",\n            \"clientOrderId\": \"a677273e-12de-4acc-a4f8-de7fb5b86e37\",\n            \"userId\": \"00000000-0000-0000-0000-000000000001\",\n            \"price\": \"20.99\",\n            \"symbol\": \"BTC-ETH\",\n            \"size\": \"1000\",\n            \"pendingSize\": \"0\",\n            \"filledSize\": \"0\",\n            \"side\": \"sell\",\n            \"timestamp\": \"2023-12-09T21:51:49Z\"\n        }\n    ],\n    \"page\": 1,\n    \"pageSize\": 10,\n    \"total\": 1,\n    \"totalPages\": 1\n}"
+				}
+			]
+		},
+		{
+			"name": "Get filled orders for user",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "Bearer {{API_KEY}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{BASE_URL}}/api/v1/fills",
+					"host": [
+						"{{BASE_URL}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"fills"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Get filled orders for user",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "Bearer {{API_KEY}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/api/v1/fills",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"fills"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 09 Dec 2023 21:53:13 GMT"
+						},
+						{
+							"key": "Content-Length",
+							"value": "345"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"data\": [\n        {\n            \"orderId\": \"9bfc6d29-07e0-4bf7-9189-bc03bdadb1ae\",\n            \"clientOrderId\": \"00000000-0000-0000-0000-000000000002\",\n            \"userId\": \"00000000-0000-0000-0000-000000000001\",\n            \"price\": \"10\",\n            \"symbol\": \"USDC-ETH\",\n            \"size\": \"1000\",\n            \"pendingSize\": \"0\",\n            \"filledSize\": \"1000\",\n            \"side\": \"buy\",\n            \"timestamp\": \"2023-12-09T21:03:10Z\"\n        }\n    ],\n    \"page\": 1,\n    \"pageSize\": 10,\n    \"total\": 1,\n    \"totalPages\": 1\n}"
 				}
 			]
 		},
@@ -703,13 +926,7 @@
 			"name": "Begin auction",
 			"request": {
 				"method": "POST",
-				"header": [
-					{
-						"key": "X-Public-Key",
-						"value": "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg==",
-						"type": "text"
-					}
-				],
+				"header": [],
 				"body": {
 					"mode": "raw",
 					"raw": "{\n    \"amountIn\": \"10\",\n    \"symbol\": \"BTC-ETH\",\n    \"side\": \"sell\"\n}",

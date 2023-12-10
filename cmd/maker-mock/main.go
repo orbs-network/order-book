@@ -13,7 +13,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const pubKey = "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+const mockApiKey = "abcdef12345"
 const depthSize = 5
 
 var HOST = "localhost"
@@ -71,7 +71,7 @@ func cancelAllOrders() {
 		return
 	}
 
-	req.Header.Add("X-Public-Key", pubKey)
+	req.Header.Add("X-API-Key", fmt.Sprintf("Bearer %s", mockApiKey))
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -106,7 +106,7 @@ func placeOrder(side string, price, size decimal.Decimal) {
 		log.Fatalf("error creating request: %v", err)
 	}
 
-	req.Header.Add("X-Public-Key", pubKey)
+	req.Header.Add("X-API-Key", fmt.Sprintf("Bearer %s", mockApiKey))
 
 	res, err := client.Do(req)
 	//fmt.Printf("res is ------->: %#v\n", res)

@@ -12,7 +12,7 @@ import (
 func (s *Service) GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error) {
 	order, err := s.orderBookStore.GetBestPriceFor(ctx, symbol, side)
 
-	if err == models.ErrOrderNotFound {
+	if err == models.ErrNotFound {
 		logctx.Info(ctx, fmt.Sprintf("No orders found for %s %q", side, symbol))
 		return decimal.Zero, nil
 	}

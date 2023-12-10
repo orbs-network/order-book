@@ -31,19 +31,24 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 	}, nil
 }
 
-func (h *Handler) Init() {
+func (h *Handler) Init(getUserByApiKey middleware.GetUserByApiKeyFunc) {
+	h.initMMRoutes(getUserByApiKey)
+	h.initLHRoutes()
+}
 
-	/////////////////////////////////////////////////////////////////////
-	// Market maker side
+// Market Maker specific routes
+func (h *Handler) initMMRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 	mmApi := h.Router.PathPrefix("/api/v1").Subrouter()
 
-	middlewareValidUser := middleware.ValidateUserMiddleware(h.svc)
-
+	// Middleware to validate user by API key
+	middlewareValidUser := middleware.ValidateUserMiddleware(getUserByApiKey)
 	mmApi.Use(middlewareValidUser)
 
 	// ------- CREATE -------
+	// Place multiple orders
+	mmApi.HandleFunc("/orders", h.CreateOrders).Methods("POST")
 	// Place a new order
-	mmApi.HandleFunc("/order", h.ProcessOrder).Methods("POST")
+	mmApi.HandleFunc("/order", h.CreateOrder).Methods("POST")
 
 	// ------- READ -------
 	// Get an order by client order ID
@@ -52,8 +57,10 @@ func (h *Handler) Init() {
 	mmApi.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
 	// Get an order by ID
 	mmApi.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
-	// Get all orders for a user
-	mmApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOrdersForUser)).Methods("GET")
+	// Get all open orders for a user
+	mmApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOpenOrdersForUser)).Methods("GET")
+	// Get all filled orders for a user
+	mmApi.HandleFunc("/fills", middleware.PaginationMiddleware(h.GetFilledOrdersForUser)).Methods("GET")
 	// Get all symbols
 	mmApi.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth
@@ -66,10 +73,12 @@ func (h *Handler) Init() {
 	mmApi.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
 	// Cancel all orders for a user
 	mmApi.HandleFunc("/orders", h.CancelOrdersForUser).Methods("DELETE")
+}
 
-	/////////////////////////////////////////////////////////////////////
-	// LH Auction side
+// Liquidity Hub specific routes
+func (h *Handler) initLHRoutes() {
 	lhApi := h.Router.PathPrefix("/lh/v1").Subrouter()
+
 	lhApi.HandleFunc("/begin_auction/{auctionId}", h.beginAuction).Methods("POST")
 	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("GET")
 	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("POST")

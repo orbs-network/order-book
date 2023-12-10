@@ -9,19 +9,24 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// CreateOrderIDKey creates a Redis key for storing the user's orders
-func CreateUserOrdersKey(userId uuid.UUID) string {
-	return fmt.Sprintf("userId:%s:orders", userId)
+// CreateUserOpenOrdersKey creates a Redis key for storing the user's open orders
+func CreateUserOpenOrdersKey(userId uuid.UUID) string {
+	return fmt.Sprintf("userId:%s:openOrders", userId)
+}
+
+// CreateAuctionTrackerKey creates a Redis key for storing the user's filled orders
+func CreateUserFilledOrdersKey(userId uuid.UUID) string {
+	return fmt.Sprintf("userId:%s:filledOrders", userId)
 }
 
 // CreateOrderIDKey creates a Redis key for a single order ID
 func CreateOrderIDKey(orderId uuid.UUID) string {
-	return fmt.Sprintf("orderID:%s", orderId)
+	return fmt.Sprintf("orderID:%s:order", orderId)
 }
 
 // CreateClientOIDKey creates a Redis key for a single client order ID
 func CreateClientOIDKey(clientOId uuid.UUID) string {
-	return fmt.Sprintf("clientOId:%s", clientOId)
+	return fmt.Sprintf("clientOId:%s:order", clientOId)
 }
 
 // CreateBuySidePricesKey creates a Redis key for storing the buy side (bid) prices
@@ -36,7 +41,7 @@ func CreateSellSidePricesKey(symbol models.Symbol) string {
 
 // CreateAuctionKey creates a Redis key for storing the auction data
 func CreateAuctionKey(auctionID uuid.UUID) string {
-	return fmt.Sprintf("auctionId:%s", auctionID)
+	return fmt.Sprintf("auctionId:%s:auction", auctionID)
 }
 
 // CreateSwapKey creates a Redis key for storing the auction data
@@ -47,6 +52,16 @@ func CreateSwapKey(swapId uuid.UUID) string {
 // CreateUserPubKeyKey creates a Redis key for storing the user's public key
 func CreateUserPubKeyKey(publicKey string) string {
 	return fmt.Sprintf("user:%s:publicKey", publicKey)
+}
+
+// CreateUserApiKeyKey creates a Redis key for storing the user by their API key
+func CreateUserApiKeyKey(apiKey string) string {
+	return fmt.Sprintf("userApiKey:%s:user", apiKey)
+}
+
+// CreateUserIdKey creates a Redis key for storing the user by their ID
+func CreateUserIdKey(userId uuid.UUID) string {
+	return fmt.Sprintf("userId:%s:user", userId)
 }
 
 // CreateAuctionTrackerKey creates a Redis key for storing auctions of different statuses

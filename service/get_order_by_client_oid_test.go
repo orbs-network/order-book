@@ -17,9 +17,11 @@ func TestService_GetOrderByClientOId(t *testing.T) {
 
 	clientOId := uuid.MustParse("e577273e-12de-4acc-a4f8-de7fb5b86e37")
 
+	mockBcClient := &mocks.MockBcClient{IsVerified: true}
+
 	t.Run("successfully retrieve order by client order ID - should return order", func(t *testing.T) {
 		o := &models.Order{ClientOId: clientOId}
-		svc, _ := service.New(&mocks.MockOrderBookStore{Order: o})
+		svc, _ := service.New(&mocks.MockOrderBookStore{Order: o}, mockBcClient)
 
 		order, err := svc.GetOrderByClientOId(ctx, clientOId)
 
@@ -28,7 +30,7 @@ func TestService_GetOrderByClientOId(t *testing.T) {
 	})
 
 	t.Run("order not found - should return nil", func(t *testing.T) {
-		svc, _ := service.New(&mocks.MockOrderBookStore{Error: models.ErrOrderNotFound})
+		svc, _ := service.New(&mocks.MockOrderBookStore{Error: models.ErrNotFound}, mockBcClient)
 
 		order, err := svc.GetOrderByClientOId(ctx, clientOId)
 
@@ -37,7 +39,7 @@ func TestService_GetOrderByClientOId(t *testing.T) {
 	})
 
 	t.Run("unexpected error - should return error", func(t *testing.T) {
-		svc, _ := service.New(&mocks.MockOrderBookStore{Error: assert.AnError})
+		svc, _ := service.New(&mocks.MockOrderBookStore{Error: assert.AnError}, mockBcClient)
 
 		order, err := svc.GetOrderByClientOId(ctx, clientOId)
 

@@ -27,7 +27,8 @@ type ConfirmAuctionRes struct {
 func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 
 	// check if order is still open
-	if order.Status != models.STATUS_OPEN {
+	// TODO: we no longer need this check as we are not storing open orders?
+	if order.IsFilled() {
 		return false
 	}
 	// order.size - (Order.filled + Order.pending) >= frag.size
@@ -36,7 +37,7 @@ func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 
 func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 	// check if order is still open
-	if order.Status != models.STATUS_OPEN {
+	if order.IsFilled() {
 		return false
 	}
 	// order.Size pending should be greater or equal to orderFrag: (Order.sizePending + Order.pending) >= frag.size
@@ -79,7 +80,7 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 				logctx.Warn(ctx, "Remove Auction", logger.Error(err))
 			}
 
-			return ConfirmAuctionRes{}, models.ErrOrderNotFound
+			return ConfirmAuctionRes{}, models.ErrNotFound
 		} else if !validateOrderFrag(frag, order) {
 			// cancel auction
 			_ = s.orderBookStore.RemoveAuction(ctx, auctionId)
@@ -98,9 +99,9 @@ func (s *Service) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (Conf
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
 		res.Orders[i].SizePending = res.Fragments[i].Size
 	}
-	err = s.orderBookStore.StoreOrders(ctx, res.Orders)
+	err = s.orderBookStore.StoreOpenOrders(ctx, res.Orders)
 	if err != nil {
-		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		logctx.Warn(ctx, "StoreOpenOrders Failed", logger.Error(err))
 		return ConfirmAuctionRes{}, err
 	}
 
@@ -147,9 +148,9 @@ func (s *Service) RevertAuction(ctx context.Context, auctionId uuid.UUID) error 
 		}
 	}
 	// store orders
-	err = s.orderBookStore.StoreOrders(ctx, orders)
+	err = s.orderBookStore.StoreOpenOrders(ctx, orders)
 	if err != nil {
-		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		logctx.Warn(ctx, "StoreOpenOrders Failed", logger.Error(err))
 		return err
 	}
 
@@ -190,7 +191,7 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 				logctx.Error(ctx, err.Error())
 			}
 			// return empty
-			return models.ErrOrderNotFound
+			return models.ErrNotFound
 		} else if !validatePendingFrag(frag, order) {
 			// cancel auction
 			err = s.orderBookStore.RemoveAuction(ctx, auctionId) // PANIC - shouldn't happen
@@ -206,28 +207,22 @@ func (s *Service) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
 			order.SizeFilled = order.SizeFilled.Add(frag.Size)
 
 			// success - mark as filled
-			filledOrders = append(filledOrders, *order)
+			if order.IsFilled() {
+				logctx.Info(ctx, "Order is filled", logger.String("orderID", order.Id.String()))
+				filledOrders = append(filledOrders, *order)
+			}
 		}
 	}
 	// only if all reags successfully filled - continue
-	// close completely filled orders
-	for _, order := range filledOrders {
-		if order.Size.Equal(order.SizeFilled) {
-			order.Status = models.STATUS_FILLED
-			logctx.Info(ctx, fmt.Sprintf("order is completely filled %s", order.Id.String()))
-		}
-	}
 	// TODO: remove order from sell/buy side
 	// Add them to "filled" storage - can be done withn StoreOrders()
 
 	// store orders
-	err = s.orderBookStore.StoreOrders(ctx, filledOrders)
+	err = s.orderBookStore.StoreFilledOrders(ctx, filledOrders)
 	if err != nil {
-		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
+		logctx.Error(ctx, "StoreFilledOrders Failed", logger.Error(err))
 		return err
 	}
-
-	// TODO: remove filled orders
 
 	return s.orderBookStore.RemoveAuction(ctx, auctionId) // no need to revert pending its done in line 124
 }

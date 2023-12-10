@@ -19,7 +19,6 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 		UserId: userId,
 		Symbol: "BTC-ETH",
 		Side:   models.BUY,
-		Status: models.STATUS_OPEN,
 	}
 
 	t.Run("should get orders for user", func(t *testing.T) {
@@ -32,13 +31,13 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOrdersKey(userId)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetVal([]string{"00000000-0000-0000-0000-000000000001"})
 		mock.ExpectHGetAll(CreateOrderIDKey(order.Id)).SetVal(order.OrderToMap())
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId)
+		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
 
 		assert.Equal(t, orders[0].Id, order.Id)
 		assert.Equal(t, orders[0].UserId, order.UserId)
@@ -57,11 +56,11 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOrdersKey(userId)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetErr(assert.AnError)
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId)
+		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
 
 		assert.Equal(t, orders, []models.Order{})
 		assert.Equal(t, totalOrders, 0)
@@ -78,12 +77,12 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOrdersKey(userId)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetErr(assert.AnError)
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId)
+		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
 
 		assert.Equal(t, orders, []models.Order{})
 		assert.Equal(t, totalOrders, 0)
@@ -100,12 +99,12 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOrdersKey(userId)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetVal([]string{"bad-uuid"})
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId)
+		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
 
 		assert.Equal(t, orders, []models.Order{})
 		assert.Equal(t, totalOrders, 0)
@@ -122,17 +121,17 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOrdersKey(userId)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetVal([]string{"00000000-0000-0000-0000-000000000001"})
 		mock.ExpectHGetAll(CreateOrderIDKey(order.Id)).SetErr(assert.AnError)
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId)
+		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
 
 		assert.Equal(t, orders, []models.Order{})
 		assert.Equal(t, totalOrders, 0)
-		assert.ErrorContains(t, err, "failed to get order")
+		assert.ErrorContains(t, err, "failed to find orders by ID")
 	})
 
 }

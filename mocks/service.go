@@ -26,7 +26,7 @@ type MockOrderBookStore struct {
 	Sets map[string]map[string]struct{}
 }
 
-func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order) error {
+func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
 
 	source, err := m.FindOrderById(ctx, order.Id, false)
 	if err != nil {
@@ -39,14 +39,11 @@ func (m *MockOrderBookStore) StoreOrder(ctx context.Context, order models.Order)
 	return m.Error
 }
 
-func (m *MockOrderBookStore) StoreOrders(ctx context.Context, orders []models.Order) error {
-	// update the orders
-	for _, order := range orders {
-		err := m.StoreOrder(ctx, order)
-		if err != nil {
-			return err
-		}
-	}
+func (m *MockOrderBookStore) StoreOpenOrders(ctx context.Context, orders []models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) StoreFilledOrders(ctx context.Context, orders []models.Order) error {
 	return m.Error
 }
 
@@ -84,7 +81,7 @@ func (m *MockOrderBookStore) FindOrderById(ctx context.Context, id uuid.UUID, is
 		return order, nil
 	}
 	if m.Order == nil {
-		return nil, models.ErrOrderNotFound
+		return nil, models.ErrNotFound
 	}
 
 	return m.Order, nil
@@ -136,8 +133,12 @@ func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.U
 	return m.Orders, len(m.Orders), nil
 }
 
-func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) error {
-	return m.Error
+func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
+	var orderIds []uuid.UUID
+	for _, order := range m.Orders {
+		orderIds = append(orderIds, order.Id)
+	}
+	return orderIds, m.Error
 }
 
 func (m *MockOrderBookStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {

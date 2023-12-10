@@ -1,6 +1,8 @@
 package models
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -8,35 +10,44 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// EIP712 signature components
+type Signature struct {
+	Eip712Sig     string                 `json:"eip712Sig"`
+	Eip712MsgData map[string]interface{} `json:"eip712MsgData"`
+}
+
 type Order struct {
-	Id          uuid.UUID       `json:"orderId"`
-	ClientOId   uuid.UUID       `json:"clientOrderId"`
-	UserId      uuid.UUID       `json:"userId"`
-	Price       decimal.Decimal `json:"price"`
-	Symbol      Symbol          `json:"symbol"`
-	Size        decimal.Decimal `json:"size"`
-	SizePending decimal.Decimal `json:"-"`
-	SizeFilled  decimal.Decimal `json:"-"`
-	Signature   string          `json:"-" ` // EIP 712
-	Status      Status          `json:"-"`  // when order is pending, it should not be updateable
+	Id        uuid.UUID       `json:"orderId"`
+	ClientOId uuid.UUID       `json:"clientOrderId"`
+	UserId    uuid.UUID       `json:"userId"`
+	Price     decimal.Decimal `json:"price"`
+	Symbol    Symbol          `json:"symbol"`
+	Size      decimal.Decimal `json:"size"`
+	// TODO: do we want to expose pending and filled sizes?
+	SizePending decimal.Decimal `json:"pendingSize"`
+	SizeFilled  decimal.Decimal `json:"filledSize"`
 	Side        Side            `json:"side"`
 	Timestamp   time.Time       `json:"timestamp"`
+	Signature   Signature       `json:"-" `
 }
 
 func (o *Order) OrderToMap() map[string]string {
+	// error can be ignored here because we know the data is valid
+	eip712MsgDataBytes, _ := json.Marshal(o.Signature.Eip712MsgData)
+	eip712MsgDataStr := string(eip712MsgDataBytes)
 	return map[string]string{
-		"id":          o.Id.String(),
-		"clientOId":   o.ClientOId.String(),
-		"userId":      o.UserId.String(),
-		"price":       o.Price.String(),
-		"symbol":      o.Symbol.String(),
-		"size":        o.Size.String(),
-		"sizePending": o.SizePending.String(),
-		"sizeFilled":  o.SizeFilled.String(),
-		"signature":   o.Signature,
-		"status":      o.Status.String(),
-		"side":        o.Side.String(),
-		"timestamp":   o.Timestamp.Format(time.RFC3339),
+		"id":            o.Id.String(),
+		"clientOId":     o.ClientOId.String(),
+		"userId":        o.UserId.String(),
+		"price":         o.Price.String(),
+		"symbol":        o.Symbol.String(),
+		"size":          o.Size.String(),
+		"sizePending":   o.SizePending.String(),
+		"sizeFilled":    o.SizeFilled.String(),
+		"side":          o.Side.String(),
+		"timestamp":     o.Timestamp.Format(time.RFC3339),
+		"eip712Sig":     o.Signature.Eip712Sig,
+		"eip712MsgData": eip712MsgDataStr,
 	}
 }
 
@@ -85,14 +96,14 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("no sizeFilled provided")
 	}
 
-	signatureStr, exists := data["signature"]
+	signatureStr, exists := data["eip712Sig"]
 	if !exists {
 		return fmt.Errorf("no signature provided")
 	}
 
-	statusStr, exists := data["status"]
+	messageData, exists := data["eip712MsgData"]
 	if !exists {
-		return fmt.Errorf("no status provided")
+		return fmt.Errorf("no messageData provided")
 	}
 
 	sideStr, exists := data["side"]
@@ -150,14 +161,15 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return err
 	}
 
-	status, err := StrToStatus(statusStr)
-	if err != nil {
-		return err
-	}
-
 	timestamp, err := time.Parse(time.RFC3339, timestampStr)
 	if err != nil {
 		return fmt.Errorf("invalid timestamp: %v", err)
+	}
+
+	eip712MsgData := map[string]interface{}{}
+
+	if err := json.Unmarshal([]byte(messageData), &eip712MsgData); err != nil {
+		return fmt.Errorf("invalid eip712MsgData: %v", err)
 	}
 
 	o.Id = id
@@ -168,15 +180,50 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	o.Size = size
 	o.SizePending = sizePending
 	o.SizeFilled = sizeFilled
-	o.Signature = signatureStr
-	o.Status = status
+	o.Signature = Signature{
+		Eip712Sig:     signatureStr,
+		Eip712MsgData: eip712MsgData,
+	}
 	o.Side = side
 	o.Timestamp = timestamp
 
 	return nil
 }
 
+// GetAvailableSize returns the size that is available to be filled
 func (o *Order) GetAvailableSize() decimal.Decimal {
 	used := o.SizePending.Add(o.SizeFilled)
 	return o.Size.Sub(used)
+}
+
+// IsFilled returns true if the order has been filled
+func (o *Order) IsFilled() bool {
+	return o.SizeFilled.Equal(o.Size)
+}
+
+// IsPending returns true has a pending fill in progress
+func (o *Order) IsPending() bool {
+	return o.SizePending.GreaterThan(decimal.Zero)
+}
+
+// Status returns the status of the order
+func (o *Order) Status() string {
+	if o.IsFilled() {
+		return "FILLED"
+	}
+
+	return "OPEN"
+}
+
+// OrderIdsToStrings return a list of string order IDs from a list of orders
+func OrderIdsToStrings(ctx context.Context, orders *[]Order) []string {
+	if orders == nil {
+		return []string{}
+	}
+
+	var orderIds []string
+	for _, order := range *orders {
+		orderIds = append(orderIds, order.Id.String())
+	}
+	return orderIds
 }

@@ -23,7 +23,6 @@ var buyOrder = models.Order{
 	Size:   decimal.NewFromFloat(1212312.0),
 	Symbol: symbol,
 	Side:   models.BUY,
-	Status: models.STATUS_OPEN,
 }
 
 var sellOrder = models.Order{
@@ -33,7 +32,6 @@ var sellOrder = models.Order{
 	Size:   decimal.NewFromFloat(1212312.0),
 	Symbol: symbol,
 	Side:   models.SELL,
-	Status: models.STATUS_OPEN,
 }
 
 func TestRedisRepository_GetBestPriceFor(t *testing.T) {
@@ -63,7 +61,7 @@ func TestRedisRepository_GetBestPriceFor(t *testing.T) {
 		mock.ExpectZRevRange(buyPricesKey, 0, 0).SetVal([]string{})
 		order, err := repo.GetBestPriceFor(ctx, symbol, models.BUY)
 
-		assert.Error(t, err, models.ErrOrderNotFound, "error should be ErrOrderNotFound")
+		assert.Error(t, err, models.ErrNotFound, "error should be ErrNotFound")
 		assert.Equal(t, models.Order{}, order, "should be zero")
 	})
 
@@ -84,7 +82,7 @@ func TestRedisRepository_GetBestPriceFor(t *testing.T) {
 		mock.ExpectZRange(sellPricesKey, 0, 0).SetVal([]string{})
 		order, err := repo.GetBestPriceFor(ctx, symbol, models.SELL)
 
-		assert.Error(t, err, models.ErrOrderNotFound, "error should be ErrOrderNotFound")
+		assert.Error(t, err, models.ErrNotFound, "error should be ErrNotFound")
 		assert.Equal(t, models.Order{}, order, "should be zero")
 	})
 

@@ -23,6 +23,7 @@ type User struct {
 	// The user's public key from their public/private key pair
 	PubKey string
 	Type   UserType
+	ApiKey string `json:"-"`
 }
 
 var ErrInvalidUserType = errors.New("invalid user type")
@@ -45,5 +46,6 @@ func (u *User) UserToMap() map[string]string {
 		"id":     u.Id.String(),
 		"pubKey": u.PubKey,
 		"type":   u.Type.String(),
+		"apiKey": u.ApiKey,
 	}
 }

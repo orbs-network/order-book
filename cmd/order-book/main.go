@@ -10,6 +10,7 @@ import (
 
 	"github.com/orbs-network/order-book/data/redisrepo"
 	"github.com/orbs-network/order-book/service"
+	"github.com/orbs-network/order-book/serviceuser"
 	"github.com/orbs-network/order-book/transport/rest"
 )
 
@@ -42,9 +43,17 @@ func setup() {
 		log.Fatalf("error creating repository: %v", err)
 	}
 
-	service, err := service.New(repository)
+	// TODO: add CLI flag to easily switch between blockchains
+	ethClient := &service.EthereumClient{}
+
+	service, err := service.New(repository, ethClient)
 	if err != nil {
 		log.Fatalf("error creating service: %v", err)
+	}
+
+	userSvc, err := serviceuser.New(repository)
+	if err != nil {
+		log.Fatalf("error creating user service: %v", err)
 	}
 
 	router := mux.NewRouter()
@@ -52,7 +61,8 @@ func setup() {
 	if err != nil {
 		log.Fatalf("error creating handler: %v", err)
 	}
-	handler.Init()
+
+	handler.Init(userSvc.GetUserByApiKey)
 
 	server := rest.NewHTTPServer(":"+port, handler.Router)
 	server.StartServer()

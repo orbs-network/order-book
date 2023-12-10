@@ -14,6 +14,7 @@ import (
 var ctx = context.Background()
 var orderId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
+var userId = uuid.MustParse("00000000-0000-0000-0000-000000000003")
 var size, _ = decimal.NewFromString("10000324.123456789")
 
 var order = models.Order{
@@ -22,22 +23,9 @@ var order = models.Order{
 	Size:   size,
 	Symbol: symbol,
 	Side:   models.BUY,
-	Status: models.STATUS_OPEN,
 }
 
 func TestRedisRepository_RemoveOrder(t *testing.T) {
-
-	t.Run("only open orders can be removed", func(t *testing.T) {
-		db, _ := redismock.NewClientMock()
-
-		repo := &redisRepository{
-			client: db,
-		}
-
-		err := repo.RemoveOrder(ctx, models.Order{Status: models.STATUS_FILLED})
-
-		assert.ErrorIs(t, err, models.ErrOrderNotOpen)
-	})
 
 	t.Run("fails to remove order", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
@@ -53,7 +41,7 @@ func TestRedisRepository_RemoveOrder(t *testing.T) {
 
 		err := repo.RemoveOrder(ctx, order)
 
-		assert.ErrorIs(t, err, models.ErrTransactionFailed)
+		assert.ErrorContains(t, err, "failed to remove order")
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 

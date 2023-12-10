@@ -3,3 +3,5 @@ __debug_*
 .DS_Store
 *secret*
 *.pem
+*Key.txt
+coverage.out

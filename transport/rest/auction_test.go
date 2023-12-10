@@ -1,4 +1,4 @@
-package rest_test
+package rest
 
 import (
 	"bufio"
@@ -15,30 +15,30 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/service"
-	"github.com/orbs-network/order-book/transport/rest"
 	"github.com/stretchr/testify/assert"
 )
 
 const ETH_USD = "ETH-USD"
 
-var httpServer *rest.HTTPServer
+var httpServer *HTTPServer
 
 func runAuctionServer(t *testing.T) {
 	repository := mocks.CreateAuctionMock()
+	mockBcClient := &mocks.MockBcClient{IsVerified: true}
 
-	service, err := service.New(repository)
+	service, err := service.New(repository, mockBcClient)
 	if err != nil {
 		log.Fatalf("error creating service: %v", err)
 	}
 
 	router := mux.NewRouter()
-	handler, err := rest.NewHandler(service, router)
+	handler, err := NewHandler(service, router)
 	if err != nil {
 		log.Fatalf("error creating handler: %v", err)
 	}
-	handler.Init()
+	handler.initLHRoutes()
 
-	httpServer = rest.NewHTTPServer(":8080", handler.Router)
+	httpServer = NewHTTPServer(":8080", handler.Router)
 	httpServer.StartServer()
 }
 
@@ -117,14 +117,14 @@ func TestHandlers_BeginAuction(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			req := rest.BeginAuctionReq{
+			req := BeginAuctionReq{
 				AmountIn: test.amountIn,
 				Symbol:   test.symbol,
 				Side:     test.side,
 			}
 			auctionId := uuid.New().String()
 
-			expectedRes := rest.BeginAuctionRes{
+			expectedRes := BeginAuctionRes{
 				AuctionId: auctionId,
 				AmountOut: test.amountOut,
 			}
@@ -137,7 +137,7 @@ func TestHandlers_BeginAuction(t *testing.T) {
 			assert.NoError(t, err)
 
 			// Decode the response body into the struct
-			var actualRes rest.BeginAuctionRes
+			var actualRes BeginAuctionRes
 			err = json.NewDecoder(response.Body).Decode(&actualRes)
 			assert.NoError(t, err)
 			assert.Equal(t, expectedRes, actualRes)
@@ -147,7 +147,7 @@ func TestHandlers_BeginAuction(t *testing.T) {
 	t.Run("BUY- should error insuficinet liquidity try to buy with too many B token", func(t *testing.T) {
 		insuficientAskB := strconv.Itoa((1000 * 1) + (1001 * 2) + (1002 * 3) + 1)
 
-		req := rest.BeginAuctionReq{
+		req := BeginAuctionReq{
 			AmountIn: insuficientAskB,
 			Symbol:   ETH_USD,
 			Side:     "BUY",
@@ -173,7 +173,7 @@ func TestHandlers_BeginAuction(t *testing.T) {
 	t.Run("SELL- should error insuficinet liquidity when sell with too many A token", func(t *testing.T) {
 
 		insuficientBidA := strconv.Itoa((1 + 2 + 3) + 1)
-		req := rest.BeginAuctionReq{
+		req := BeginAuctionReq{
 			AmountIn: insuficientBidA,
 			Symbol:   ETH_USD,
 			Side:     "SELL",
@@ -213,7 +213,7 @@ func TestHandlers_ConfirmAuction(t *testing.T) {
 		assert.NoError(t, err)
 
 		// Decode the response body into the struct
-		var actualRes rest.ConfirmAuctionRes
+		var actualRes ConfirmAuctionRes
 		err = json.NewDecoder(response.Body).Decode(&actualRes)
 		assert.NoError(t, err)
 		assert.Equal(t, len(actualRes.Fragments), 3)

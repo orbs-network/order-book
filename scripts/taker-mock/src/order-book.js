@@ -3,9 +3,9 @@ import fetch from "node-fetch";
 class Orderbook {
     constructor() {
         this.ORDERBOOK_HOST = process.env.ORDERBOOK_HOST || "http://localhost:8080/"
-        const PUB_KEY = process.env.xx || "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
+        const API_KEY = process.env.xx || "abcdef12345"
         this.headers = {
-            "X-Public-Key": PUB_KEY,
+            "X-API-Key": `Bearer ${API_KEY}`,
             "Content-Type": "application/json", // Assuming you are expecting JSON in response
         };
     }

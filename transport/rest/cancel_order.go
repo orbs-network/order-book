@@ -93,14 +93,8 @@ func (h *Handler) handleCancelOrder(input hInput) {
 		UserId:      input.userId,
 	})
 
-	if err == models.ErrOrderNotFound {
+	if err == models.ErrNotFound {
 		logctx.Warn(input.ctx, "order not found", logger.String("id", input.id.String()))
-		http.Error(input.w, "Order not found", http.StatusNotFound)
-		return
-	}
-
-	if err == models.ErrOrderNotOpen {
-		logctx.Warn(input.ctx, "user trying to cancel order that is not open", logger.String("id", input.id.String()))
 		http.Error(input.w, "Order not found", http.StatusNotFound)
 		return
 	}
@@ -114,6 +108,12 @@ func (h *Handler) handleCancelOrder(input hInput) {
 	if err == models.ErrOrderPending {
 		logctx.Warn(input.ctx, "cancelling order not possible when order is pending", logger.String("id", input.id.String()))
 		http.Error(input.w, "Cannot cancel order due to pending fill", http.StatusConflict)
+		return
+	}
+
+	if err == models.ErrOrderFilled {
+		logctx.Warn(input.ctx, "cancelling order not possible when order is filled", logger.String("id", input.id.String()))
+		http.Error(input.w, "Cannot cancel filled order", http.StatusConflict)
 		return
 	}
 

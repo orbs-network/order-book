@@ -24,7 +24,7 @@ func (m *MockOrderBookService) GetUserByPublicKey(ctx context.Context, publicKey
 	return m.User, m.Error
 }
 
-func (m *MockOrderBookService) ProcessOrder(ctx context.Context, input service.ProcessOrderInput) (models.Order, error) {
+func (m *MockOrderBookService) CreateOrder(ctx context.Context, input service.CreateOrderInput) (models.Order, error) {
 	return *m.Order, m.Error
 }
 
@@ -60,12 +60,20 @@ func (m *MockOrderBookService) GetSymbols(ctx context.Context) ([]models.Symbol,
 	return m.Symbols, m.Error
 }
 
-func (m *MockOrderBookService) GetOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+func (m *MockOrderBookService) GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
 	return m.Orders, len(m.Orders), m.Error
 }
 
-func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) error {
-	return m.Error
+func (m *MockOrderBookService) GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+	return m.Orders, len(m.Orders), m.Error
+}
+
+func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) (orderIds []uuid.UUID, err error) {
+	var ids []uuid.UUID
+	for _, order := range m.Orders {
+		ids = append(ids, order.Id)
+	}
+	return ids, m.Error
 }
 
 func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {

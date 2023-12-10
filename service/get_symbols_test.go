@@ -11,7 +11,7 @@ import (
 
 func TestService_GetSymbols(t *testing.T) {
 	ctx := context.Background()
-	svc, _ := service.New(&mocks.MockOrderBookStore{})
+	svc, _ := service.New(&mocks.MockOrderBookStore{}, &mocks.MockBcClient{})
 
 	symbols, err := svc.GetSymbols(ctx)
 
