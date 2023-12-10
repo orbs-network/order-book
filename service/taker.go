@@ -30,7 +30,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 			logctx.Warn(ctx, err.Error())
 			return models.BeginSwapRes{}, models.ErrOrderNotFound
 		} else if !validateOrderFrag(frag, order) {
-			// cancel auction
+			// cancel swap
 			_ = s.orderBookStore.RemoveSwap(ctx, swapId)
 
 			// return empty

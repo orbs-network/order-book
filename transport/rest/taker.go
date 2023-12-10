@@ -143,11 +143,11 @@ func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST
-func (h *Handler) txSent(w http.ResponseWriter, r *http.Request) {
-	swapId := handleSwapId(w, r)
-	if swapId == nil {
-		return
-	}
+// func (h *Handler) txSent(w http.ResponseWriter, r *http.Request) {
+// 	swapId := handleSwapId(w, r)
+// 	if swapId == nil {
+// 		return
+// 	}
 
-	//h.svc.txSent(r.Context(), swapId)
-}
+// 	//h.svc.txSent(r.Context(), swapId)
+// }

@@ -78,16 +78,17 @@ func (h *Handler) Init() {
 	/////////////////////////////////////////////////////////////////////
 	// LH TAKER side -  to replace auction
 	takerApi := h.Router.PathPrefix("/taker/v1").Subrouter()
-	// returns potential amountOut
+	// IN: InAmount, InToken, OutToken
+	// OUT: CURRENT potential outAmount
 	takerApi.HandleFunc("/quote", h.quote).Methods("GET")
-	// returns fresh amountOut
-	// locks orders
-	// returns swapID to be used by abort and txsend
+	// IN: InAmount, InToken, OutToken
+	// OUT: Locked outAmount, SwapID
 	takerApi.HandleFunc("/swap", h.swap).Methods("POST")
+	// IN: SwapID given in /swap
 	// release locked orders of start to be used by other match
-	// called when
-	// lh doesnt want to use swap amountOut
+	// called when lh doesnt want to use swap outAmount
 	takerApi.HandleFunc("/abort/{swapId}", h.abortSwap).Methods("POST")
-	// all swaps are confirmed on-chain TXHASH
-	takerApi.HandleFunc("/txsent/{swapId}", h.txSent).Methods("POST")
+	// IN: txHash, SwapID given in /swap
+	// Notifies order book to start tracking the state of the tx (discuss events or based on txHash)
+	// takerApi.HandleFunc("/txsent/{swapId}", h.txSent).Methods("POST")
 }
