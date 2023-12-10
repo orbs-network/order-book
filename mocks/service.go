@@ -24,6 +24,8 @@ type MockOrderBookStore struct {
 	Frags []models.OrderFrag
 	// re-entrance
 	Sets map[string]map[string]struct{}
+	// Misc
+	EventsChan chan []byte
 }
 
 func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
@@ -142,4 +144,12 @@ func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol
 
 func (m *MockOrderBookStore) UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error {
 	return m.Error
+}
+
+func (m *MockOrderBookStore) PublishEvent(ctx context.Context, key string, value interface{}) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) SubscribeToEvents(ctx context.Context, channel string) (chan []byte, error) {
+	return m.EventsChan, m.Error
 }

@@ -19,7 +19,7 @@ func ValidateUserMiddleware(getUserByApiKey GetUserByApiKeyFunc) func(http.Handl
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			key, err := bearerToken(r, "X-API-KEY")
+			key, err := BearerToken(r, "X-API-KEY")
 
 			if err != nil {
 				logctx.Warn(r.Context(), "incorrect API key format", logger.Error(err))
@@ -48,7 +48,7 @@ func ValidateUserMiddleware(getUserByApiKey GetUserByApiKeyFunc) func(http.Handl
 	}
 }
 
-func bearerToken(r *http.Request, header string) (string, error) {
+func BearerToken(r *http.Request, header string) (string, error) {
 	rawToken := r.Header.Get(header)
 	pieces := strings.SplitN(rawToken, " ", 2)
 

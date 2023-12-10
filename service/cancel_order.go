@@ -59,5 +59,7 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (canc
 	}
 
 	logctx.Info(ctx, "order removed", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+
+	s.publishOrderEvent(ctx, order, models.STATUS_CANCELLED)
 	return &order.Id, nil
 }
