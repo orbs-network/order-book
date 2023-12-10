@@ -17,13 +17,14 @@ const symbol = "ETH-USD"
 // /////////////////////////////////////////////////////////////
 func TestTaker_Quote(t *testing.T) {
 	ctx := context.Background()
+	ethClient := &service.EthereumClient{}
 
 	t.Run("QUOTE should return error zero amount in ", func(t *testing.T) {
 		store := mocks.MockOrderBookStore{
 			Error: models.ErrAuctionInvalid,
 			Sets:  make(map[string]map[string]struct{}),
 		}
-		svc, _ := service.New(&store)
+		svc, _ := service.New(&store, ethClient)
 		_, err := svc.GetQuote(ctx, symbol, models.BUY, decimal.Zero)
 		assert.Error(t, err, models.ErrInAmount)
 
@@ -31,7 +32,7 @@ func TestTaker_Quote(t *testing.T) {
 
 	t.Run("QUOTE HappyPath", func(t *testing.T) {
 		mock := mocks.CreateAuctionMock()
-		svc, _ := service.New(mock)
+		svc, _ := service.New(mock, ethClient)
 
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
@@ -42,10 +43,11 @@ func TestTaker_Quote(t *testing.T) {
 }
 func TestTaker_BeginSwap(t *testing.T) {
 	ctx := context.Background()
+	ethClient := &service.EthereumClient{}
 
 	t.Run("BeginSwap Should return the same as quote, second quote returns diff amount", func(t *testing.T) {
 		mock := mocks.CreateAuctionMock()
-		svc, _ := service.New(mock)
+		svc, _ := service.New(mock, ethClient)
 
 		// get quote does not lock liquidity
 		inAmount := decimal.NewFromInt(1000)
@@ -71,10 +73,11 @@ func TestTaker_BeginSwap(t *testing.T) {
 
 func TestService_AbortSwap(t *testing.T) {
 	ctx := context.Background()
+	ethClient := &service.EthereumClient{}
 
 	t.Run("AbortSwap HappyPath", func(t *testing.T) {
 		mock := mocks.CreateAuctionMock()
-		svc, _ := service.New(mock)
+		svc, _ := service.New(mock, ethClient)
 
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
