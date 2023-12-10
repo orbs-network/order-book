@@ -7,15 +7,22 @@ import (
 )
 
 type redisRepository struct {
-	client redis.Cmdable
+	cmdable redis.Cmdable
+	client  *redis.Client
 }
 
-func NewRedisRepository(client redis.Cmdable) (*redisRepository, error) {
-	if client == nil {
+func NewRedisRepository(cmdable redis.Cmdable) (*redisRepository, error) {
+	if cmdable == nil {
 		return nil, fmt.Errorf("redis client cannot be nil")
 	}
 
+	client, ok := cmdable.(*redis.Client)
+	if !ok {
+		return nil, fmt.Errorf("cmdable is not a *redis.Client")
+	}
+
 	return &redisRepository{
-		client: client,
+		cmdable: cmdable,
+		client:  client,
 	}, nil
 }

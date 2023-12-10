@@ -10,6 +10,18 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type Status string
+
+const (
+	STATUS_OPEN      Status = "OPEN"
+	STATUS_FILLED    Status = "FILLED"
+	STATUS_CANCELLED Status = "CANCELLED"
+)
+
+func (s Status) String() string {
+	return string(s)
+}
+
 // EIP712 signature components
 type Signature struct {
 	Eip712Sig     string                 `json:"eip712Sig"`
@@ -188,6 +200,23 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	o.Timestamp = timestamp
 
 	return nil
+}
+
+type OrderWithStatus struct {
+	Order
+	Status Status `json:"status"`
+}
+
+func (o *Order) ToJsonWithStatus(status Status) ([]byte, error) {
+	os := OrderWithStatus{
+		Order:  *o,
+		Status: status,
+	}
+	return json.Marshal(os)
+}
+
+func (o *Order) ToJson() ([]byte, error) {
+	return json.Marshal(o)
 }
 
 // GetAvailableSize returns the size that is available to be filled

@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/transport/middleware"
+	"github.com/orbs-network/order-book/transport/websocket"
 )
 
 type Handler struct {
@@ -62,6 +63,8 @@ func (h *Handler) initMMRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 	mmApi.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth
 	mmApi.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
+	// Subscribe to order events (websocket)
+	mmApi.HandleFunc("/ws/orders", websocket.WebSocketOrderHandler(h.svc, getUserByApiKey)).Methods("GET")
 
 	// ------- DELETE -------
 	// Cancel an existing order by client order ID

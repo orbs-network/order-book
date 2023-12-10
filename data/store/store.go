@@ -28,4 +28,7 @@ type OrderBookStore interface {
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
 	UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error
+	// Misc
+	PublishEvent(ctx context.Context, key string, value interface{}) error
+	SubscribeToEvents(ctx context.Context, channel string) (chan []byte, error)
 }

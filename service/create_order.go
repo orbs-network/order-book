@@ -106,5 +106,8 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 	}
 
 	logctx.Info(ctx, "new order created", logger.String("ID", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()))
+
+	s.publishOrderEvent(ctx, &order, models.STATUS_OPEN)
+
 	return order, nil
 }

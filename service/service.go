@@ -23,6 +23,7 @@ type OrderBookService interface {
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)
 	GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
 	GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
+	SubscribeUserOrders(ctx context.Context, userId uuid.UUID) (chan []byte, error)
 
 	ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error)
 	RevertAuction(ctx context.Context, auctionId uuid.UUID) error
