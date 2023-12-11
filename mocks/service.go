@@ -32,7 +32,6 @@ func (m *MockOrderBookStore) FindOrdersByIds(ctx context.Context, ids []uuid.UUI
 }
 
 func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
-
 	source, err := m.FindOrderById(ctx, order.Id, false)
 	if err != nil {
 		return err
@@ -45,6 +44,12 @@ func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Or
 }
 
 func (m *MockOrderBookStore) StoreOpenOrders(ctx context.Context, orders []models.Order) error {
+	for _, order := range orders {
+		err := m.StoreOpenOrder(ctx, order)
+		if err != nil {
+			return err
+		}
+	}
 	return m.Error
 }
 
