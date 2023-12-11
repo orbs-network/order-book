@@ -47,10 +47,10 @@ func TestRedisRepository_StoreAuction(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectSAdd(CreateAuctionKey(auctionID), auctionJson).SetErr(assert.AnError)
+		mock.ExpectRPush(CreateAuctionKey(auctionID), auctionJson).SetErr(assert.AnError)
 
 		err := repo.StoreAuction(ctx, auctionID, frags)
-		assert.Equal(t, models.ErrUnexpectedError, err)
+		assert.ErrorContains(t, err, "failed to store auction")
 	})
 
 }

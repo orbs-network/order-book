@@ -2,6 +2,7 @@ package redisrepo
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -14,7 +15,7 @@ func (r *redisRepository) StoreAuction(ctx context.Context, auctionID uuid.UUID,
 	auctionJson, err := models.MarshalOrderFrags(frags)
 	if err != nil {
 		logctx.Error(ctx, "failed to marshal auction", logger.String("auctionID", auctionID.String()), logger.Error(err))
-		return models.ErrMarshalError
+		return fmt.Errorf("failed to marshal auction: %v", err)
 	}
 
 	auctionKey := CreateAuctionKey(auctionID)
@@ -22,7 +23,7 @@ func (r *redisRepository) StoreAuction(ctx context.Context, auctionID uuid.UUID,
 	_, err = r.client.RPush(ctx, auctionKey, auctionJson).Result()
 	if err != nil {
 		logctx.Error(ctx, "failed to store auction", logger.String("auctionID", auctionID.String()), logger.Error(err))
-		return models.ErrUnexpectedError
+		return fmt.Errorf("failed to store auction: %v", err)
 	}
 
 	// Set the TTL to 24 hours (24 hours * 60 minutes * 60 seconds)
@@ -42,7 +43,7 @@ func (r *redisRepository) StoreSwap(ctx context.Context, swapId uuid.UUID, frags
 	swapJson, err := models.MarshalOrderFrags(frags)
 	if err != nil {
 		logctx.Error(ctx, "failed to marshal swap", logger.String("swapID", swapId.String()), logger.Error(err))
-		return models.ErrMarshalError
+		return fmt.Errorf("failed to marshal swap: %v", err)
 	}
 
 	auctionKey := CreateSwapKey(swapId)
@@ -50,7 +51,7 @@ func (r *redisRepository) StoreSwap(ctx context.Context, swapId uuid.UUID, frags
 	_, err = r.client.RPush(ctx, auctionKey, swapJson).Result()
 	if err != nil {
 		logctx.Error(ctx, "failed to store auction", logger.String("swapId", swapId.String()), logger.Error(err))
-		return models.ErrUnexpectedError
+		return fmt.Errorf("failed to store auction: %v", err)
 	}
 
 	// Set the TTL to 24 hours (24 hours * 60 minutes * 60 seconds)

@@ -49,11 +49,6 @@ func CreateSwapKey(swapId uuid.UUID) string {
 	return fmt.Sprintf("swapId:%s", swapId)
 }
 
-// CreateUserPubKeyKey creates a Redis key for storing the user's public key
-func CreateUserPubKeyKey(publicKey string) string {
-	return fmt.Sprintf("user:%s:publicKey", publicKey)
-}
-
 // CreateUserApiKeyKey creates a Redis key for storing the user by their API key
 func CreateUserApiKeyKey(apiKey string) string {
 	return fmt.Sprintf("userApiKey:%s:user", apiKey)

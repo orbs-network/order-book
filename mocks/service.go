@@ -12,12 +12,13 @@ import (
 type MockOrderBookStore struct {
 	Error error
 	// Force a get/store user error
-	ErrUser     error
-	Order       *models.Order
-	Orders      []models.Order
-	User        *models.User
-	MarketDepth models.MarketDepth
-	OrderIter   models.OrderIter
+	ErrUser      error
+	Order        *models.Order
+	Orders       []models.Order
+	User         *models.User
+	MarketDepth  models.MarketDepth
+	AskOrderIter models.OrderIter
+	BidOrderIter models.OrderIter
 	// auction
 	Asks  []models.Order
 	Bids  []models.Order
@@ -26,30 +27,12 @@ type MockOrderBookStore struct {
 	Sets map[string]map[string]struct{}
 }
 
-func (m *MockOrderBookStore) FindOrdersByIds(ctx context.Context, ids []uuid.UUID) ([]models.Order, error) {
-	return m.Orders, nil
-
-}
-
 func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
-	source, err := m.FindOrderById(ctx, order.Id, false)
-	if err != nil {
-		return err
-	}
-
-	//source.SizePending = order.SizePending
-	*source = order
-
 	return m.Error
 }
 
 func (m *MockOrderBookStore) StoreOpenOrders(ctx context.Context, orders []models.Order) error {
-	for _, order := range orders {
-		err := m.StoreOpenOrder(ctx, order)
-		if err != nil {
-			return err
-		}
-	}
+
 	return m.Error
 }
 
@@ -61,39 +44,18 @@ func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order
 	return m.Error
 }
 
-func findOrder(orders []models.Order, id uuid.UUID) *models.Order {
-	//for i, order := range *orders {
-	for i := 0; i < len(orders); i++ { // := range *orders {
-		if orders[i].Id == id {
-			res := &orders[i]
-			return res
-		}
-	}
-	return nil
-}
-func (m *MockOrderBookStore) FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error) {
+func (m *MockOrderBookStore) FindOrdersByIds(ctx context.Context, ids []uuid.UUID) ([]models.Order, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
+	return m.Orders, nil
+}
 
-	order := findOrder(m.Asks, id)
-	if order != nil {
-		return order, nil
-	}
+func (m *MockOrderBookStore) FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error) {
 
-	order = findOrder(m.Bids, id)
-	if order != nil {
-		return order, nil
+	if m.Error != nil {
+		return nil, m.Error
 	}
-
-	order = findOrder(m.Orders, id)
-	if order != nil {
-		return order, nil
-	}
-	if m.Order == nil {
-		return nil, models.ErrNotFound
-	}
-
 	return m.Order, nil
 }
 
@@ -122,8 +84,7 @@ func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UU
 	if m.Error != nil {
 		return m.Error
 	}
-	// save auction
-	m.Frags = frags
+
 	return nil
 }
 
@@ -131,8 +92,7 @@ func (m *MockOrderBookStore) StoreSwap(ctx context.Context, auctionID uuid.UUID,
 	if m.Error != nil {
 		return m.Error
 	}
-	// save auction
-	m.Frags = frags
+
 	return nil
 }
 
@@ -170,27 +130,20 @@ func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID
 }
 
 func (m *MockOrderBookStore) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {
-	m.Frags = []models.OrderFrag{}
-	return nil
+	return m.Error
 }
 
 func (m *MockOrderBookStore) RemoveSwap(ctx context.Context, auctionID uuid.UUID) error {
-	m.Frags = []models.OrderFrag{}
-	return nil
+
+	return m.Error
 }
 
 func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {
-	return &OrderIterMock{
-		orders: m.Asks,
-		index:  -1,
-	}
+	return m.AskOrderIter
 }
 
 func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
-	return &OrderIterMock{
-		orders: m.Bids,
-		index:  -1,
-	}
+	return m.BidOrderIter
 }
 
 func (m *MockOrderBookStore) UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error {
