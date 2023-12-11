@@ -139,7 +139,10 @@ func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 	if swapId == nil {
 		return
 	}
-	h.svc.AbortSwap(r.Context(), *swapId)
+	if err := h.svc.AbortSwap(r.Context(), *swapId); err != nil {
+		http.Error(w, "Error GetAmountOut", http.StatusBadRequest)
+		return
+	}
 }
 
 // POST

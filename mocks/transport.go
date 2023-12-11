@@ -102,7 +102,3 @@ func (m *MockOrderBookService) BeginSwap(ctx context.Context, data models.Amount
 func (m *MockOrderBookService) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 	return m.Error
 }
-
-func (m *MockOrderBookService) txSent(ctx context.Context, swapId uuid.UUID) error {
-	return m.Error
-}
