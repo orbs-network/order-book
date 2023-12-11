@@ -11,8 +11,32 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// orderID->amount bought or sold in A token always
+func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 
+	// make sure amountIn is positivr
+	if !amountIn.IsPositive() {
+		return models.AmountOut{}, models.ErrInAmount
+	}
+	var it models.OrderIter
+	var res models.AmountOut
+	var err error
+	if side == models.BUY {
+		it = s.orderBookStore.GetMinAsk(ctx, symbol)
+		res, err = getAmountOutInAToken(ctx, it, amountIn)
+
+	} else { // SELL
+		it = s.orderBookStore.GetMaxBid(ctx, symbol)
+		res, err = getAmountOutInBToken(ctx, it, amountIn)
+	}
+	if err != nil {
+		logctx.Error(ctx, "getAmountOutIn failed", logger.Error(err))
+		return models.AmountOut{}, err
+	}
+
+	return res, nil
+}
+
+// orderID->amount bought or sold in A token always
 func (s *Service) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 
 	var it models.OrderIter

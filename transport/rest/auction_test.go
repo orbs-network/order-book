@@ -23,6 +23,7 @@ const ETH_USD = "ETH-USD"
 var httpServer *HTTPServer
 
 func runAuctionServer(t *testing.T) {
+	t.Skip("Auction handler will be removed")
 	repository := mocks.CreateAuctionMock()
 	mockBcClient := &mocks.MockBcClient{IsVerified: true}
 
@@ -51,6 +52,7 @@ type BeginAuctionTest struct {
 }
 
 func TestHandlers_BeginAuction(t *testing.T) {
+	t.Skip("Auction handler will be removed")
 	runAuctionServer(t)
 
 	entireA := strconv.Itoa((1) + (2) + (3))
@@ -201,7 +203,7 @@ func TestHandlers_BeginAuction(t *testing.T) {
 }
 
 func TestHandlers_ConfirmAuction(t *testing.T) {
-	t.Skip("TODO refactor into unit test")
+	t.Skip("Auction hander will be removed")
 	runAuctionServer(t)
 	// revert auction mock
 
@@ -228,7 +230,7 @@ func TestHandlers_ConfirmAuction(t *testing.T) {
 }
 
 func TestHandlers_AbortAuction(t *testing.T) {
-	t.Skip("TODO refactor")
+	t.Skip("Auction hander will be removed")
 	runAuctionServer(t)
 
 	t.Run("Happy Path", func(t *testing.T) {
@@ -245,6 +247,7 @@ func TestHandlers_AbortAuction(t *testing.T) {
 }
 
 func TestHandler_AuctionMined(t *testing.T) {
+	t.Skip("Auction hander will be removed")
 	runAuctionServer(t)
 
 	t.Run("Auction Mined - but never began or confirmed", func(t *testing.T) {

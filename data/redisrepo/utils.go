@@ -44,6 +44,11 @@ func CreateAuctionKey(auctionID uuid.UUID) string {
 	return fmt.Sprintf("auctionId:%s:auction", auctionID)
 }
 
+// CreateSwapKey creates a Redis key for storing the auction data
+func CreateSwapKey(swapId uuid.UUID) string {
+	return fmt.Sprintf("swapId:%s", swapId)
+}
+
 // CreateUserApiKeyKey creates a Redis key for storing the user by their API key
 func CreateUserApiKeyKey(apiKey string) string {
 	return fmt.Sprintf("userApiKey:%s:user", apiKey)

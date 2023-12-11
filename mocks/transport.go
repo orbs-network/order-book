@@ -11,13 +11,14 @@ import (
 
 // Mock service methods for transport layer testing
 type MockOrderBookService struct {
-	Error       error
-	Order       *models.Order
-	Orders      []models.Order
-	MarketDepth models.MarketDepth
-	AmountOut   models.AmountOut
-	Symbols     []models.Symbol
-	User        *models.User
+	Error        error
+	Order        *models.Order
+	Orders       []models.Order
+	MarketDepth  models.MarketDepth
+	AmountOut    models.AmountOut
+	Symbols      []models.Symbol
+	User         *models.User
+	BeginSwapRes models.BeginSwapRes
 }
 
 func (m *MockOrderBookService) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {
@@ -79,13 +80,25 @@ func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId u
 func (m *MockOrderBookService) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 	return m.AmountOut, m.Error
 }
+func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
+	return m.AmountOut, m.Error
+}
 func (m *MockOrderBookService) ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (service.ConfirmAuctionRes, error) {
 	return service.ConfirmAuctionRes{}, nil
 }
 func (m *MockOrderBookService) RevertAuction(ctx context.Context, auctionId uuid.UUID) error {
-	return nil
+	return m.Error
 }
 
 func (m *MockOrderBookService) AuctionMined(ctx context.Context, auctionId uuid.UUID) error {
-	return nil
+	return m.Error
+}
+
+// taker api instead of auction
+func (m *MockOrderBookService) BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error) {
+	return m.BeginSwapRes, m.Error
+}
+
+func (m *MockOrderBookService) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
+	return m.Error
 }

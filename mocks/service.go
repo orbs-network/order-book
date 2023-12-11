@@ -12,12 +12,13 @@ import (
 type MockOrderBookStore struct {
 	Error error
 	// Force a get/store user error
-	ErrUser     error
-	Order       *models.Order
-	Orders      []models.Order
-	User        *models.User
-	MarketDepth models.MarketDepth
-	OrderIter   models.OrderIter
+	ErrUser      error
+	Order        *models.Order
+	Orders       []models.Order
+	User         *models.User
+	MarketDepth  models.MarketDepth
+	AskOrderIter models.OrderIter
+	BidOrderIter models.OrderIter
 	// auction
 	Asks  []models.Order
 	Bids  []models.Order
@@ -27,11 +28,11 @@ type MockOrderBookStore struct {
 }
 
 func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
-
 	return m.Error
 }
 
 func (m *MockOrderBookStore) StoreOpenOrders(ctx context.Context, orders []models.Order) error {
+
 	return m.Error
 }
 
@@ -51,10 +52,10 @@ func (m *MockOrderBookStore) FindOrdersByIds(ctx context.Context, ids []uuid.UUI
 }
 
 func (m *MockOrderBookStore) FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error) {
+
 	if m.Error != nil {
 		return nil, m.Error
 	}
-
 	return m.Order, nil
 }
 
@@ -83,8 +84,15 @@ func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UU
 	if m.Error != nil {
 		return m.Error
 	}
-	// save auction
-	m.Frags = frags
+
+	return nil
+}
+
+func (m *MockOrderBookStore) StoreSwap(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error {
+	if m.Error != nil {
+		return m.Error
+	}
+
 	return nil
 }
 
@@ -104,14 +112,14 @@ func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uui
 }
 
 func (m *MockOrderBookStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {
-	if m.ErrUser != nil {
-		return nil, m.ErrUser
+	if m.Error != nil {
+		return nil, m.Error
 	}
 	return m.User, nil
 }
 
 func (m *MockOrderBookStore) StoreUserByPublicKey(ctx context.Context, user models.User) error {
-	return m.ErrUser
+	return m.Error
 }
 
 func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error) {
@@ -122,22 +130,20 @@ func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID
 }
 
 func (m *MockOrderBookStore) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {
-	m.Frags = []models.OrderFrag{}
-	return nil
+	return m.Error
+}
+
+func (m *MockOrderBookStore) RemoveSwap(ctx context.Context, auctionID uuid.UUID) error {
+
+	return m.Error
 }
 
 func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {
-	return &OrderIterMock{
-		orders: m.Asks,
-		index:  -1,
-	}
+	return m.AskOrderIter
 }
 
 func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter {
-	return &OrderIterMock{
-		orders: m.Bids,
-		index:  -1,
-	}
+	return m.BidOrderIter
 }
 
 func (m *MockOrderBookStore) UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error {

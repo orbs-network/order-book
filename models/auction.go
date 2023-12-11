@@ -10,9 +10,13 @@ import (
 type AuctionStatus string
 
 const (
+	// to deprecate
 	AUCTION_CONFIRMED AuctionStatus = "confirmed"
 	AUCTION_MINED     AuctionStatus = "mined"
 	AUCTION_REVERTED  AuctionStatus = "reverted"
+	// taker
+	SWAP_STARTED  AuctionStatus = "swap_started"
+	SWAP_ABORDTED AuctionStatus = "swap_aborted"
 )
 
 func (a AuctionStatus) String() string {
