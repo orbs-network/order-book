@@ -13,9 +13,6 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 	// create swapID
 	swapId := uuid.New()
 	// no re-entry is needed
-	// err := s.orderBookStore.UpdateAuctionTracker(ctx, models.swap_started, auctionId)
-
-	// storeSwap
 
 	res := models.BeginSwapRes{
 		OutAmount: data.Size,
@@ -54,8 +51,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 		return models.BeginSwapRes{}, err
 	}
 
-	// add oredebook signature on the buffer
-	//res.BookSignature = []byte("todo:sign")
+	// add oredebook signature on the buffer HERE if needed
 
 	return res, nil
 }
@@ -105,7 +101,3 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 
 	return s.orderBookStore.RemoveAuction(ctx, swapId) // TODO: rename auction
 }
-
-// func (s *Service) txSent(ctx context.Context, swapId uuid.UUID) error {
-// 	return nil
-// }

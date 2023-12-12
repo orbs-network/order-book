@@ -64,7 +64,6 @@ func TestTaker_BeginSwap(t *testing.T) {
 		assert.True(t, oaRes.Size.Equals(swapRes.OutAmount))
 
 		// second quote however should return different amountOut as first order has already been filled
-		// second quote should get
 		oaRes2, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
 		assert.NoError(t, err)
 		assert.NotEqual(t, oaRes.Size, oaRes2.Size)
