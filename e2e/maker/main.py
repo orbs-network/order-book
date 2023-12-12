@@ -1,13 +1,24 @@
 import json
-import requests
 import os
 import time
-from uuid import uuid4
+from dataclasses import dataclass
 from decimal import Decimal
+from uuid import uuid4
 
-mock_api_key = "abcdef12345"
-depth_size = 5
-HOST = "localhost"
+import requests
+from orbs_orderbook import CreateOrderInput, OrderBookSDK, OrderSigner
+
+BASE_URL = os.environ.get("BASE_URL", "http://localhost")
+API_KEY = os.environ.get("API_KEY", "abc123")
+PRIVATE_KEY = os.environ.get(
+    "PRIVATE_KEY", "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+)
+TICKER_URL = os.environ.get(
+    "TICKER_URL", "https://www.binance.com/api/v3/ticker/price?symbol=ETHUSDT"
+)
+TICKER_SYMBOL = os.environ.get("TICKER_SYMBOL", "ETH-USDT")
+DEPTH_SIZE = os.environ.get("DEPTH_SIZE", "5")
+SLEEP_TIME = os.environ.get("SLEEP_TIME", "10")
 
 
 class Ticker:
@@ -16,96 +27,131 @@ class Ticker:
         self.symbol = symbol
 
 
-class AddOrderReq:
-    def __init__(self, price, size, side, symbol, client_order_id):
-        self.price = price
-        self.size = size
-        self.side = side
-        self.symbol = symbol
-        self.client_order_id = client_order_id
+@dataclass
+class Client:
+    ob_sdk: OrderBookSDK
+    signer: OrderSigner
 
+    def update_orders(self, price):
+        try:
+            self.ob_sdk.cancel_all_orders()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 404:
+                print("No orders to cancel")
+            else:
+                print("Error cancelling orders:", e)
+                return
+        print("Cancelled all orders")
 
-def on_tick(url):
-    response = requests.get(url)
-    if response.status_code != 200:
-        print(f"HTTP request failed with status code {response.status_code}")
-        return None
+        factor = Decimal("1.001")
+        cur_price = price
+        print("------ Market Price: ", price)
 
-    ticker_data = response.json()
-    ticker = Ticker(ticker_data["price"], ticker_data["symbol"])
-    print(f"ETH-USD Price: {ticker.price}")
-    return ticker
+        # ASK
+        for i in range(int(DEPTH_SIZE)):
+            cur_price *= factor
+            print("Ask Price: ", cur_price)
+            cur_size = Decimal((i + 1) * 10)
 
+            order_input = CreateOrderInput(
+                price=str(cur_price),
+                size=str(cur_size),
+                side="sell",
+                symbol=TICKER_SYMBOL,
+                clientOrderId=str(uuid4()),
+            )
 
-def cancel_all_orders():
-    url = f"{HOST}/api/v1/orders"
-    headers = {"X-API-Key": f"Bearer {mock_api_key}"}
+            signature, message_data = self.signer.prepare_and_sign_order(order_input)
 
-    response = requests.delete(url, headers=headers)
-    response.raise_for_status()
-    print("Canceled all orders")
+            try:
+                self.ob_sdk.create_order(
+                    order_input=order_input,
+                    signature=signature,
+                    message_data=message_data,
+                )
+            except Exception as e:
+                print("Error creating sell order:", e)
+                continue
 
+            print(f"Created sell order of size {cur_size} at price {cur_price}")
 
-def place_order(side, price, size):
-    cOId = str(uuid4())
-    body = AddOrderReq(
-        price=str(price),
-        size=str(size),
-        side=side,
-        symbol="ETH-USD",
-        client_order_id=cOId,
-    )
-    url = f"{HOST}/api/v1/order"
-    headers = {
-        "X-API-Key": f"Bearer {mock_api_key}",
-        "Content-Type": "application/json",
-    }
+        print("\n")
+        print("----------------------------------")
+        print("\n")
 
-    response = requests.post(url, data=json.dumps(body.__dict__), headers=headers)
-    response.raise_for_status()
-    print("Created order with clientOrderId:", cOId)
-    print("Status code:", response.status_code)
+        # BIDS
+        factor = Decimal("0.999")
+        cur_price = price
+        for i in range(int(DEPTH_SIZE)):
+            cur_price *= factor
+            print("Bid Price: ", cur_price)
+            cur_size = Decimal((i + 1) * 10)
 
+            order_input = CreateOrderInput(
+                price=str(cur_price),
+                size=str(cur_size),
+                side="buy",
+                symbol=TICKER_SYMBOL,
+                clientOrderId=str(uuid4()),
+            )
 
-def update_orders(price):
-    cancel_all_orders()
-    factor = Decimal("1.001")
-    cur_price = price
-    print("------ Market Price: ", price)
+            signature, message_data = self.signer.prepare_and_sign_order(order_input)
 
-    # ASK
-    for i in range(depth_size):
-        cur_price *= factor
-        print("Ask Price: ", cur_price)
-        cur_size = Decimal((i + 1) * 10)
-        place_order("sell", cur_price, cur_size)
+            try:
+                self.ob_sdk.create_order(
+                    order_input=order_input,
+                    signature=signature,
+                    message_data=message_data,
+                )
+            except Exception as e:
+                print("Error creating buy order:", e)
+                continue
 
-    # BIDS
-    factor = Decimal("0.999")
-    cur_price = price
-    for i in range(depth_size):
-        cur_price *= factor
-        print("Bid Price: ", cur_price)
-        cur_size = Decimal((i + 1) * 10)
-        place_order("buy", cur_price, cur_size)
+            print(f"Created buy order of size {cur_size} at price {cur_price}")
+
+        print("\n")
+        print("----------------------------------")
+        print("\n")
+
+    def on_tick(self, url):
+        response = requests.get(url)
+        if response.status_code != 200:
+            print(f"HTTP request failed with status code {response.status_code}")
+            return None
+
+        ticker_data = response.json()
+        ticker = Ticker(ticker_data["price"], ticker_data["symbol"])
+        print(f"ETH-USD Price: {ticker.price}")
+        return ticker
 
 
 def main():
-    url = "https://www.binance.com/api/v3/ticker/price?symbol=ETHUSDT"
-    print("Ticker URL: ", url)
-    host = os.getenv("ORDERBOOK_HOST")
-    if host:
-        global HOST
-        HOST = host
+    ob_client = Client(
+        ob_sdk=OrderBookSDK(base_url=BASE_URL, api_key=API_KEY),
+        signer=OrderSigner(private_key=PRIVATE_KEY),
+    )
 
-    while True:
-        ticker = on_tick(url)
-        if ticker:
+    print("----------------------------------")
+    print(f"BASE_URL: {BASE_URL}")
+    print(f"TICKER_URL: {TICKER_URL}")
+    print(f"TICKER_SYMBOL: {TICKER_SYMBOL}")
+    print("----------------------------------")
+
+    try:
+        while True:
+            ticker = ob_client.on_tick(TICKER_URL)
+            if not ticker:
+                print(f"No price data. Sleeping for {SLEEP_TIME} seconds...")
+                time.sleep(int(SLEEP_TIME))
+                continue
+
             price = Decimal(ticker.price)
-            update_orders(price)
+            ob_client.update_orders(price)
 
-            print("Sleeping for 10 seconds...")
-            time.sleep(10)
+            print(f"Sleeping for {SLEEP_TIME} seconds...")
+            time.sleep(int(SLEEP_TIME))
+    except KeyboardInterrupt:
+        print("\nExiting...")
 
 
 if __name__ == "__main__":

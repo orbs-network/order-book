@@ -11,6 +11,7 @@ var (
 		"ETH-BTC":  "ETH-BTC",
 		"USDC-ETH": "USDC-ETH",
 		"ETH-USDC": "ETH-USDC",
+		"ETH-USDT": "ETH-USDT",
 		"ETH-USD":  "ETH-USD",
 		"USD-ETH":  "USD-ETH",
 		"TRX-BTT":  "TRX-BTT",
