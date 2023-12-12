@@ -24,7 +24,7 @@ var httpServer *HTTPServer
 
 func runAuctionServer(t *testing.T) {
 	t.Skip("Auction handler will be removed")
-	repository := mocks.CreateAuctionMock()
+	repository := mocks.CreateSwapMock()
 	mockBcClient := &mocks.MockBcClient{IsVerified: true}
 
 	service, err := service.New(repository, mockBcClient)
