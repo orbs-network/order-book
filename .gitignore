@@ -5,3 +5,4 @@ __debug_*
 *.pem
 *Key.txt
 coverage.out
+.venv
