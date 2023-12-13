@@ -15,8 +15,6 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-type EvmClient struct{}
-
 type VerifySignatureInput struct {
 	// The message data map that was signed
 	MessageData map[string]interface{}

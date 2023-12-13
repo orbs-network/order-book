@@ -5,9 +5,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gorilla/mux"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/orbs-network/order-book/data/evmrepo"
 	"github.com/orbs-network/order-book/data/redisrepo"
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/serviceuser"
@@ -36,6 +38,11 @@ func setup() {
 		port = "8080"
 	}
 
+	rpcUrl, found := os.LookupEnv("RPC_URL")
+	if !found {
+		panic("RPC_URL not set")
+	}
+
 	rdb := redis.NewClient(opt)
 
 	repository, err := redisrepo.NewRedisRepository(rdb)
@@ -43,8 +50,22 @@ func setup() {
 		log.Fatalf("error creating repository: %v", err)
 	}
 
+	ethClient, err := ethclient.Dial(rpcUrl)
+	if err != nil {
+		log.Fatalf("error creating eth client: %v", err)
+	}
+	defer ethClient.Close()
+
+	evmRepo, err := evmrepo.NewEvmRepository(*ethClient)
+	if err != nil {
+		log.Fatalf("error creating evm repository: %v", err)
+	}
+
 	// TODO: add CLI flag to easily switch between blockchains
-	evmClient := &service.EvmClient{}
+	evmClient, err := service.NewEvmSvc(repository, evmRepo)
+	if err != nil {
+		log.Fatalf("error creating evm client: %v", err)
+	}
 
 	service, err := service.New(repository, evmClient)
 	if err != nil {

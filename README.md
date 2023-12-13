@@ -4,7 +4,22 @@ WIP
 
 ## Folder structure
 
-1. REST API is exposed at the `transport` layer
-2. `transport` translates it into a known type, handles authentication, calls `service`
-3. `service` is where main business logic takes place, calls `data` layer to fetch and persist data
-4. `data` layer has specific implementations for interacting with blockchain / database / external services
+```
+Transport
+  |
+  +---> Service
+          |
+          +---> Data
+```
+
+### Transport
+
+Handles the communication with the outside world (like HTTP requests, gRPC, message queues) and translates those requests into actions or queries in the service layer.
+
+### Service
+
+Contains business logic, orchestrates data flow between the data layer and the transport layer, and makes decisions based on business rules.
+
+### Data
+
+Responsible for data persistence, retrieval, and direct interactions with the data storage mechanisms (databases, file systems, external APIs, including blockchain nodes).
