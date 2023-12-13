@@ -1,3 +1,5 @@
+// Various scripts for testing the redis repository
+
 package main
 
 import (
