@@ -15,7 +15,7 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-type PolygonClient struct{}
+type EvmClient struct{}
 
 type VerifySignatureInput struct {
 	// The message data map that was signed
@@ -29,7 +29,7 @@ type VerifySignatureInput struct {
 // Returns true if the signature is valid (the `PublicKey` matches the recovered one from the `Signature`), false otherwise
 //
 // https://blog.hook.xyz/validate-eip-712/
-func (e *PolygonClient) VerifySignature(ctx context.Context, input VerifySignatureInput) (bool, error) {
+func (e *EvmClient) VerifySignature(ctx context.Context, input VerifySignatureInput) (bool, error) {
 	// Prepend "04" to the public key to ensure it's in the uncompressed format
 	fullPubKey := "04" + strings.TrimPrefix(input.PublicKey, "0x")
 

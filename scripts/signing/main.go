@@ -50,7 +50,7 @@ var message = map[string]interface{}{
 
 func main() {
 
-	client := service.PolygonClient{}
+	client := service.EvmClient{}
 
 	ctx := context.Background()
 
