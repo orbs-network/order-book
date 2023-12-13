@@ -4,5 +4,6 @@ __debug_*
 *secret*
 *.pem
 *Key.txt
+address.txt
 coverage.out
 .venv
