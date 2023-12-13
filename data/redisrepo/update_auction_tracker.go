@@ -10,20 +10,20 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func (r *redisRepository) UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error {
+func (r *redisRepository) UpdateSwapTracker(ctx context.Context, swapStatus models.SwapStatus, swapId uuid.UUID) error {
 
-	auctionTrackerKey := CreateAuctionTrackerKey(auctionStatus)
+	swapTrackerKey := CreateSwapTrackerKey(swapStatus)
 
-	if err := AddVal2Set(ctx, r.client, auctionTrackerKey, auctionId.String()); err != nil {
+	if err := AddVal2Set(ctx, r.client, swapTrackerKey, swapId.String()); err != nil {
 		if err == models.ErrValAlreadyInSet {
-			logctx.Warn(ctx, "auction already in tracker", logger.String("auctionId", auctionId.String()), logger.String("auctionStatus", auctionStatus.String()))
+			logctx.Warn(ctx, "swap already in tracker", logger.String("swapId", swapId.String()), logger.String("swapStatus", swapStatus.String()))
 			return err
 		}
 
-		logctx.Error(ctx, "failed to add auction to tracker", logger.Error(err), logger.String("auctionId", auctionId.String()), logger.String("auctionStatus", auctionStatus.String()))
-		return fmt.Errorf("failed to add auction to tracker: %w", err)
+		logctx.Error(ctx, "failed to add swap to tracker", logger.Error(err), logger.String("swapId", swapId.String()), logger.String("swapStatus", swapStatus.String()))
+		return fmt.Errorf("failed to add swap to tracker: %w", err)
 	}
 
-	logctx.Info(ctx, "added auction to tracker", logger.String("auctionId", auctionId.String()), logger.String("auctionStatus", auctionStatus.String()))
+	logctx.Info(ctx, "added swap to tracker", logger.String("swapId", swapId.String()), logger.String("swapStatus", swapStatus.String()))
 	return nil
 }

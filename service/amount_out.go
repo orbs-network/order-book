@@ -37,7 +37,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 }
 
 // orderID->amount bought or sold in A token always
-func (s *Service) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
+func (s *Service) GetAmountOut(ctx context.Context, swapId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 
 	var it models.OrderIter
 	var res models.AmountOut
@@ -54,9 +54,9 @@ func (s *Service) GetAmountOut(ctx context.Context, auctionId uuid.UUID, symbol 
 		logctx.Error(ctx, "getAmountOutIn failed", logger.Error(err))
 		return models.AmountOut{}, err
 	}
-	err = s.orderBookStore.StoreAuction(ctx, auctionId, res.OrderFrags)
+	err = s.orderBookStore.StoreSwap(ctx, swapId, res.OrderFrags)
 	if err != nil {
-		logctx.Error(ctx, "StoreAuction failed", logger.Error(err))
+		logctx.Error(ctx, "StoreSwap failed", logger.Error(err))
 		return models.AmountOut{}, err
 	}
 	return res, nil

@@ -22,7 +22,7 @@ const ETH_USD = "ETH-USD"
 
 var httpServer *HTTPServer
 
-func runAuctionServer(t *testing.T) {
+func runSwapServer(t *testing.T) {
 	t.Skip("Auction handler will be removed")
 	repository := mocks.CreateSwapMock()
 	mockBcClient := &mocks.MockBcClient{IsVerified: true}
@@ -43,7 +43,7 @@ func runAuctionServer(t *testing.T) {
 	httpServer.StartServer()
 }
 
-type BeginAuctionTest struct {
+type BeginSwapTest struct {
 	name      string
 	amountIn  string
 	amountOut string
@@ -51,15 +51,15 @@ type BeginAuctionTest struct {
 	symbol    string
 }
 
-func TestHandlers_BeginAuction(t *testing.T) {
+func TestHandlers_BeginSwap(t *testing.T) {
 	t.Skip("Auction handler will be removed")
-	runAuctionServer(t)
+	runSwapServer(t)
 
 	entireA := strconv.Itoa((1) + (2) + (3))
 	entireAskB := strconv.Itoa((1000 * 1) + (1001 * 2) + (1002 * 3))
 	entireBidB := strconv.Itoa((900 * 1) + (800 * 2) + (700 * 3))
 
-	tests := []BeginAuctionTest{
+	tests := []BeginSwapTest{
 		{
 			name:      "Happy Path BUY - should return 1 ETH for 1000 USD",
 			amountIn:  "1000",
@@ -119,19 +119,19 @@ func TestHandlers_BeginAuction(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			req := BeginAuctionReq{
+			req := BeginSwapReq{
 				AmountIn: test.amountIn,
 				Symbol:   test.symbol,
 				Side:     test.side,
 			}
-			auctionId := uuid.New().String()
+			swapId := uuid.New().String()
 
-			expectedRes := BeginAuctionRes{
-				AuctionId: auctionId,
+			expectedRes := BeginSwapRes{
+				swapId: swapId,
 				AmountOut: test.amountOut,
 			}
 
-			url := fmt.Sprintf("http://localhost:8080/lh/v1/begin_auction/%s", auctionId)
+			url := fmt.Sprintf("http://localhost:8080/lh/v1/begin_auction/%s", swapId)
 			jsonData, err := json.Marshal(req)
 			assert.NoError(t, err)
 
@@ -139,7 +139,7 @@ func TestHandlers_BeginAuction(t *testing.T) {
 			assert.NoError(t, err)
 
 			// Decode the response body into the struct
-			var actualRes BeginAuctionRes
+			var actualRes BeginSwapRes
 			err = json.NewDecoder(response.Body).Decode(&actualRes)
 			assert.NoError(t, err)
 			assert.Equal(t, expectedRes, actualRes)
@@ -149,13 +149,13 @@ func TestHandlers_BeginAuction(t *testing.T) {
 	t.Run("BUY- should error insuficinet liquidity try to buy with too many B token", func(t *testing.T) {
 		insuficientAskB := strconv.Itoa((1000 * 1) + (1001 * 2) + (1002 * 3) + 1)
 
-		req := BeginAuctionReq{
+		req := BeginSwapReq{
 			AmountIn: insuficientAskB,
 			Symbol:   ETH_USD,
 			Side:     "BUY",
 		}
-		auctionId := uuid.New().String()
-		url := fmt.Sprintf("http://localhost:8080/lh/v1/begin_auction/%s", auctionId)
+		swapId := uuid.New().String()
+		url := fmt.Sprintf("http://localhost:8080/lh/v1/begin_auction/%s", swapId)
 		jsonData, err := json.Marshal(req)
 		assert.NoError(t, err)
 
@@ -175,13 +175,13 @@ func TestHandlers_BeginAuction(t *testing.T) {
 	t.Run("SELL- should error insuficinet liquidity when sell with too many A token", func(t *testing.T) {
 
 		insuficientBidA := strconv.Itoa((1 + 2 + 3) + 1)
-		req := BeginAuctionReq{
+		req := BeginSwapReq{
 			AmountIn: insuficientBidA,
 			Symbol:   ETH_USD,
 			Side:     "SELL",
 		}
-		auctionId := uuid.New().String()
-		url := fmt.Sprintf("http://localhost:8080/lh/v1/begin_auction/%s", auctionId)
+		swapId := uuid.New().String()
+		url := fmt.Sprintf("http://localhost:8080/lh/v1/begin_auction/%s", swapId)
 		jsonData, err := json.Marshal(req)
 		assert.NoError(t, err)
 
@@ -204,18 +204,18 @@ func TestHandlers_BeginAuction(t *testing.T) {
 
 func TestHandlers_ConfirmAuction(t *testing.T) {
 	t.Skip("Auction hander will be removed")
-	runAuctionServer(t)
+	runSwapServer(t)
 	// revert auction mock
 
 	t.Run("Happy Path", func(t *testing.T) {
-		auctionId := uuid.New().String()
+		swapId := uuid.New().String()
 
-		url := fmt.Sprintf("http://localhost:8080/lh/v1/confirm_auction/%s", auctionId)
+		url := fmt.Sprintf("http://localhost:8080/lh/v1/confirm_auction/%s", swapId)
 		response, err := http.Get(url)
 		assert.NoError(t, err)
 
 		// Decode the response body into the struct
-		var actualRes ConfirmAuctionRes
+		var actualRes ConfirmSwapRes
 		err = json.NewDecoder(response.Body).Decode(&actualRes)
 		assert.NoError(t, err)
 		assert.Equal(t, len(actualRes.Fragments), 3)
@@ -231,11 +231,11 @@ func TestHandlers_ConfirmAuction(t *testing.T) {
 
 func TestHandlers_AbortAuction(t *testing.T) {
 	t.Skip("Auction hander will be removed")
-	runAuctionServer(t)
+	runSwapServer(t)
 
 	t.Run("Happy Path", func(t *testing.T) {
-		auctionId := uuid.New().String()
-		url := fmt.Sprintf("http://localhost:8080/lh/v1/abort_auction/%s", auctionId)
+		swapId := uuid.New().String()
+		url := fmt.Sprintf("http://localhost:8080/lh/v1/abort_auction/%s", swapId)
 		response, err := http.Post(url, "application/json", nil)
 		assert.NoError(t, err)
 		assert.Equal(t, response.ContentLength, int64(0))
@@ -248,12 +248,12 @@ func TestHandlers_AbortAuction(t *testing.T) {
 
 func TestHandler_AuctionMined(t *testing.T) {
 	t.Skip("Auction hander will be removed")
-	runAuctionServer(t)
+	runSwapServer(t)
 
 	t.Run("Auction Mined - but never began or confirmed", func(t *testing.T) {
-		auctionId := uuid.New().String()
+		swapId := uuid.New().String()
 
-		url := fmt.Sprintf("http://localhost:8080/lh/v1/auction_mined/%s", auctionId)
+		url := fmt.Sprintf("http://localhost:8080/lh/v1/auction_mined/%s", swapId)
 		res, err := http.Post(url, "application/json", nil)
 		fmt.Println(res)
 		fmt.Println(err)

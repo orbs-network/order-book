@@ -21,7 +21,7 @@ func TestTaker_Quote(t *testing.T) {
 
 	t.Run("QUOTE should return error zero amount in ", func(t *testing.T) {
 		store := mocks.MockOrderBookStore{
-			Error: models.ErrAuctionInvalid,
+			Error: models.ErrSwapInvalid,
 			Sets:  make(map[string]map[string]struct{}),
 		}
 		svc, _ := service.New(&store, ethClient)

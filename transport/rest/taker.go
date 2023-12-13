@@ -12,6 +12,29 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type BeginSwapReq struct {
+	AmountIn string `json:"amountIn"`
+	Symbol   string `json:"symbol"`
+	Side     string `json:"side"`
+}
+
+type BeginSwapRes struct {
+	SwapId    string `json:"swapId"`
+	AmountOut string `json:"amountOut"`
+}
+
+type Fragment struct {
+	OrderId       string                 `json:"orderId"`
+	AmountOut     string                 `json:"amountOut"`
+	Eip712Sig     string                 `json:"eip712Sig"`
+	Eip712MsgData map[string]interface{} `json:"eip712MsgData"`
+}
+type ConfirmSwapRes struct {
+	SwapId        string     `json:"swapId"`
+	Fragments     []Fragment `json:"fragments"`
+	BookSignature string     `json:"bookSignature"`
+}
+
 type QuoteReq struct {
 	InAmount string `json:"inAmount"`
 	InToken  string `json:"inToken"`

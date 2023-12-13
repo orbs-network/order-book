@@ -20,10 +20,10 @@ func main() {
 	app := &cli.App{
 		Commands: []*cli.Command{
 			{
-				Name:  "createAuctions",
-				Usage: "Create auctions",
+				Name:  "createSwaps",
+				Usage: "Create swaps",
 				Action: func(c *cli.Context) error {
-					createAuctions()
+					createSwaps()
 					return nil
 				},
 			},
@@ -195,46 +195,46 @@ var user = models.User{
 	PubKey: publicKey,
 }
 
-func createAuctions() {
+func createSwaps() {
 	repository, err := redisrepo.NewRedisRepository(rdb)
 	if err != nil {
 		log.Fatalf("error creating repository: %v", err)
 	}
 
-	fakeAuctionOne := models.OrderFrag{
+	fakeSwapOne := models.OrderFrag{
 		OrderId: uuid.New(),
 		Size:    decimal.NewFromFloat(200.0),
 	}
 
-	fakeAuctionTwo := models.OrderFrag{
+	fakeSwapTwo := models.OrderFrag{
 		OrderId: uuid.New(),
 		Size:    decimal.NewFromFloat(300.0),
 	}
 
-	fakeAuctionThree := models.OrderFrag{
+	fakeSwapThree := models.OrderFrag{
 		OrderId: uuid.New(),
 		Size:    decimal.NewFromFloat(400.0),
 	}
 
-	fillOrders := []models.OrderFrag{fakeAuctionOne, fakeAuctionTwo, fakeAuctionThree}
+	fillOrders := []models.OrderFrag{fakeSwapOne, fakeSwapTwo, fakeSwapThree}
 
-	auctionID := uuid.New()
+	swapId := uuid.New()
 
 	ctx := context.Background()
 
-	err = repository.StoreAuction(ctx, auctionID, fillOrders)
+	err = repository.StoreSwap(ctx, swapId, fillOrders)
 	if err != nil {
-		log.Fatalf("error storing auction: %v", err)
+		log.Fatalf("error storing swap: %v", err)
 	}
 
-	auction, err := repository.GetAuction(ctx, auctionID)
+	swap, err := repository.GetSwap(ctx, swapId)
 	if err != nil {
-		log.Fatalf("error getting auction: %v", err)
+		log.Fatalf("error getting swap: %v", err)
 	}
 	log.Print("--------------------------")
-	log.Printf("auction: %v", auction)
-	log.Print(auction[0].OrderId)
-	log.Print(auction[0].Size)
+	log.Printf("swap: %v", swap)
+	log.Print(swap[0].OrderId)
+	log.Print(swap[0].Size)
 }
 
 func createOrders() {

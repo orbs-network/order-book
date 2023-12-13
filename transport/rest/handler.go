@@ -32,12 +32,12 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 }
 
 func (h *Handler) Init(getUserByApiKey middleware.GetUserByApiKeyFunc) {
-	h.initMMRoutes(getUserByApiKey)
-	h.initLHRoutes()
+	h.initMakerRoutes(getUserByApiKey)
+	h.initTakerRoutes()
 }
 
 // Market Maker specific routes
-func (h *Handler) initMMRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
+func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 	mmApi := h.Router.PathPrefix("/api/v1").Subrouter()
 
 	// Middleware to validate user by API key
@@ -76,16 +76,9 @@ func (h *Handler) initMMRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 }
 
 // Liquidity Hub specific routes
-func (h *Handler) initLHRoutes() {
-	lhApi := h.Router.PathPrefix("/lh/v1").Subrouter()
-
-	lhApi.HandleFunc("/begin_auction/{auctionId}", h.beginAuction).Methods("POST")
-	lhApi.HandleFunc("/confirm_auction/{auctionId}", h.confirmAuction).Methods("GET")
-	lhApi.HandleFunc("/abort_auction/{auctionId}", h.abortAuction).Methods("POST")
-	lhApi.HandleFunc("/auction_mined/{auctionId}", h.auctionMined).Methods("POST")
-
+func (h *Handler) initTakerRoutes() {
 	/////////////////////////////////////////////////////////////////////
-	// LH TAKER side -  to replace auction
+	// TAKER side
 	takerApi := h.Router.PathPrefix("/taker/v1").Subrouter()
 	// IN: InAmount, InToken, OutToken
 	// OUT: CURRENT potential outAmount

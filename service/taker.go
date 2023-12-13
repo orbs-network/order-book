@@ -9,6 +9,26 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
+func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
+
+	// check if order is still open
+	// TODO: we no longer need this check as we are not storing open orders?
+	if order.IsFilled() {
+		return false
+	}
+	// order.size - (Order.filled + Order.pending) >= frag.size
+	return order.GetAvailableSize().GreaterThanOrEqual(frag.Size)
+}
+
+func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
+	// check if order is still open
+	if order.IsFilled() {
+		return false
+	}
+	// order.Size pending should be greater or equal to orderFrag: (Order.sizePending + Order.pending) >= frag.size
+	return order.SizePending.GreaterThanOrEqual(frag.Size)
+}
+
 func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error) {
 	// create swapID
 	swapId := uuid.New()
@@ -19,7 +39,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 		SwapId:    swapId,
 	}
 
-	// validate all orders of auction
+	// validate all orders of a swap
 	for _, frag := range data.OrderFrags {
 		// get order by ID
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
@@ -32,7 +52,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 
 			// return empty
 			logctx.Warn(ctx, "failed to validate order frag")
-			return models.BeginSwapRes{}, models.ErrAuctionInvalid
+			return models.BeginSwapRes{}, models.ErrSwapInvalid
 		} else {
 			// success- append
 			res.Orders = append(res.Orders, *order)
@@ -58,19 +78,19 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 
 func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 	// returns error if already confirmed
-	err := s.orderBookStore.UpdateAuctionTracker(ctx, models.SWAP_ABORDTED, swapId)
+	err := s.orderBookStore.UpdateSwapTracker(ctx, models.SWAP_ABORDTED, swapId)
 
 	if err != nil {
 		if err == models.ErrValAlreadyInSet {
 			logctx.Warn(ctx, "AbortSwap re-entry!", logger.String("swapId: ", swapId.String()))
 		} else {
-			logctx.Warn(ctx, "AbortSwap UpdateAuctionTracker Failed", logger.String("swapId: ", swapId.String()), logger.Error(err))
+			logctx.Warn(ctx, "AbortSwap UpdateSwapTracker Failed", logger.String("swapId: ", swapId.String()), logger.Error(err))
 		}
 		return err
 	}
 
-	// get auction from store
-	frags, err := s.orderBookStore.GetAuction(ctx, swapId) // TODO: rename auction
+	// get swap from store
+	frags, err := s.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
 		logctx.Warn(ctx, "GetSwap Failed", logger.Error(err))
 		return err
@@ -83,9 +103,9 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		// no return during erros as what can be revert, should
 		if err != nil {
-			logctx.Error(ctx, "order not found while reverting an auction", logger.Error(err))
+			logctx.Error(ctx, "order not found while reverting a swap", logger.Error(err))
 		} else if !validatePendingFrag(frag, order) {
-			logctx.Error(ctx, "Auction fragments should be valid during a revert request", logger.Error(err))
+			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
 		} else {
 			// success
 			order.SizePending = order.SizePending.Sub(frag.Size)
@@ -99,5 +119,5 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 		return err
 	}
 
-	return s.orderBookStore.RemoveAuction(ctx, swapId) // TODO: rename auction
+	return s.orderBookStore.RemoveSwap(ctx, swapId)
 }

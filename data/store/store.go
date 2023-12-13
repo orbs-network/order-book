@@ -22,14 +22,11 @@ type OrderBookStore interface {
 	GetOrdersForUser(ctx context.Context, userId uuid.UUID, isFilledOrders bool) (orders []models.Order, totalOrders int, err error)
 	CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
 	// LH side
-	StoreAuction(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error
-	RemoveAuction(ctx context.Context, auctionID uuid.UUID) error
-	GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error)
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
-	UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error
 	// taker side
-	//UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error
-	StoreSwap(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error
-	RemoveSwap(ctx context.Context, auctionID uuid.UUID) error
+	UpdateSwapTracker(ctx context.Context, swapStatus models.SwapStatus, swapId uuid.UUID) error
+	GetSwap(ctx context.Context, swapId uuid.UUID) ([]models.OrderFrag, error)
+	StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error
+	RemoveSwap(ctx context.Context, swapId uuid.UUID) error
 }

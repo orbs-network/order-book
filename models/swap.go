@@ -7,19 +7,15 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type AuctionStatus string
+type SwapStatus string
 
 const (
-	// to deprecate
-	AUCTION_CONFIRMED AuctionStatus = "confirmed"
-	AUCTION_MINED     AuctionStatus = "mined"
-	AUCTION_REVERTED  AuctionStatus = "reverted"
 	// taker
-	SWAP_STARTED  AuctionStatus = "swap_started"
-	SWAP_ABORDTED AuctionStatus = "swap_aborted"
+	SWAP_STARTED  SwapStatus = "swap_started"
+	SWAP_ABORDTED SwapStatus = "swap_aborted"
 )
 
-func (a AuctionStatus) String() string {
+func (a SwapStatus) String() string {
 	return string(a)
 }
 
@@ -72,10 +68,10 @@ func (f *OrderFrag) ToOrderFrag(data map[string]string) error {
 }
 
 func MarshalOrderFrags(orderFrags []OrderFrag) ([]byte, error) {
-	auctionMap := make([]map[string]string, len(orderFrags))
+	swapMap := make([]map[string]string, len(orderFrags))
 	for i, frag := range orderFrags {
-		auctionMap[i] = frag.ToMap()
+		swapMap[i] = frag.ToMap()
 	}
 
-	return json.Marshal(auctionMap)
+	return json.Marshal(swapMap)
 }
