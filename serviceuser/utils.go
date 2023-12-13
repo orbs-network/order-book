@@ -2,20 +2,34 @@ package serviceuser
 
 import (
 	"crypto/rand"
-	"encoding/base64"
+	"crypto/sha256"
+	"encoding/hex"
+	"math/big"
 )
 
+func HashAPIKey(apiKey string) string {
+	hashedBytes := sha256.Sum256([]byte(apiKey))
+	return hex.EncodeToString(hashedBytes[:])
+}
+
 func GenerateAPIKey() (string, error) {
-
-	// Create a byte slice of 32 bytes
-	bytes := make([]byte, 32)
-
-	// Read random bytes, using the crypto/rand package for cryptographic security
-	if _, err := rand.Read(bytes); err != nil {
-		// Handle the error appropriately in your real code
+	apiKey, err := generateRandomString(32)
+	if err != nil {
 		return "", err
 	}
 
-	// Encode the bytes to a base64 string
-	return base64.URLEncoding.EncodeToString(bytes), nil
+	return apiKey, nil
+}
+
+func generateRandomString(length int) (string, error) {
+	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	bytes := make([]byte, length)
+	for i := range bytes {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(chars))))
+		if err != nil {
+			return "", err
+		}
+		bytes[i] = chars[n.Int64()]
+	}
+	return string(bytes), nil
 }
