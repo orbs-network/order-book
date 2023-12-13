@@ -8,6 +8,7 @@ from uuid import uuid4
 import requests
 from orbs_orderbook import CreateOrderInput, OrderBookSDK, OrderSigner
 
+IS_DISABLED = os.environ.get("IS_DISABLED", "false").lower() == "true"
 BASE_URL = os.environ.get("BASE_URL", "http://localhost")
 API_KEY = os.environ.get("API_KEY", "abc123")
 PRIVATE_KEY = os.environ.get(
@@ -155,4 +156,8 @@ def main():
 
 
 if __name__ == "__main__":
+    if IS_DISABLED:
+        print("Maker is disabled")
+        exit(0)
+
     main()
