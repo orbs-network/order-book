@@ -13,6 +13,7 @@ import (
 	"github.com/orbs-network/order-book/data/redisrepo"
 	"github.com/orbs-network/order-book/data/storeuser"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/serviceuser"
 	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
 	"github.com/urfave/cli/v2"
@@ -204,6 +205,7 @@ var rdb = redis.NewClient(&redis.Options{
 })
 
 var repository, _ = redisrepo.NewRedisRepository(rdb)
+var usersvc, _ = serviceuser.New(repository)
 
 var ctx = context.Background()
 var orderId = uuid.MustParse("9bfc6d29-07e0-4bf7-9189-bc03bdadb1ae")
@@ -323,15 +325,18 @@ func removeOrders() {
 
 func createUser(apiKey string) {
 	user.ApiKey = apiKey
-	user, err := repository.CreateUser(ctx, user)
+	user, apiKey, err := usersvc.CreateUser(ctx, serviceuser.CreateUserInput{
+		PubKey: publicKey,
+	})
 	if err != nil {
-		log.Fatalf("error storing user: %v", err)
+		log.Fatalf("error creating user: %v", err)
 	}
 	log.Print("--------------------------")
 	log.Printf("userId: %v", user.Id)
 	log.Printf("userType: %v", user.Type)
 	log.Printf("userPubKey: %v", user.PubKey)
-	log.Printf("userApiKey: %v", user.ApiKey)
+	log.Printf("hashedApiKey: %v", user.ApiKey)
+	log.Printf("apiKey: %v", apiKey)
 	log.Print("--------------------------")
 }
 
