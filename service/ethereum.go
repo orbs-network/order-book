@@ -15,7 +15,7 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-type EthereumClient struct{}
+type PolygonClient struct{}
 
 type VerifySignatureInput struct {
 	// The message data map that was signed
@@ -29,7 +29,7 @@ type VerifySignatureInput struct {
 // Returns true if the signature is valid (the `PublicKey` matches the recovered one from the `Signature`), false otherwise
 //
 // https://blog.hook.xyz/validate-eip-712/
-func (e *EthereumClient) VerifySignature(ctx context.Context, input VerifySignatureInput) (bool, error) {
+func (e *PolygonClient) VerifySignature(ctx context.Context, input VerifySignatureInput) (bool, error) {
 	// Prepend "04" to the public key to ensure it's in the uncompressed format
 	fullPubKey := "04" + strings.TrimPrefix(input.PublicKey, "0x")
 
@@ -60,7 +60,7 @@ func (e *EthereumClient) VerifySignature(ctx context.Context, input VerifySignat
 		return false, fmt.Errorf("failed to decode signature: %v", err)
 	}
 
-	// Normalize the `v` value in the signature (adjust for Ethereum's signature format)
+	// Normalize the `v` value in the signature (adjust for EVM's signature format)
 	v := signatureBytes[64]
 	if v == 27 || v == 28 {
 		logctx.Info(ctx, "signature v value is normalized", logger.String("publicKey", fullPubKey))

@@ -1,4 +1,4 @@
-// Generates Ethereum compatible private key, public key, and address
+// Generates EVM compatible private key, public key, and address
 // Writes keys and address to files
 // Private key format: 64 character hex string with '0x' prefix
 // Public key format: 128 character uncompressed hex string with "0x" prefix, not including "0x04" prefix

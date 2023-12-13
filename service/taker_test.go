@@ -17,7 +17,7 @@ const symbol = "ETH-USD"
 // /////////////////////////////////////////////////////////////
 func TestTaker_Quote(t *testing.T) {
 	ctx := context.Background()
-	ethClient := &service.EthereumClient{}
+	ethClient := &service.PolygonClient{}
 
 	t.Run("QUOTE should return error zero amount in ", func(t *testing.T) {
 		store := mocks.MockOrderBookStore{
@@ -43,7 +43,7 @@ func TestTaker_Quote(t *testing.T) {
 }
 func TestTaker_BeginSwap(t *testing.T) {
 	ctx := context.Background()
-	ethClient := &service.EthereumClient{}
+	ethClient := &service.PolygonClient{}
 
 	t.Run("BeginSwap Should return the same as quote, second quote returns diff amount", func(t *testing.T) {
 		mock := mocks.CreateSwapMock()
@@ -72,7 +72,7 @@ func TestTaker_BeginSwap(t *testing.T) {
 
 func TestService_AbortSwap(t *testing.T) {
 	ctx := context.Background()
-	ethClient := &service.EthereumClient{}
+	ethClient := &service.PolygonClient{}
 
 	t.Run("AbortSwap HappyPath", func(t *testing.T) {
 		mock := mocks.CreateSwapMock()
