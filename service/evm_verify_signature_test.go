@@ -44,9 +44,9 @@ var message = map[string]interface{}{
 	},
 }
 
-func TestPolygonClient_VerifySignature(t *testing.T) {
+func TestEvmClient_VerifySignature(t *testing.T) {
 	ctx := context.TODO()
-	polyClient := &PolygonClient{}
+	evmClient := &EvmClient{}
 
 	t.Run("successfully verify signature - should return true", func(t *testing.T) {
 		input := VerifySignatureInput{
@@ -55,7 +55,7 @@ func TestPolygonClient_VerifySignature(t *testing.T) {
 			MessageData: message,
 		}
 
-		result, err := polyClient.VerifySignature(ctx, input)
+		result, err := evmClient.VerifySignature(ctx, input)
 
 		assert.NoError(t, err)
 		assert.True(t, result)
@@ -68,7 +68,7 @@ func TestPolygonClient_VerifySignature(t *testing.T) {
 			MessageData: message,
 		}
 
-		result, err := polyClient.VerifySignature(ctx, input)
+		result, err := evmClient.VerifySignature(ctx, input)
 
 		assert.ErrorContains(t, err, "error decoding hex public key")
 		assert.False(t, result)
