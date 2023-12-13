@@ -9,10 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRedisRepository_UpdateAuctionTrackerTest(t *testing.T) {
-
-	auctionStatus := models.AUCTION_REVERTED
-	auctionId := uuid.MustParse("00000000-0000-0000-0000-000000000009")
+func TestRedisRepository_UpdateSwapTrackerTest(t *testing.T) {
+	swapId := uuid.MustParse("00000000-0000-0000-0000-000000000009")
 
 	t.Run("should return without error when a new element is added that does not already exist", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
@@ -21,11 +19,11 @@ func TestRedisRepository_UpdateAuctionTrackerTest(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateAuctionTrackerKey(auctionStatus)
+		key := CreateSwapTrackerKey(models.SWAP_ABORDTED)
 
-		mock.ExpectSAdd(key, auctionId.String()).SetVal(1)
+		mock.ExpectSAdd(key, swapId.String()).SetVal(1)
 
-		err := repo.UpdateAuctionTracker(ctx, auctionStatus, auctionId)
+		err := repo.UpdateSwapTracker(ctx, models.SWAP_ABORDTED, swapId)
 
 		assert.NoError(t, err)
 	})
@@ -37,11 +35,11 @@ func TestRedisRepository_UpdateAuctionTrackerTest(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateAuctionTrackerKey(auctionStatus)
+		key := CreateSwapTrackerKey(models.SWAP_ABORDTED)
 
-		mock.ExpectSAdd(key, auctionId.String()).SetVal(0)
+		mock.ExpectSAdd(key, swapId.String()).SetVal(0)
 
-		err := repo.UpdateAuctionTracker(ctx, auctionStatus, auctionId)
+		err := repo.UpdateSwapTracker(ctx, models.SWAP_ABORDTED, swapId)
 		assert.ErrorIs(t, err, models.ErrValAlreadyInSet)
 	})
 
@@ -52,11 +50,11 @@ func TestRedisRepository_UpdateAuctionTrackerTest(t *testing.T) {
 			client: db,
 		}
 
-		key := CreateAuctionTrackerKey(auctionStatus)
+		key := CreateSwapTrackerKey(models.SWAP_ABORDTED)
 
-		mock.ExpectSAdd(key, auctionId.String()).SetErr(assert.AnError)
+		mock.ExpectSAdd(key, swapId.String()).SetErr(assert.AnError)
 
-		err := repo.UpdateAuctionTracker(ctx, auctionStatus, auctionId)
-		assert.ErrorContains(t, err, "failed to add auction to tracker")
+		err := repo.UpdateSwapTracker(ctx, models.SWAP_ABORDTED, swapId)
+		assert.ErrorContains(t, err, "failed to add swap to tracker")
 	})
 }

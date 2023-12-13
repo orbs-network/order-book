@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRedisRepository_StoreAuction(t *testing.T) {
+func TestRedisRepository_StoreSwap(t *testing.T) {
 
 	matchOne := models.OrderFrag{
 		OrderId: uuid.MustParse("00000000-0000-0000-0000-000000000001"),
@@ -22,21 +22,21 @@ func TestRedisRepository_StoreAuction(t *testing.T) {
 		Size:    decimal.NewFromFloat(300.0),
 	}
 
-	auctionID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
+	swapID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
 	frags := []models.OrderFrag{matchOne, matchTwo}
 
-	auctionJson, _ := models.MarshalOrderFrags(frags)
+	swapJson, _ := models.MarshalOrderFrags(frags)
 
-	t.Run("should store auction", func(t *testing.T) {
+	t.Run("should store swap", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
 			client: db,
 		}
 
-		mock.ExpectRPush(CreateAuctionKey(auctionID), auctionJson).SetVal(1)
+		mock.ExpectRPush(CreateSwapKey(swapID), swapJson).SetVal(1)
 
-		err := repo.StoreAuction(ctx, auctionID, frags)
+		err := repo.StoreSwap(ctx, swapID, frags)
 		assert.NoError(t, err)
 	})
 
@@ -47,10 +47,10 @@ func TestRedisRepository_StoreAuction(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectRPush(CreateAuctionKey(auctionID), auctionJson).SetErr(assert.AnError)
+		mock.ExpectRPush(CreateSwapKey(swapID), swapJson).SetErr(assert.AnError)
 
-		err := repo.StoreAuction(ctx, auctionID, frags)
-		assert.ErrorContains(t, err, "failed to store auction")
+		err := repo.StoreSwap(ctx, swapID, frags)
+		assert.ErrorContains(t, err, "failed to store swap")
 	})
 
 }

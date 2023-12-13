@@ -55,13 +55,13 @@ class Orderbook {
         return jsonResponse.data
     }
     async beginAuction(symbol, side, size) {
-        const auctionId = '10000000-0000-0000-0000-000000000001';
+        const swapId = '10000000-0000-0000-0000-000000000001';
         const body = {
             "amountIn": String(size),
             "symbol": symbol,
             "side": side
         }
-        return await this.apiCall('POST', `/lh/v1/begin_auction/${auctionId}`, body)
+        return await this.apiCall('POST', `/lh/v1/begin_auction/${swapId}`, body)
     }
     async createOrder(symbol, side, price, size, cOId) {
         const body = {

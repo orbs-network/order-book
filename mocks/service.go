@@ -19,7 +19,7 @@ type MockOrderBookStore struct {
 	MarketDepth  models.MarketDepth
 	AskOrderIter models.OrderIter
 	BidOrderIter models.OrderIter
-	// auction
+	// swap
 	Asks  []models.Order
 	Bids  []models.Order
 	Frags []models.OrderFrag
@@ -80,15 +80,7 @@ func (m *MockOrderBookStore) GetMarketDepth(ctx context.Context, symbol models.S
 	return m.MarketDepth, nil
 }
 
-func (m *MockOrderBookStore) StoreAuction(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error {
-	if m.Error != nil {
-		return m.Error
-	}
-
-	return nil
-}
-
-func (m *MockOrderBookStore) StoreSwap(ctx context.Context, auctionID uuid.UUID, frags []models.OrderFrag) error {
+func (m *MockOrderBookStore) StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error {
 	if m.Error != nil {
 		return m.Error
 	}
@@ -122,18 +114,14 @@ func (m *MockOrderBookStore) StoreUserByPublicKey(ctx context.Context, user mode
 	return m.Error
 }
 
-func (m *MockOrderBookStore) GetAuction(ctx context.Context, auctionID uuid.UUID) ([]models.OrderFrag, error) {
+func (m *MockOrderBookStore) GetSwap(ctx context.Context, swapId uuid.UUID) ([]models.OrderFrag, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
 	return m.Frags, nil
 }
 
-func (m *MockOrderBookStore) RemoveAuction(ctx context.Context, auctionID uuid.UUID) error {
-	return m.Error
-}
-
-func (m *MockOrderBookStore) RemoveSwap(ctx context.Context, auctionID uuid.UUID) error {
+func (m *MockOrderBookStore) RemoveSwap(ctx context.Context, swapId uuid.UUID) error {
 
 	return m.Error
 }
@@ -146,6 +134,6 @@ func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol
 	return m.BidOrderIter
 }
 
-func (m *MockOrderBookStore) UpdateAuctionTracker(ctx context.Context, auctionStatus models.AuctionStatus, auctionId uuid.UUID) error {
+func (m *MockOrderBookStore) UpdateSwapTracker(ctx context.Context, swapStatus models.SwapStatus, swapId uuid.UUID) error {
 	return m.Error
 }

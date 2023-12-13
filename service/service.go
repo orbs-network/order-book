@@ -24,10 +24,7 @@ type OrderBookService interface {
 	GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
 	GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
 
-	ConfirmAuction(ctx context.Context, auctionId uuid.UUID) (ConfirmAuctionRes, error)
-	RevertAuction(ctx context.Context, auctionId uuid.UUID) error
-	AuctionMined(ctx context.Context, auctionId uuid.UUID) error
-	GetAmountOut(ctx context.Context, auctionID uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
+	GetAmountOut(ctx context.Context, swapId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 	// taker api - INSTEAD
 	GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 	BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error)

@@ -46,7 +46,7 @@ func newFrags(orders []models.Order) []models.OrderFrag {
 	return frags
 }
 
-func CreateAuctionMock() *MockOrderBookStore {
+func CreateSwapMock() *MockOrderBookStore {
 
 	asks := newAsks()
 	bids := newBids()

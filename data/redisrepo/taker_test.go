@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRedisRepository_GetAuction(t *testing.T) {
+func TestRedisRepository_GetSwap(t *testing.T) {
 
 	uuid1 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
 	uuid2 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440001")
@@ -20,29 +20,29 @@ func TestRedisRepository_GetAuction(t *testing.T) {
 	amount2 := decimal.NewFromFloat(5.3)
 	amount3 := decimal.NewFromFloat(7.8)
 
-	auctionJson := []string{
+	swapJson := []string{
 		`[{"orderId":"550e8400-e29b-41d4-a716-446655440000","size":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","size":"5.3"}]`,
 		`[{"orderId":"550e8400-e29b-41d4-a716-446655440002","size":"7.8"}]`,
 	}
 
-	auctionID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
-	t.Run("should get auction", func(t *testing.T) {
+	swapId := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
+	t.Run("should get swap", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
 			client: db,
 		}
 
-		mock.ExpectLRange(CreateAuctionKey(auctionID), 0, -1).SetVal(auctionJson)
+		mock.ExpectLRange(CreateSwapKey(swapId), 0, -1).SetVal(swapJson)
 
-		auction, err := repo.GetAuction(ctx, auctionID)
+		swap, err := repo.GetSwap(ctx, swapId)
 		assert.NoError(t, err)
-		assert.Len(t, auction, 3, "Should have 3 orders in the auction")
+		assert.Len(t, swap, 3, "Should have 3 orders in the swap")
 		assert.ElementsMatch(t, []models.OrderFrag{
 			{OrderId: uuid1, Size: amount1},
 			{OrderId: uuid2, Size: amount2},
 			{OrderId: uuid3, Size: amount3},
-		}, auction, "The auction contents do not match expected")
+		}, swap, "The swap contents do not match expected")
 	})
 
 	t.Run("should return `ErrUnexpectedError` in case of a Redis error", func(t *testing.T) {
@@ -52,17 +52,17 @@ func TestRedisRepository_GetAuction(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectSMembers(CreateAuctionKey(auctionID)).SetErr(assert.AnError)
+		mock.ExpectSMembers(CreateSwapKey(swapId)).SetErr(assert.AnError)
 
-		_, err := repo.GetAuction(ctx, auctionID)
+		_, err := repo.GetSwap(ctx, swapId)
 		assert.Equal(t, models.ErrUnexpectedError, err)
 	})
 }
 
-func TestRedisRepository_RemoveAuction(t *testing.T) {
-	auctionID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
+func TestRedisRepository_RemoveSwap(t *testing.T) {
+	swapId := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
 
-	t.Run("should remove auction", func(t *testing.T) {
+	t.Run("should remove swap", func(t *testing.T) {
 
 		db, mock := redismock.NewClientMock()
 
@@ -70,9 +70,9 @@ func TestRedisRepository_RemoveAuction(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectDel(CreateAuctionKey(auctionID)).SetVal(1)
+		mock.ExpectDel(CreateSwapKey(swapId)).SetVal(1)
 
-		err := repo.RemoveAuction(ctx, auctionID)
+		err := repo.RemoveSwap(ctx, swapId)
 
 		assert.NoError(t, err)
 	})
@@ -84,9 +84,9 @@ func TestRedisRepository_RemoveAuction(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectDel(CreateAuctionKey(auctionID)).SetErr(assert.AnError)
+		mock.ExpectDel(CreateSwapKey(swapId)).SetErr(assert.AnError)
 
-		err := repo.RemoveAuction(ctx, auctionID)
+		err := repo.RemoveSwap(ctx, swapId)
 
 		assert.Equal(t, assert.AnError, err)
 	})

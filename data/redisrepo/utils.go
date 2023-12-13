@@ -14,7 +14,7 @@ func CreateUserOpenOrdersKey(userId uuid.UUID) string {
 	return fmt.Sprintf("userId:%s:openOrders", userId)
 }
 
-// CreateAuctionTrackerKey creates a Redis key for storing the user's filled orders
+// CreateUserFilledOrdersKey creates a Redis key for storing the user's filled orders
 func CreateUserFilledOrdersKey(userId uuid.UUID) string {
 	return fmt.Sprintf("userId:%s:filledOrders", userId)
 }
@@ -39,12 +39,7 @@ func CreateSellSidePricesKey(symbol models.Symbol) string {
 	return fmt.Sprintf("%s:sell:prices", symbol)
 }
 
-// CreateAuctionKey creates a Redis key for storing the auction data
-func CreateAuctionKey(auctionID uuid.UUID) string {
-	return fmt.Sprintf("auctionId:%s:auction", auctionID)
-}
-
-// CreateSwapKey creates a Redis key for storing the auction data
+// CreateSwapKey creates a Redis key for storing the swap data
 func CreateSwapKey(swapId uuid.UUID) string {
 	return fmt.Sprintf("swapId:%s", swapId)
 }
@@ -59,9 +54,9 @@ func CreateUserIdKey(userId uuid.UUID) string {
 	return fmt.Sprintf("userId:%s:user", userId)
 }
 
-// CreateAuctionTrackerKey creates a Redis key for storing auctions of different statuses
-func CreateAuctionTrackerKey(status models.AuctionStatus) string {
-	return fmt.Sprintf("auctionTracker:%s", status)
+// CreateSwapTrackerKey creates a Redis key for storing swaps of different statuses
+func CreateSwapTrackerKey(status models.SwapStatus) string {
+	return fmt.Sprintf("swapTracker:%s", status)
 }
 
 // GENERIC store funcs
