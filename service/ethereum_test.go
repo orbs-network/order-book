@@ -44,9 +44,9 @@ var message = map[string]interface{}{
 	},
 }
 
-func TestEthereumClient_VerifySignature(t *testing.T) {
+func TestPolygonClient_VerifySignature(t *testing.T) {
 	ctx := context.TODO()
-	ethereumClient := &EthereumClient{}
+	polyClient := &PolygonClient{}
 
 	t.Run("successfully verify signature - should return true", func(t *testing.T) {
 		input := VerifySignatureInput{
@@ -55,7 +55,7 @@ func TestEthereumClient_VerifySignature(t *testing.T) {
 			MessageData: message,
 		}
 
-		result, err := ethereumClient.VerifySignature(ctx, input)
+		result, err := polyClient.VerifySignature(ctx, input)
 
 		assert.NoError(t, err)
 		assert.True(t, result)
@@ -68,7 +68,7 @@ func TestEthereumClient_VerifySignature(t *testing.T) {
 			MessageData: message,
 		}
 
-		result, err := ethereumClient.VerifySignature(ctx, input)
+		result, err := polyClient.VerifySignature(ctx, input)
 
 		assert.ErrorContains(t, err, "error decoding hex public key")
 		assert.False(t, result)

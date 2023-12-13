@@ -44,9 +44,9 @@ func setup() {
 	}
 
 	// TODO: add CLI flag to easily switch between blockchains
-	ethClient := &service.EthereumClient{}
+	polyClient := &service.PolygonClient{}
 
-	service, err := service.New(repository, ethClient)
+	service, err := service.New(repository, polyClient)
 	if err != nil {
 		log.Fatalf("error creating service: %v", err)
 	}
