@@ -56,7 +56,7 @@ func setup() {
 	}
 	defer ethClient.Close()
 
-	evmRepo, err := evmrepo.NewEvmRepository(*ethClient)
+	evmRepo, err := evmrepo.NewEvmRepository(ethClient)
 	if err != nil {
 		log.Fatalf("error creating evm repository: %v", err)
 	}
