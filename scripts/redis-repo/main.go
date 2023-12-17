@@ -160,6 +160,30 @@ func main() {
 					return nil
 				},
 			},
+			{
+				Name:  "storePendingSwap",
+				Usage: "Store a pending swap",
+				Action: func(c *cli.Context) error {
+					storePendingSwap()
+					return nil
+				},
+			},
+			{
+				Name:  "getPendingSwaps",
+				Usage: "Get pending swaps",
+				Action: func(c *cli.Context) error {
+					getPendingSwaps()
+					return nil
+				},
+			},
+			{
+				Name:  "storePendingSwaps",
+				Usage: "Batch store pending swaps",
+				Action: func(c *cli.Context) error {
+					storePendingSwaps()
+					return nil
+				},
+			},
 		},
 	}
 
@@ -373,4 +397,44 @@ func updateUser(newApiKey string) {
 	}
 
 	log.Printf("user %q updated", userId)
+}
+
+func storePendingSwap() {
+	p := models.Pending{
+		SwapId: uuid.New(),
+		TxHash: "0x5dcbfe934287c50363e5c82502739aadd4d535a1f7c0ccd7a8088fb4dfd800da",
+	}
+
+	for i := 0; i < 1000; i++ {
+		err := repository.StoreNewPendingSwap(ctx, p)
+		if err != nil {
+			log.Fatalf("error storing pending swap: %v", err)
+		}
+	}
+}
+
+func getPendingSwaps() {
+	pendingSwaps, err := repository.GetPendingSwaps(ctx)
+	if err != nil {
+		log.Fatalf("error getting pending swaps: %v", err)
+	}
+
+	log.Print("--------------------------")
+	log.Printf("no. of pendingSwaps: %d", len(pendingSwaps))
+}
+
+func storePendingSwaps() {
+	var pendingSwaps []models.Pending
+	for i := 0; i < 1000; i++ {
+		p := models.Pending{
+			SwapId: uuid.New(),
+			TxHash: "0x5dcbfe934287c50363e5c82502739aadd4d535a1f7c0ccd7a8088fb4dfd800da",
+		}
+		pendingSwaps = append(pendingSwaps, p)
+	}
+
+	err := repository.StorePendingSwaps(ctx, pendingSwaps)
+	if err != nil {
+		log.Fatalf("error storing pending swaps: %v", err)
+	}
 }

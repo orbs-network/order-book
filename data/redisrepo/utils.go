@@ -59,6 +59,11 @@ func CreateSwapTrackerKey(status models.SwapStatus) string {
 	return fmt.Sprintf("swapTracker:%s", status)
 }
 
+// CreatePendingSwapTxsKey creates a Redis key for storing pending swap transactions
+func CreatePendingSwapTxsKey() string {
+	return "pendingSwapTxs"
+}
+
 // GENERIC store funcs
 func AddVal2Set(ctx context.Context, client redis.Cmdable, key, val string) error {
 	added, err := client.SAdd(ctx, key, val).Result()

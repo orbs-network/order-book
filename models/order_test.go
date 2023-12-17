@@ -125,3 +125,83 @@ func TestOrder_MapToOrder(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+func TestOrder_MarkSwapComplete(t *testing.T) {
+	// generate table test
+	tests := []struct {
+		name     string
+		order    Order
+		expected Order
+		isFilled bool
+		error    error
+	}{
+		{
+			name: "size 1000, sizeFilled 0, sizePending 1000",
+			order: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizeFilled:  decimal.NewFromInt(0),
+				SizePending: decimal.NewFromFloat(1000),
+			},
+			expected: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizeFilled:  decimal.NewFromInt(1000),
+				SizePending: decimal.Zero,
+			},
+			isFilled: true,
+		},
+		{
+			name: "size 1000, sizeFilled 500, sizePending 500",
+			order: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizeFilled:  decimal.NewFromInt(500),
+				SizePending: decimal.NewFromInt(500),
+			},
+			expected: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizeFilled:  decimal.NewFromInt(1000),
+				SizePending: decimal.Zero,
+			},
+			isFilled: true,
+		},
+		{
+			name: "size 23782378.50, sizeFilled 2.38, sizePending 1238.12",
+			order: Order{
+				Size:        decimal.NewFromFloat(23782378.50),
+				SizeFilled:  decimal.NewFromFloat(2.38),
+				SizePending: decimal.NewFromFloat(1238.12),
+			},
+			expected: Order{
+				Size:        decimal.NewFromFloat(23782378.50),
+				SizeFilled:  decimal.NewFromFloat(1240.50),
+				SizePending: decimal.Zero,
+			},
+			isFilled: false,
+		},
+		{
+			name: "size 1, sizeFilled 0.5, sizePending 1",
+			order: Order{
+				Size:        decimal.NewFromInt(1),
+				SizeFilled:  decimal.NewFromFloat(0.5),
+				SizePending: decimal.NewFromInt(1),
+			},
+			expected: Order{
+				Size:        decimal.NewFromInt(1),
+				SizeFilled:  decimal.NewFromFloat(0.5),
+				SizePending: decimal.NewFromInt(1),
+			},
+			isFilled: false,
+			error:    ErrInvalidSize,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			isFilled, err := test.order.MarkSwapSuccess()
+			assert.Equal(t, test.expected.Size.String(), test.order.Size.String(), "size should be equal")
+			assert.Equal(t, test.expected.SizeFilled.String(), test.order.SizeFilled.String(), "sizeFilled should be equal")
+			assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
+			assert.Equal(t, test.isFilled, isFilled, "isFilled should be equal")
+			assert.Equal(t, test.error, err, "error should be equal")
+		})
+	}
+}

@@ -29,4 +29,8 @@ type OrderBookStore interface {
 	GetSwap(ctx context.Context, swapId uuid.UUID) ([]models.OrderFrag, error)
 	StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error
 	RemoveSwap(ctx context.Context, swapId uuid.UUID) error
+	// Pending transactions
+	StoreNewPendingSwap(ctx context.Context, pendingSwap models.Pending) error
+	GetPendingSwaps(ctx context.Context) ([]models.Pending, error)
+	StorePendingSwaps(ctx context.Context, pendingSwaps []models.Pending) error
 }

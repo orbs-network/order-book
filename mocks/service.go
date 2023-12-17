@@ -25,6 +25,8 @@ type MockOrderBookStore struct {
 	Frags []models.OrderFrag
 	// re-entrance
 	Sets map[string]map[string]struct{}
+	// Pending swaps
+	PendingSwaps []models.Pending
 }
 
 func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
@@ -135,5 +137,17 @@ func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol
 }
 
 func (m *MockOrderBookStore) UpdateSwapTracker(ctx context.Context, swapStatus models.SwapStatus, swapId uuid.UUID) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) StoreNewPendingSwap(ctx context.Context, pendingSwap models.Pending) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) GetPendingSwaps(ctx context.Context) ([]models.Pending, error) {
+	return m.PendingSwaps, m.Error
+}
+
+func (m *MockOrderBookStore) StorePendingSwaps(ctx context.Context, pendingSwaps []models.Pending) error {
 	return m.Error
 }

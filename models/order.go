@@ -215,6 +215,24 @@ func (o *Order) Status() string {
 	return "OPEN"
 }
 
+func (o *Order) MarkSwapSuccess() (isFilled bool, err error) {
+
+	newSizeFilled := o.SizeFilled.Add(o.SizePending)
+	if newSizeFilled.GreaterThan(o.Size) {
+		return false, ErrInvalidSize
+	}
+
+	o.SizeFilled = newSizeFilled
+	o.SizePending = decimal.Zero
+
+	return o.IsFilled(), nil
+}
+
+func (o *Order) MarkSwapFailed() error {
+	o.SizePending = decimal.Zero
+	return nil
+}
+
 // OrderIdsToStrings return a list of string order IDs from a list of orders
 func OrderIdsToStrings(ctx context.Context, orders *[]Order) []string {
 	if orders == nil {
