@@ -33,4 +33,5 @@ type OrderBookStore interface {
 	StoreNewPendingSwap(ctx context.Context, pendingSwap models.Pending) error
 	GetPendingSwaps(ctx context.Context) ([]models.Pending, error)
 	StorePendingSwaps(ctx context.Context, pendingSwaps []models.Pending) error
+	ProcessCompletedSwapOrders(ctx context.Context, orders []*models.Order, swapId uuid.UUID, isSuccessful bool) error
 }

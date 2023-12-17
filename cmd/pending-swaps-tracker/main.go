@@ -1,0 +1,79 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/orbs-network/order-book/data/evmrepo"
+	"github.com/orbs-network/order-book/data/redisrepo"
+	"github.com/orbs-network/order-book/service"
+	"github.com/redis/go-redis/v9"
+)
+
+var defaultDuration = 10 * time.Second
+
+func main() {
+	redisAddress, found := os.LookupEnv("REDIS_URL")
+	if !found {
+		panic("REDIS_URL not set")
+	}
+
+	opt, err := redis.ParseURL(redisAddress)
+	if err != nil {
+		panic(fmt.Errorf("failed to parse redis url: %v", err))
+	}
+
+	log.Printf("Redis address: %s", opt.Addr)
+
+	rpcUrl, found := os.LookupEnv("RPC_URL")
+	if !found {
+		panic("RPC_URL not set")
+	}
+
+	rdb := redis.NewClient(opt)
+
+	repository, err := redisrepo.NewRedisRepository(rdb)
+	if err != nil {
+		log.Fatalf("error creating repository: %v", err)
+	}
+
+	ethClient, err := ethclient.Dial(rpcUrl)
+	if err != nil {
+		log.Fatalf("error creating eth client: %v", err)
+	}
+	defer ethClient.Close()
+
+	evmRepo, err := evmrepo.NewEvmRepository(ethClient)
+	if err != nil {
+		log.Fatalf("error creating evm repository: %v", err)
+	}
+
+	evmClient, err := service.NewEvmSvc(repository, evmRepo)
+	if err != nil {
+		log.Fatalf("error creating evm client: %v", err)
+	}
+
+	envDurationStr := os.Getenv("TICKER_DURATION")
+
+	tickerDuration, err := time.ParseDuration(envDurationStr)
+	if err != nil || envDurationStr == "" {
+		fmt.Printf("Invalid or missing TICKER_DURATION. Using default of %s\n", defaultDuration)
+		tickerDuration = defaultDuration
+	}
+
+	ticker := time.NewTicker(tickerDuration)
+	defer ticker.Stop()
+
+	ctx := context.Background()
+
+	for range ticker.C {
+		err := evmClient.CheckPendingTxs(ctx)
+		if err != nil {
+			log.Printf("error checking pending txs: %v", err)
+		}
+	}
+}

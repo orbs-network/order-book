@@ -3,6 +3,8 @@ LOG_LEVEL ?= info
 -include .makerc
 export
 
+RPC_URL ?= https://some-rpc-url.com
+
 start:
 	@echo "Starting server and db..."
 	@docker-compose up --build -d

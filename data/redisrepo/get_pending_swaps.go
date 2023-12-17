@@ -7,6 +7,7 @@ import (
 	"github.com/orbs-network/order-book/models"
 )
 
+// GetPendingSwaps returns all pending swaps that are waiting to be checked for completion
 func (r *redisRepository) GetPendingSwaps(ctx context.Context) ([]models.Pending, error) {
 	var pendingSwaps []models.Pending
 

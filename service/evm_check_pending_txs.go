@@ -12,12 +12,17 @@ import (
 )
 
 func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
+	logctx.Info(ctx, "Checking pending transactions...")
 	pendingSwaps, err := e.orderBookStore.GetPendingSwaps(ctx)
 	if err != nil {
 		logctx.Error(ctx, "Failed to get pending swaps", logger.Error(err))
 		return err
 	}
-	fmt.Printf("pendingSwaps BEFORE: %#v\n", pendingSwaps)
+
+	if len(pendingSwaps) == 0 {
+		logctx.Info(ctx, "No pending transactions. Sleeping...")
+		return nil
+	}
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -33,7 +38,6 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 			tx, err := e.blockchainStore.GetTx(ctx, p.TxHash)
 			if err != nil {
 				if err == models.ErrNotFound {
-					fmt.Println("Transaction not found")
 					logctx.Error(ctx, "Transaction not found but should be valid", logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
 				} else {
 					logctx.Error(ctx, "Failed to get transaction", logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
@@ -42,36 +46,37 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 			}
 
 			if tx == nil {
-				fmt.Println("Transaction not found")
 				logctx.Error(ctx, "Transaction not found but should be valid", logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
 				return
 			}
 
 			switch tx.Status {
 			case models.TX_SUCCESS:
-				// Process successful transaction
-				fmt.Println("Transaction successful  ----->")
-				_, err = e.processSuccessfulTransaction(ctx, p, &mu)
+				logctx.Info(ctx, "Transaction successful", logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
+				_, err = e.processCompletedTransaction(ctx, p, true, &mu)
 				if err != nil {
 					logctx.Error(ctx, "Failed to process successful transaction", logger.Error(err), logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
 					return
 				}
-
 			case models.TX_FAILURE:
-				fmt.Printf("Transaction %s failed\n", p.TxHash)
-				break
+				logctx.Info(ctx, "Transaction failed", logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
+				_, err = e.processCompletedTransaction(ctx, p, false, &mu)
+				if err != nil {
+					logctx.Error(ctx, "Failed to process failed transaction", logger.Error(err), logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
+					return
+				}
 			case models.TX_PENDING:
-				fmt.Printf("Transaction %s is still pending\n", p.TxHash)
-				break
+				logctx.Info(ctx, "Transaction still pending", logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
+				ptxs = append(ptxs, p)
 			default:
-				fmt.Printf("Transaction %s has unknown status\n", p.TxHash)
-				break
+				logctx.Error(ctx, "Unknown transaction status", logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
+				return
 			}
 
 		}(i)
 	}
 
-	wg.Wait() // Wait for all goroutines to complete
+	wg.Wait()
 
 	mu.Lock()
 	err = e.orderBookStore.StorePendingSwaps(ctx, ptxs)
@@ -82,11 +87,11 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 		return err
 	}
 
-	fmt.Println("Updated pending swaps list stored in Redis")
+	logctx.Info(ctx, "Finished checking pending transactions", logger.Int("numPending", len(ptxs)))
 	return nil
 }
 
-func (e *EvmClient) processSuccessfulTransaction(ctx context.Context, p models.Pending, mu *sync.Mutex) ([]models.Order, error) {
+func (e *EvmClient) processCompletedTransaction(ctx context.Context, p models.Pending, isSuccessful bool, mu *sync.Mutex) ([]models.Order, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -107,20 +112,23 @@ func (e *EvmClient) processSuccessfulTransaction(ctx context.Context, p models.P
 		return []models.Order{}, fmt.Errorf("failed to get orders: %w", err)
 	}
 
-	for _, order := range orders {
-		isFilled, err := order.MarkSwapSuccess()
-		if err != nil {
-			logctx.Error(ctx, "Failed to mark order as filled", logger.Error(err), logger.String("orderId", order.Id.String()))
-			return []models.Order{}, fmt.Errorf("failed to mark order as filled: %w", err)
-		}
+	var swapOrders []*models.Order
 
-		if isFilled {
-			logctx.Info(ctx, "Order is filled", logger.String("orderId", order.Id.String()))
-			e.orderBookStore.StoreFilledOrders(ctx, []models.Order{order})
+	for _, order := range orders {
+		if isSuccessful {
+			if _, err := order.MarkSwapSuccess(); err != nil {
+				logctx.Error(ctx, "Failed to mark order as filled", logger.Error(err), logger.String("orderId", order.Id.String()))
+			}
 		} else {
-			logctx.Info(ctx, "Order is partially filled", logger.String("orderId", order.Id.String()))
-			e.orderBookStore.StoreOpenOrder(ctx, order)
+			order.MarkSwapFailed()
 		}
+		swapOrders = append(swapOrders, &order)
+	}
+
+	err = e.orderBookStore.ProcessCompletedSwapOrders(ctx, swapOrders, p.SwapId, isSuccessful)
+	if err != nil {
+		logctx.Error(ctx, "Failed to process completed swap orders", logger.Error(err), logger.String("swapId", p.SwapId.String()))
+		return []models.Order{}, fmt.Errorf("failed to process completed swap orders: %w", err)
 	}
 
 	return orders, nil

@@ -10,6 +10,7 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
+// StoreNewPendingSwap stores a new pending swap in order for its status (pending/complete) to be checked later
 func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Pending) error {
 	key := CreatePendingSwapTxsKey()
 

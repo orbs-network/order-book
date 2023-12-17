@@ -151,3 +151,7 @@ func (m *MockOrderBookStore) GetPendingSwaps(ctx context.Context) ([]models.Pend
 func (m *MockOrderBookStore) StorePendingSwaps(ctx context.Context, pendingSwaps []models.Pending) error {
 	return m.Error
 }
+
+func (m *MockOrderBookStore) ProcessCompletedSwapOrders(ctx context.Context, orders []*models.Order, swapId uuid.UUID, isSuccessful bool) error {
+	return m.Error
+}
