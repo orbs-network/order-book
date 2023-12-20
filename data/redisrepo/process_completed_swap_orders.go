@@ -46,7 +46,7 @@ func (r *redisRepository) ProcessCompletedSwapOrders(ctx context.Context, orders
 
 	// 2. Remove the swap
 	swapKey := CreateSwapKey(swapId)
-	transaction.Del(ctx, swapKey).Err()
+	transaction.Del(ctx, swapKey)
 
 	// --- END TRANSACTION ---
 	_, err := transaction.Exec(ctx)

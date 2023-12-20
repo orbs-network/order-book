@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/orbs-network/order-book/utils/logger"
+	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
 )
 
@@ -215,21 +217,30 @@ func (o *Order) Status() string {
 	return "OPEN"
 }
 
-func (o *Order) MarkSwapSuccess() (isFilled bool, err error) {
-
-	newSizeFilled := o.SizeFilled.Add(o.SizePending)
+func (o *Order) Fill(ctx context.Context, fillSize decimal.Decimal) (isFilled bool, err error) {
+	newSizeFilled := o.SizeFilled.Add(fillSize)
 	if newSizeFilled.GreaterThan(o.Size) {
-		return false, ErrInvalidSize
+		logctx.Error(ctx, "total size is less than requested fill size", logger.String("orderId", o.Id.String()), logger.String("orderSize", o.Size.String()), logger.String("requestedFillSize", fillSize.String()))
+		return false, ErrUnexpectedSizeFilled
 	}
 
-	o.SizeFilled = newSizeFilled
-	o.SizePending = decimal.Zero
+	if fillSize.GreaterThan(o.SizePending) {
+		logctx.Error(ctx, "fillSize is greater than sizePending", logger.String("orderId", o.Id.String()), logger.String("pendingSize", o.SizePending.String()), logger.String("requestedFillSize", fillSize.String()))
+		return false, ErrUnexpectedSizePending
+	}
 
+	o.SizeFilled = o.SizeFilled.Add(fillSize)
+	o.SizePending = o.SizePending.Sub(fillSize)
 	return o.IsFilled(), nil
 }
 
-func (o *Order) MarkSwapFailed() error {
-	o.SizePending = decimal.Zero
+func (o *Order) Kill(ctx context.Context, size decimal.Decimal) error {
+	if o.SizePending.LessThan(size) {
+		logctx.Error(ctx, "size to be rolled back is greater than sizePending", logger.String("orderId", o.Id.String()), logger.String("pendingSize", o.SizePending.String()), logger.String("requestedKillSize", size.String()))
+		return ErrUnexpectedSizeFilled
+	}
+
+	o.SizePending = o.SizePending.Sub(size)
 	return nil
 }
 

@@ -400,7 +400,7 @@ func updateUser(newApiKey string) {
 }
 
 func storePendingSwap() {
-	p := models.Pending{
+	p := models.SwapTx{
 		SwapId: uuid.New(),
 		TxHash: "0x5dcbfe934287c50363e5c82502739aadd4d535a1f7c0ccd7a8088fb4dfd800da",
 	}
@@ -424,9 +424,9 @@ func getPendingSwaps() {
 }
 
 func storePendingSwaps() {
-	var pendingSwaps []models.Pending
+	var pendingSwaps []models.SwapTx
 	for i := 0; i < 1000; i++ {
-		p := models.Pending{
+		p := models.SwapTx{
 			SwapId: uuid.New(),
 			TxHash: "0x5dcbfe934287c50363e5c82502739aadd4d535a1f7c0ccd7a8088fb4dfd800da",
 		}

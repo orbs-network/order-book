@@ -9,8 +9,10 @@ import (
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
+	"github.com/shopspring/decimal"
 )
 
+// CheckPendingTxs checks all pending transactions and updates the order book accordingly
 func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 	logctx.Info(ctx, "Checking pending transactions...")
 	pendingSwaps, err := e.orderBookStore.GetPendingSwaps(ctx)
@@ -27,7 +29,7 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
-	ptxs := make([]models.Pending, 0)
+	ptxs := make([]models.SwapTx, 0)
 
 	for i := 0; i < len(pendingSwaps); i++ {
 		wg.Add(1)
@@ -91,7 +93,7 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 	return nil
 }
 
-func (e *EvmClient) processCompletedTransaction(ctx context.Context, p models.Pending, isSuccessful bool, mu *sync.Mutex) ([]models.Order, error) {
+func (e *EvmClient) processCompletedTransaction(ctx context.Context, p models.SwapTx, isSuccessful bool, mu *sync.Mutex) ([]models.Order, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -102,8 +104,11 @@ func (e *EvmClient) processCompletedTransaction(ctx context.Context, p models.Pe
 	}
 
 	var orderIds []uuid.UUID
+	orderSizes := make(map[uuid.UUID]decimal.Decimal)
+
 	for _, frag := range orderFrags {
 		orderIds = append(orderIds, frag.OrderId)
+		orderSizes[frag.OrderId] = frag.Size
 	}
 
 	orders, err := e.orderBookStore.FindOrdersByIds(ctx, orderIds)
@@ -115,12 +120,23 @@ func (e *EvmClient) processCompletedTransaction(ctx context.Context, p models.Pe
 	var swapOrders []*models.Order
 
 	for _, order := range orders {
+
+		size, found := orderSizes[order.Id]
+		if !found {
+			logctx.Error(ctx, "Failed to get order frag size", logger.String("orderId", order.Id.String()))
+			return []models.Order{}, fmt.Errorf("failed to get order frag size")
+		}
+
 		if isSuccessful {
-			if _, err := order.MarkSwapSuccess(); err != nil {
+			if _, err := order.Fill(ctx, size); err != nil {
 				logctx.Error(ctx, "Failed to mark order as filled", logger.Error(err), logger.String("orderId", order.Id.String()))
+				continue
 			}
 		} else {
-			order.MarkSwapFailed()
+			if err := order.Kill(ctx, size); err != nil {
+				logctx.Error(ctx, "Failed to mark order as killed", logger.Error(err), logger.String("orderId", order.Id.String()))
+				continue
+			}
 		}
 		swapOrders = append(swapOrders, &order)
 	}

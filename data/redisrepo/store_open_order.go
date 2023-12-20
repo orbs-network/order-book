@@ -13,7 +13,8 @@ import (
 // These methods should be used to store UNFILLED or PARTIALLY FILLED orders in Redis.
 //
 // `StoreFilledOrders` should be used to store completely filled orders.
-
+//
+// TODO: combine `StoreOpenOrder` and `StoreFilledOrder` into a single `StoreOrder` method that checks order status and stores accordingly.
 func (r *redisRepository) StoreOpenOrder(ctx context.Context, order models.Order) error {
 
 	// --- START TRANSACTION ---

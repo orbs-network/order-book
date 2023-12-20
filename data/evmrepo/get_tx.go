@@ -48,13 +48,13 @@ func (e *evmRepository) GetTx(ctx context.Context, id string) (*models.Tx, error
 	} else {
 		// If receipt is found, check the status
 		if receipt.Status == 1 {
-			logctx.Info(ctx, "Transaction %q succeeded", logger.String("txHash", txHash.String()))
+			logctx.Info(ctx, "Transaction succeeded", logger.String("txHash", txHash.String()))
 			return &models.Tx{
 				Status: models.TX_SUCCESS,
 				TxHash: receipt.TxHash.Hex(),
 			}, nil
 		} else {
-			logctx.Info(ctx, "Transaction %q failed", logger.String("txHash", txHash.String()))
+			logctx.Info(ctx, "Transaction failed", logger.String("txHash", txHash.String()))
 			return &models.Tx{
 				Status: models.TX_FAILURE,
 				TxHash: receipt.TxHash.Hex(),

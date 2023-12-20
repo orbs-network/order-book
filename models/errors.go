@@ -19,7 +19,8 @@ var ErrOrderFilled = errors.New("order is filled")
 var ErrInvalidInput = errors.New("invalid input")
 var ErrSignatureVerificationError = errors.New("signature verification error")
 var ErrSignatureVerificationFailed = errors.New("signature verification failed")
-var ErrInvalidSize = errors.New("updated sizeFilled is greater than size")
+var ErrUnexpectedSizeFilled = errors.New("unexpected sizeFilled")
+var ErrUnexpectedSizePending = errors.New("unexpected sizePending")
 
 // store generic errors
 var ErrValAlreadyInSet = errors.New("the value is already a member of the set")

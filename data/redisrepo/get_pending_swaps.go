@@ -8,8 +8,8 @@ import (
 )
 
 // GetPendingSwaps returns all pending swaps that are waiting to be checked for completion
-func (r *redisRepository) GetPendingSwaps(ctx context.Context) ([]models.Pending, error) {
-	var pendingSwaps []models.Pending
+func (r *redisRepository) GetPendingSwaps(ctx context.Context) ([]models.SwapTx, error) {
+	var pendingSwaps []models.SwapTx
 
 	pendings, err := r.client.LRange(ctx, CreatePendingSwapTxsKey(), 0, -1).Result()
 	if err != nil {
@@ -17,7 +17,7 @@ func (r *redisRepository) GetPendingSwaps(ctx context.Context) ([]models.Pending
 	}
 
 	for _, pending := range pendings {
-		var p models.Pending
+		var p models.SwapTx
 		err := p.FromJson([]byte(pending))
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal pending: %s", err)

@@ -11,7 +11,7 @@ import (
 )
 
 // StoreNewPendingSwap stores a new pending swap in order for its status (pending/complete) to be checked later
-func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Pending) error {
+func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.SwapTx) error {
 	key := CreatePendingSwapTxsKey()
 
 	jsonData, err := json.Marshal(p)

@@ -11,7 +11,7 @@ import (
 )
 
 // StorePendingSwaps stores all swaps that are still pending completion in order for their status (pending/complete) to be checked again later
-func (r *redisRepository) StorePendingSwaps(ctx context.Context, pendingSwaps []models.Pending) error {
+func (r *redisRepository) StorePendingSwaps(ctx context.Context, pendingSwaps []models.SwapTx) error {
 	key := CreatePendingSwapTxsKey()
 
 	transaction := r.client.TxPipeline()

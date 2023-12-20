@@ -19,11 +19,11 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 			client: db,
 		}
 
-		pendingJson, _ := mocks.Pending.ToJson()
+		pendingJson, _ := mocks.SwapTx.ToJson()
 
 		mock.ExpectRPush(CreatePendingSwapTxsKey(), pendingJson).SetVal(1)
 
-		err := repo.StoreNewPendingSwap(ctx, mocks.Pending)
+		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
 
 		assert.NoError(t, err)
 	})
@@ -35,9 +35,9 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectRPush(CreatePendingSwapTxsKey(), mocks.Pending.PendingToMap()).SetErr(assert.AnError)
+		mock.ExpectRPush(CreatePendingSwapTxsKey(), mocks.SwapTx.ToMap()).SetErr(assert.AnError)
 
-		err := repo.StoreNewPendingSwap(ctx, mocks.Pending)
+		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
 
 		assert.ErrorContains(t, err, "failed to store pending swap tx")
 	})

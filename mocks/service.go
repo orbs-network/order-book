@@ -26,7 +26,7 @@ type MockOrderBookStore struct {
 	// re-entrance
 	Sets map[string]map[string]struct{}
 	// Pending swaps
-	PendingSwaps []models.Pending
+	PendingSwaps []models.SwapTx
 }
 
 func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
@@ -140,15 +140,15 @@ func (m *MockOrderBookStore) UpdateSwapTracker(ctx context.Context, swapStatus m
 	return m.Error
 }
 
-func (m *MockOrderBookStore) StoreNewPendingSwap(ctx context.Context, pendingSwap models.Pending) error {
+func (m *MockOrderBookStore) StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) error {
 	return m.Error
 }
 
-func (m *MockOrderBookStore) GetPendingSwaps(ctx context.Context) ([]models.Pending, error) {
+func (m *MockOrderBookStore) GetPendingSwaps(ctx context.Context) ([]models.SwapTx, error) {
 	return m.PendingSwaps, m.Error
 }
 
-func (m *MockOrderBookStore) StorePendingSwaps(ctx context.Context, pendingSwaps []models.Pending) error {
+func (m *MockOrderBookStore) StorePendingSwaps(ctx context.Context, pendingSwaps []models.SwapTx) error {
 	return m.Error
 }
 
