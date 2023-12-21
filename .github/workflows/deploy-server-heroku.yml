@@ -4,8 +4,9 @@ on:
   push:
     branches:
       - main
+
 jobs:
-  build-and-deploy:
+  build-and-deploy-server:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,13 +19,37 @@ jobs:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
       - name: Build and Push Docker Image
-        run: |          
-          docker build -t registry.heroku.com/order-book-server/web -f cmd/order-book.Dockerfile .
+        run: |
+          docker build --build-arg APP_PATH=./cmd/order-book -t registry.heroku.com/order-book-server/web -f cmd/order-book.Dockerfile .
           docker push registry.heroku.com/order-book-server/web
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
       - name: Release Image
         run: heroku container:release web --app order-book-server
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+  build-and-deploy-pending-swaps-track:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+
+      - name: Login to Heroku Container Registry
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build --build-arg APP_PATH=./cmd/pending-swaps-tracker -t registry.heroku.com/order-book-pending-swaps-track/worker -f cmd/order-book.Dockerfile .
+          docker push registry.heroku.com/order-book-pending-swaps-track/worker
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Release Image
+        run: heroku container:release worker --app order-book-pending-swaps-track
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
