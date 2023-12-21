@@ -7,3 +7,4 @@ __debug_*
 address.txt
 coverage.out
 .venv
+.makerc

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -124,4 +125,150 @@ func TestOrder_MapToOrder(t *testing.T) {
 		err := order.MapToOrder(data)
 		assert.Error(t, err)
 	})
+}
+
+func TestOrder_Fill(t *testing.T) {
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name     string
+		order    Order
+		expected Order
+		fillSize decimal.Decimal
+		isFilled bool
+		error    error
+	}{
+		{
+			name: "size 1000, sizeFilled 0, sizePending 1000",
+			order: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizeFilled:  decimal.NewFromInt(0),
+				SizePending: decimal.NewFromFloat(1000),
+			},
+			expected: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizeFilled:  decimal.NewFromInt(1000),
+				SizePending: decimal.Zero,
+			},
+			fillSize: decimal.NewFromInt(1000),
+			isFilled: true,
+		},
+		{
+			name: "size 1000, sizeFilled 500, sizePending 500",
+			order: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizeFilled:  decimal.NewFromInt(500),
+				SizePending: decimal.NewFromInt(500),
+			},
+			expected: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizeFilled:  decimal.NewFromInt(1000),
+				SizePending: decimal.Zero,
+			},
+			fillSize: decimal.NewFromInt(500),
+			isFilled: true,
+		},
+		{
+			name: "partial fill",
+			order: Order{
+				Size:        decimal.NewFromFloat(23782378.50),
+				SizeFilled:  decimal.NewFromFloat(2.38),
+				SizePending: decimal.NewFromFloat(1238.12),
+			},
+			expected: Order{
+				Size:        decimal.NewFromFloat(23782378.50),
+				SizeFilled:  decimal.NewFromFloat(2.38).Add(decimal.NewFromFloat(10)),
+				SizePending: decimal.NewFromFloat(1238.12).Sub(decimal.NewFromFloat(10)),
+			},
+			fillSize: decimal.NewFromFloat(10),
+			isFilled: false,
+		},
+		{
+			name: "total size is less than requested fill size",
+			order: Order{
+				Size:        decimal.NewFromFloat(10.00),
+				SizeFilled:  decimal.NewFromFloat(9.00),
+				SizePending: decimal.NewFromFloat(2.89),
+			},
+			expected: Order{
+				Size:        decimal.NewFromFloat(10.00),
+				SizeFilled:  decimal.NewFromFloat(9.00),
+				SizePending: decimal.NewFromFloat(2.89),
+			},
+			fillSize: decimal.NewFromFloat(2.00),
+			isFilled: false,
+			error:    ErrUnexpectedSizeFilled,
+		},
+		{
+			name: "size to be filled is greater than size pending",
+			order: Order{
+				Size:        decimal.NewFromFloat(10.00),
+				SizeFilled:  decimal.NewFromFloat(2.00),
+				SizePending: decimal.NewFromFloat(2.00),
+			},
+			expected: Order{
+				Size:        decimal.NewFromFloat(10.00),
+				SizeFilled:  decimal.NewFromFloat(2.00),
+				SizePending: decimal.NewFromFloat(2.00),
+			},
+			fillSize: decimal.NewFromFloat(4.00),
+			isFilled: false,
+			error:    ErrUnexpectedSizePending,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			isFilled, err := test.order.Fill(ctx, test.fillSize)
+			assert.Equal(t, test.expected.Size.String(), test.order.Size.String(), "size should be equal")
+			assert.Equal(t, test.expected.SizeFilled.String(), test.order.SizeFilled.String(), "sizeFilled should be equal")
+			assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
+			assert.Equal(t, test.isFilled, isFilled, "isFilled should be equal")
+			assert.Equal(t, test.error, err, "error should be equal")
+		})
+	}
+}
+
+func TestOrder_Kill(t *testing.T) {
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name     string
+		order    Order
+		expected Order
+		killSize decimal.Decimal
+		error    error
+	}{
+		{
+			name: "sizePending 1000, killSize 1000",
+			order: Order{
+				SizePending: decimal.NewFromFloat(1000),
+			},
+			expected: Order{
+				SizePending: decimal.Zero,
+			},
+			killSize: decimal.NewFromInt(1000),
+		},
+		{
+			name: "sizePending 500, killSize 1000",
+			order: Order{
+				SizePending: decimal.NewFromInt(500),
+			},
+			expected: Order{
+				SizePending: decimal.NewFromInt(500),
+			},
+			killSize: decimal.NewFromInt(1000),
+			error:    ErrUnexpectedSizeFilled,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.order.Kill(ctx, test.killSize)
+			assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
+			assert.Equal(t, test.error, err, "error should be equal")
+		})
+	}
 }

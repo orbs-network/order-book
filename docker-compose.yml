@@ -4,12 +4,15 @@ services:
     build:
       dockerfile: cmd/order-book.Dockerfile
       context: .
+      args:
+        APP_PATH: ./cmd/order-book
     ports:
       - "80:8080"
     environment:
       - REDIS_URL=redis://db:6379/0
       - PORT=8080
       - VERIFY_SIGNATURE=true
+      - RPC_URL=${RPC_URL}
     depends_on:
       - db
     develop:
@@ -28,6 +31,25 @@ services:
     command: redis-server --save 60 1 --loglevel warning
     volumes:
       - db:/data
+
+  pending-swaps-tracker:
+    build:
+      dockerfile: cmd/order-book.Dockerfile
+      context: .
+      args:
+        APP_PATH: ./cmd/pending-swaps-tracker
+    environment:
+      - REDIS_URL=redis://db:6379/0
+      - RPC_URL=${RPC_URL}
+    depends_on:
+      - db
+    develop:
+      watch:
+        - action: rebuild
+          files:
+            - ./**/*.go
+            - ./go.mod
+            - ./go.sum
 volumes:
   db:
     driver: local

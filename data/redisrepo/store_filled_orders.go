@@ -17,7 +17,7 @@ func (r *redisRepository) StoreFilledOrders(ctx context.Context, orders []models
 	transaction := r.client.TxPipeline()
 
 	for _, order := range orders {
-		err := storeFilledOrderTx(ctx, transaction, order)
+		err := storeFilledOrderTx(ctx, transaction, &order)
 		if err != nil {
 			return err
 		}
@@ -31,7 +31,7 @@ func (r *redisRepository) StoreFilledOrders(ctx context.Context, orders []models
 	return nil
 }
 
-func storeFilledOrderTx(ctx context.Context, transaction redis.Pipeliner, order models.Order) error {
+func storeFilledOrderTx(ctx context.Context, transaction redis.Pipeliner, order *models.Order) error {
 	// 1. Remove the order from the user's open orders set
 	userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
 	transaction.ZRem(ctx, userOrdersKey, order.Id.String())
@@ -45,11 +45,11 @@ func storeFilledOrderTx(ctx context.Context, transaction redis.Pipeliner, order 
 	})
 
 	// 3. Remove the order from the buy/sell prices set for that pair
-	buyPricesKey := CreateBuySidePricesKey(order.Symbol)
-	sellPricesKey := CreateSellSidePricesKey(order.Symbol)
 	if order.Side == models.BUY {
+		buyPricesKey := CreateBuySidePricesKey(order.Symbol)
 		transaction.ZRem(ctx, buyPricesKey, order.Id.String())
 	} else {
+		sellPricesKey := CreateSellSidePricesKey(order.Symbol)
 		transaction.ZRem(ctx, sellPricesKey, order.Id.String())
 	}
 
