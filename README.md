@@ -23,3 +23,17 @@ Contains business logic, orchestrates data flow between the data layer and the t
 ### Data
 
 Responsible for data persistence, retrieval, and direct interactions with the data storage mechanisms (databases, file systems, external APIs, including blockchain nodes).
+
+## Development
+
+### Prerequisites
+
+- [Go](https://golang.org/doc/install)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Setup
+
+1. Clone the repository
+2. Copy the `.makerc.example` file to `.makerc` and fill in the values
+3. Run `make watch` to start the development environment and watch for changes
