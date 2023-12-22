@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"strings"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -20,6 +21,8 @@ func getConfig(opts []Option) config {
 		zapLogger:  nil,
 		callerSkip: 2,
 	}
+
+	logLevel := getLogLevelFromEnv("LOG_LEVEL", zapcore.InfoLevel)
 
 	for _, o := range opts {
 		o(&cfg)
@@ -40,7 +43,7 @@ func getConfig(opts []Option) config {
 			EncodeCaller:   zapcore.ShortCallerEncoder,
 		}),
 		zapcore.AddSync(os.Stdout),
-		zap.NewAtomicLevelAt(zapcore.InfoLevel),
+		zap.NewAtomicLevelAt(logLevel),
 	), zap.AddCaller(), zap.AddCallerSkip(cfg.callerSkip))
 
 	// Allow overriding the entire zap logger (for testing mainly).
@@ -49,6 +52,30 @@ func getConfig(opts []Option) config {
 	}
 
 	return cfg
+}
+
+// getLogLevelFromEnv reads the environment variable and returns the corresponding zapcore.Level.
+func getLogLevelFromEnv(envVar string, defaultLevel zapcore.Level) zapcore.Level {
+	levelStr, exists := os.LookupEnv(envVar)
+	if !exists {
+		return defaultLevel
+	}
+
+	var level zapcore.Level
+	switch strings.ToLower(levelStr) {
+	case "debug":
+		level = zapcore.DebugLevel
+	case "info":
+		level = zapcore.InfoLevel
+	case "warn":
+		level = zapcore.WarnLevel
+	case "error":
+		level = zapcore.ErrorLevel
+	default:
+		level = defaultLevel
+	}
+
+	return level
 }
 
 // WithZapLogger allows us to pass in a zap logger.

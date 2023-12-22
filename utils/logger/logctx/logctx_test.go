@@ -14,7 +14,7 @@ import (
 )
 
 func WithObserver(ctx context.Context, opts ...zap.Option) (*observer.ObservedLogs, context.Context) {
-	return WithObserverLevelEnabler(ctx, zap.InfoLevel, opts...)
+	return WithObserverLevelEnabler(ctx, zap.DebugLevel, opts...)
 }
 
 func WithObserverLevelEnabler(ctx context.Context, enab zapcore.LevelEnabler, opts ...zap.Option) (*observer.ObservedLogs, context.Context) {
@@ -77,6 +77,20 @@ func TestWithFields(t *testing.T) {
 	t.Run("should return the original context if there's nothing to do", func(t *testing.T) {
 		ctx := context.Background()
 		assert.Equal(t, ctx, logctx.WithFields(ctx))
+	})
+}
+
+func TestDebug(t *testing.T) {
+	t.Run("should call the zap logger associated with the context at the debug level", func(t *testing.T) {
+		const someMessage = "some-message"
+
+		o, ctx := WithObserver(context.Background())
+
+		logctx.Debug(ctx, someMessage)
+
+		l := o.FilterMessage(someMessage)
+		require.NotZero(t, l.Len())
+		assert.Equal(t, zapcore.DebugLevel, l.TakeAll()[0].Level)
 	})
 }
 
