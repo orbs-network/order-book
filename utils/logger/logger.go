@@ -25,6 +25,11 @@ func New(opts ...Option) Logger {
 	}
 }
 
+// Debug logs at a debug level.
+func (l Logger) Debug(msg string, fields ...Field) {
+	l.log(l.zap.Debug, msg, fields)
+}
+
 // Info logs at an info level.
 func (l Logger) Info(msg string, fields ...Field) {
 	l.log(l.zap.Info, msg, fields)

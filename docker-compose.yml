@@ -13,6 +13,7 @@ services:
       - PORT=8080
       - VERIFY_SIGNATURE=true
       - RPC_URL=${RPC_URL}
+      - LOG_LEVEL=info
     depends_on:
       - db
     develop:
@@ -41,6 +42,7 @@ services:
     environment:
       - REDIS_URL=redis://db:6379/0
       - RPC_URL=${RPC_URL}
+      - LOG_LEVEL=info
     depends_on:
       - db
     develop:

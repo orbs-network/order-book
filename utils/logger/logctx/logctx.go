@@ -39,6 +39,12 @@ func WithFields(ctx context.Context, fields ...logger.Field) context.Context {
 	return With(ctx, logger.WithFields(From(ctx), fields...))
 }
 
+// Debug will log at the debug level using the logger associated with the
+// context.
+func Debug(ctx context.Context, msg string, fields ...logger.Field) {
+	From(ctx).Debug(msg, fields...)
+}
+
 // Info will log at the info level using the logger associated with the
 // context.
 func Info(ctx context.Context, msg string, fields ...logger.Field) {
