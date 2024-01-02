@@ -14,10 +14,11 @@ func TestServiceUser_CreateUser(t *testing.T) {
 	t.Run("should create user and return user instance on success", func(t *testing.T) {
 		userSvc, _ := New(&mocks.MockUserStore{User: &mocks.User})
 
-		user, err := userSvc.CreateUser(ctx, CreateUserInput{
+		user, apiKey, err := userSvc.CreateUser(ctx, CreateUserInput{
 			PubKey: mocks.PubKey,
 		})
 
+		assert.NotEmpty(t, apiKey)
 		assert.Equal(t, mocks.User, user)
 		assert.NoError(t, err)
 
@@ -26,22 +27,24 @@ func TestServiceUser_CreateUser(t *testing.T) {
 	t.Run("should return `ErrUserAlreadyExists` error if user already exists", func(t *testing.T) {
 		userSvc, _ := New(&mocks.MockUserStore{User: &models.User{}, Error: models.ErrUserAlreadyExists})
 
-		_, err := userSvc.CreateUser(ctx, CreateUserInput{
+		user, apiKey, err := userSvc.CreateUser(ctx, CreateUserInput{
 			PubKey: mocks.PubKey,
 		})
 
-		// assert.Equal(t, models.User{}, user)
+		assert.Equal(t, models.User{}, user)
+		assert.Empty(t, apiKey)
 		assert.ErrorIs(t, err, models.ErrUserAlreadyExists)
 	})
 
 	t.Run("should return error if failed to create user", func(t *testing.T) {
 		userSvc, _ := New(&mocks.MockUserStore{User: &models.User{}, Error: assert.AnError})
 
-		user, err := userSvc.CreateUser(ctx, CreateUserInput{
+		user, apiKey, err := userSvc.CreateUser(ctx, CreateUserInput{
 			PubKey: mocks.PubKey,
 		})
 
 		assert.Equal(t, models.User{}, user)
+		assert.Empty(t, apiKey)
 		assert.ErrorContains(t, err, "failed to create user")
 	})
 }

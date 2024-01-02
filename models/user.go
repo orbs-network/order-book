@@ -23,6 +23,7 @@ type User struct {
 	// The user's public key from their public/private key pair
 	PubKey string
 	Type   UserType
+	// Hashed SHA256 API key,
 	ApiKey string `json:"-"`
 }
 
