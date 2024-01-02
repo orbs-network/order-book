@@ -53,13 +53,13 @@ func TestGetSupportedTokens(t *testing.T) {
 }
 
 func createInvalidFile(filePath string) {
-	os.WriteFile(filePath, []byte("invalid-json"), 0644)
+	_ = os.WriteFile(filePath, []byte("invalid-json"), 0644)
 }
 
 func createValidFile(filePath string, data []byte) {
-	os.WriteFile(filePath, data, 0644)
+	_ = os.WriteFile(filePath, data, 0644)
 }
 
 func deleteFile(filePath string) {
-	os.Remove(filePath)
+	_ = os.Remove(filePath)
 }
