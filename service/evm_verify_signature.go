@@ -68,12 +68,11 @@ func (e *EvmClient) VerifySignature(ctx context.Context, input VerifySignatureIn
 
 	// EIP712 domain
 	domain := apitypes.TypedDataDomain{
-		Name:              "Permit2",
+		Name:              "RePermit",
 		ChainId:           math.NewHexOrDecimal256(137),
 		VerifyingContract: "0x000000000022d473030f116ddee9f6b43ac78ba3",
 	}
 
-	// TODO: confirm with Zlotin rePermit payload
 	// EIP712 message types
 	types := apitypes.Types{
 		"EIP712Domain": {
@@ -81,7 +80,7 @@ func (e *EvmClient) VerifySignature(ctx context.Context, input VerifySignatureIn
 			{Name: "chainId", Type: "uint256"},
 			{Name: "verifyingContract", Type: "address"},
 		},
-		"PermitWitnessTransferFrom": {
+		"RePermitWitnessTransferFrom": {
 			{Name: "permitted", Type: "TokenPermissions"},
 			{Name: "spender", Type: "address"},
 			{Name: "nonce", Type: "uint256"},
@@ -120,7 +119,7 @@ func (e *EvmClient) VerifySignature(ctx context.Context, input VerifySignatureIn
 
 	// Create the TypedData object
 	typedData := apitypes.TypedData{
-		PrimaryType: "PermitWitnessTransferFrom",
+		PrimaryType: "RePermitWitnessTransferFrom",
 		Types:       types,
 		Domain:      domain,
 		Message:     input.MessageData,
