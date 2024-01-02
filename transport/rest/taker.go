@@ -69,7 +69,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 
 	pair := h.pairMngr.Resolve(req.InToken, req.OutToken)
-	if pair != nil {
+	if pair == nil {
 		msg := fmt.Sprintf("no suppoerted pair with found with the following tokens %s, %s", req.InToken, req.OutToken)
 		logctx.Error(ctx, msg, logger.Error(err))
 		http.Error(w, msg, http.StatusBadRequest)
