@@ -22,6 +22,9 @@ restart: stop start
 logs: 
 	@docker-compose logs -f
 
+logs-server:
+	@docker-compose logs -f server 
+
 test:
 	@echo "Running tests..."
 	@go test -v ./...

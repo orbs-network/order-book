@@ -65,6 +65,8 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	mmApi.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth
 	mmApi.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
+	// Get supported tokens
+	mmApi.HandleFunc("/supported-tokens", h.GetSupportedTokens).Methods("GET")
 
 	// ------- DELETE -------
 	// Cancel an existing order by client order ID
