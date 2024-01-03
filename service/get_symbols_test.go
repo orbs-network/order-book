@@ -15,6 +15,6 @@ func TestService_GetSymbols(t *testing.T) {
 
 	symbols, err := svc.GetSymbols(ctx)
 
-	assert.Greater(t, len(symbols), 20)
+	assert.GreaterOrEqual(t, len(symbols), 1)
 	assert.NoError(t, err)
 }

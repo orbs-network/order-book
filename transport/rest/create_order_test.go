@@ -29,7 +29,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 	orderReq := rest.CreateOrderRequest{
 		Price:         "100.0",
 		Size:          "10",
-		Symbol:        "BTC-USD",
+		Symbol:        "MATIC-USDC",
 		Side:          "sell",
 		ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 		Eip712Sig:     "mock-sig",
@@ -78,7 +78,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			&mocks.MockOrderBookService{},
 			createBody(t, rest.CreateOrderRequest{
 				Size:          "10",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "sell",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 			}),
@@ -90,7 +90,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			&mocks.MockOrderBookService{},
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "100.0",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "sell",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 			}),
@@ -115,7 +115,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "100.0",
 				Size:          "10",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 			}),
 			http.StatusBadRequest,
@@ -139,7 +139,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "100.0",
 				Size:          "10",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "sell",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 			}),
@@ -152,7 +152,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "100.0",
 				Size:          "10",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "sell",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 				Eip712Sig:     "mock-sig",
@@ -167,7 +167,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "100.0.0",
 				Size:          "10",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "sell",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 				Eip712Sig:     "mock-sig",
@@ -182,7 +182,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "-100.0",
 				Size:          "10",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "sell",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 				Eip712Sig:     "mock-sig",
@@ -197,7 +197,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "100.0",
 				Size:          "dsfdsfsdf",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "sell",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 				Eip712Sig:     "mock-sig",
@@ -212,7 +212,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "100.0",
 				Size:          "-10",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "sell",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 				Eip712Sig:     "mock-sig",
@@ -242,7 +242,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "100.0",
 				Size:          "10",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "some-invalid-side",
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 				Eip712Sig:     "mock-sig",
@@ -257,7 +257,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 			createBody(t, rest.CreateOrderRequest{
 				Price:         "100.0",
 				Size:          "10",
-				Symbol:        "BTC-USD",
+				Symbol:        "MATIC-USDC",
 				Side:          "sell",
 				ClientOrderId: "1",
 				Eip712Sig:     "mock-sig",

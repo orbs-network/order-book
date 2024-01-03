@@ -17,7 +17,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 	var order = models.Order{
 		Id:     uuid.MustParse("00000000-0000-0000-0000-000000000001"),
 		UserId: userId,
-		Symbol: "BTC-ETH",
+		Symbol: "MATIC-USDC",
 		Side:   models.BUY,
 	}
 
