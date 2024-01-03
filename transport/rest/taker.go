@@ -89,7 +89,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		InAmount:  req.InAmount,
 		InToken:   req.InToken,
 		SwapId:    "",
-		Fragments: nil,
+		Fragments: []Fragment{},
 	}
 
 	if isSwap {
