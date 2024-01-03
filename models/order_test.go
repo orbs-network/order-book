@@ -21,7 +21,7 @@ func TestOrder_OrderToMap(t *testing.T) {
 		ClientOId:   clientOId,
 		UserId:      userId,
 		Price:       decimal.NewFromFloat(10.99),
-		Symbol:      "USDC-ETH",
+		Symbol:      "MATIC-USDC",
 		Size:        decimal.NewFromInt(1000),
 		SizeFilled:  decimal.NewFromInt(600),
 		SizePending: decimal.NewFromInt(400),
@@ -66,7 +66,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 			"clientOId":     clientOId.String(),
 			"userId":        userId.String(),
 			"price":         "10.99",
-			"symbol":        "USDC-ETH",
+			"symbol":        "MATIC-USDC",
 			"size":          "1000",
 			"sizePending":   "0",
 			"sizeFilled":    "0",
@@ -88,7 +88,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 		assert.Equal(t, data["clientOId"], order.ClientOId.String())
 		assert.Equal(t, data["userId"], order.UserId.String())
 		assert.Equal(t, priceDec, order.Price)
-		assert.Equal(t, "USDC-ETH", order.Symbol.String())
+		assert.Equal(t, "MATIC-USDC", order.Symbol.String())
 		assert.Equal(t, sizeDec, order.Size)
 		assert.Equal(t, Signature{Eip712Sig: "signature", Eip712MsgData: map[string]interface{}{
 			"message": "data",

@@ -26,7 +26,7 @@ func TestRedisRepository_FindOrderById(t *testing.T) {
 
 	orderID := uuid.MustParse("00000000-0000-0000-0000-000000000008")
 	clientOId := uuid.MustParse("00000000-0000-0000-0000-000000000009")
-	symbol, _ := models.StrToSymbol("USDC-ETH")
+	symbol, _ := models.StrToSymbol("MATIC-USDC")
 	price := decimal.NewFromFloat(10000.55)
 	zero := decimal.NewFromFloat(0)
 	order := models.Order{

@@ -212,7 +212,7 @@ var userId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var publicKey = "0x37edf0398ec38921baa65dfc808d151d1bc979c7c3af9649bbde160b96b2851599b9b13fe138116ffafee0ebd775ecc7bcb9ba911aa488c10db3d4a26b72178e"
 var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 var size, _ = decimal.NewFromString("1000")
-var symbol, _ = models.StrToSymbol("USDC-ETH")
+var symbol, _ = models.StrToSymbol("MATIC-USDC")
 var price = decimal.NewFromFloat(10.0)
 
 var user = models.User{

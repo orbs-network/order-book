@@ -13,7 +13,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-var symbol, _ = models.StrToSymbol("USDC-ETH")
+var symbol, _ = models.StrToSymbol("MATIC-USDC")
 var price = decimal.NewFromFloat(10.0)
 
 var buyOrder = models.Order{
