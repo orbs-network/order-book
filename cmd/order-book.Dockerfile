@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . ./
-RUN find . -type f ! -name "*.go" ! -name "go.mod" ! -name "go.sum" -delete
+RUN find . -type f ! -name "*.go" ! -name "go.mod" ! -name "go.sum" ! -name "supportedTokens.json" -delete
 
 ARG APP_PATH
 
