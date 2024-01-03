@@ -15,9 +15,9 @@ PRIVATE_KEY = os.environ.get(
     "PRIVATE_KEY", "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 )
 TICKER_URL = os.environ.get(
-    "TICKER_URL", "https://www.binance.com/api/v3/ticker/price?symbol=ETHUSDT"
+    "TICKER_URL", "https://www.binance.com/api/v3/ticker/price?symbol=MATICUSDC"
 )
-TICKER_SYMBOL = os.environ.get("TICKER_SYMBOL", "ETH-USDT")
+TICKER_SYMBOL = os.environ.get("TICKER_SYMBOL", "MATIC-USDC")
 DEPTH_SIZE = os.environ.get("DEPTH_SIZE", "5")
 SLEEP_TIME = os.environ.get("SLEEP_TIME", "10")
 
