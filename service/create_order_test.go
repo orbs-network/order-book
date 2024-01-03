@@ -18,7 +18,7 @@ func TestService_CreateOrder(t *testing.T) {
 	ctx := mocks.AddUserToCtx(nil)
 	mockBcClient := &mocks.MockBcClient{IsVerified: true}
 
-	symbol, _ := models.StrToSymbol("USDC-ETH")
+	symbol, _ := models.StrToSymbol("MATIC-USDC")
 	userId := uuid.MustParse("a577273e-12de-4acc-a4f8-de7fb5b86e37")
 	userPubKey := "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEhqhj8rWPzkghzOZTUCOo/sdkE53sU1coVhaYskKGKrgiUF7lsSmxy46i3j8w7E7KMTfYBpCGAFYiWWARa0KQwg=="
 	price := decimal.NewFromFloat(10.0)
