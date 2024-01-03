@@ -51,6 +51,7 @@ func (r *redisRepository) GetMinAsk(ctx context.Context, symbol models.Symbol) m
 	orderIDs, err := r.client.ZRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		logctx.Error(ctx, "Error fetching asks", logger.Error(err))
+		return nil
 	}
 	// create order iter
 	return &OrderIter{
@@ -70,6 +71,7 @@ func (r *redisRepository) GetMaxBid(ctx context.Context, symbol models.Symbol) m
 
 	if err != nil {
 		logctx.Error(ctx, "Error fetching bids", logger.Error(err))
+		return nil
 	}
 	// create order iter
 	return &OrderIter{

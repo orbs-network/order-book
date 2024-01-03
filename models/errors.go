@@ -21,6 +21,7 @@ var ErrSignatureVerificationError = errors.New("signature verification error")
 var ErrSignatureVerificationFailed = errors.New("signature verification failed")
 var ErrUnexpectedSizeFilled = errors.New("unexpected sizeFilled")
 var ErrUnexpectedSizePending = errors.New("unexpected sizePending")
+var ErrIterFail = errors.New("failed to get bid/ask iterator from store")
 
 // store generic errors
 var ErrValAlreadyInSet = errors.New("the value is already a member of the set")

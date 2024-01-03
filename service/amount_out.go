@@ -22,10 +22,18 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 	var err error
 	if side == models.BUY {
 		it = s.orderBookStore.GetMinAsk(ctx, symbol)
+		if it == nil {
+			logctx.Error(ctx, "GetMinAsk failed", logger.Error(err))
+			return models.AmountOut{}, models.ErrIterFail
+		}
 		res, err = getAmountOutInAToken(ctx, it, amountIn)
 
 	} else { // SELL
 		it = s.orderBookStore.GetMaxBid(ctx, symbol)
+		if it == nil {
+			logctx.Error(ctx, "GetMaxBid failed", logger.Error(err))
+			return models.AmountOut{}, models.ErrIterFail
+		}
 		res, err = getAmountOutInBToken(ctx, it, amountIn)
 	}
 	if err != nil {
