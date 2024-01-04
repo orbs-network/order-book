@@ -79,22 +79,25 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 	var order *models.Order
 	for it.HasNext() && amountInB.IsPositive() {
 		order = it.Next(ctx)
-		// max Spend in B token  for this order
-		orderSizeB := order.Price.Mul(order.GetAvailableSize())
-		// spend the min of orderSizeB/amountInB
-		spendB := decimal.Min(orderSizeB, amountInB)
+		// skip orders with locked funds
+		if order.GetAvailableSize().IsPositive() {
+			// max Spend in B token  for this order
+			orderSizeB := order.Price.Mul(order.GetAvailableSize())
+			// spend the min of orderSizeB/amountInB
+			spendB := decimal.Min(orderSizeB, amountInB)
 
-		// Gain
-		gainA := spendB.Div(order.Price)
+			// Gain
+			gainA := spendB.Div(order.Price)
 
-		// sub-add
-		amountInB = amountInB.Sub(spendB)
-		amountOutA = amountOutA.Add(gainA)
+			// sub-add
+			amountInB = amountInB.Sub(spendB)
+			amountOutA = amountOutA.Add(gainA)
 
-		// res
-		logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
-		logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
-		frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: gainA})
+			// res
+			logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
+			logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
+			frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: gainA})
+		}
 	}
 	// not all is Spent - error
 	if amountInB.IsPositive() {
