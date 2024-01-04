@@ -13,14 +13,19 @@ import (
 func (r *redisRepository) GetSwap(ctx context.Context, swapId uuid.UUID) ([]models.OrderFrag, error) {
 	swapKey := CreateSwapKey(swapId)
 
-	swapJsons, err := r.client.LRange(ctx, swapKey, 0, -1).Result()
+	swapJsons, err := r.client.LRange(ctx, "uvix"+swapKey, 0, -1).Result()
+	// Error
 	if err != nil {
 		logctx.Error(ctx, "failed to get swap", logger.String("swapId", swapId.String()), logger.Error(err))
 		return []models.OrderFrag{}, models.ErrUnexpectedError
 	}
+	// empty range of swaps
+	if len(swapJsons) == 0 {
+		logctx.Error(ctx, "swap is not found", logger.String("swapId", swapId.String()), logger.Error(err))
+		return []models.OrderFrag{}, models.ErrNotFound
+	}
 
 	var frags []models.OrderFrag
-
 	for _, swapJson := range swapJsons {
 		var orders []models.OrderFrag
 		err := json.Unmarshal([]byte(swapJson), &orders)
