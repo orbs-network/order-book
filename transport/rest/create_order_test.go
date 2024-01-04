@@ -192,6 +192,21 @@ func TestHandler_CreateOrder(t *testing.T) {
 			"'price' must not exceed 8 decimal places\n",
 		},
 		{
+			"price format cannot exceed 8 decimal places - should return `price must not exceed 8 decimal places` error",
+			&mocks.MockOrderBookService{},
+			createBody(t, rest.CreateOrderRequest{
+				Price:         "50000.823709877",
+				Size:          "10",
+				Symbol:        "MATIC-USDC",
+				Side:          "sell",
+				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
+				Eip712Sig:     "mock-sig",
+				Eip712MsgData: map[string]interface{}{},
+			}),
+			http.StatusBadRequest,
+			"'price' must not exceed 8 decimal places\n",
+		},
+		{
 			"negative price - should return `price must be positive` error",
 			&mocks.MockOrderBookService{},
 			createBody(t, rest.CreateOrderRequest{
