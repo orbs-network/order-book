@@ -89,7 +89,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		InAmount:  req.InAmount,
 		InToken:   req.InToken,
 		SwapId:    "",
-		Fragments: nil,
+		Fragments: []Fragment{},
 	}
 
 	if isSwap {
@@ -99,9 +99,12 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			return
 		}
 		for i := 0; i < len(swapData.Fragments); i++ {
+
 			frag := Fragment{
-				AmountOut: swapData.Fragments[i].Size.String(),
-				OrderId:   swapData.Orders[i].Id.String(),
+				OrderId:       swapData.Fragments[i].OrderId.String(),
+				AmountOut:     swapData.Fragments[i].Size.String(),
+				Eip712Sig:     swapData.Orders[i].Signature.Eip712Sig,
+				Eip712MsgData: swapData.Orders[i].Signature.Eip712MsgData,
 			}
 			quoteRes.Fragments = append(quoteRes.Fragments, frag)
 		}
@@ -152,7 +155,6 @@ func handleSwapId(w http.ResponseWriter, r *http.Request) *uuid.UUID {
 		return nil
 	}
 	return &res
-
 }
 
 // POST
@@ -161,8 +163,29 @@ func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 	if swapId == nil {
 		return
 	}
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
 	if err := h.svc.AbortSwap(r.Context(), *swapId); err != nil {
-		http.Error(w, "Error GetAmountOut", http.StatusBadRequest)
-		return
+		w.WriteHeader(http.StatusBadRequest)
+		// Create an empty JSON object
+		obj := genRes{
+			StatusText: err.Error(),
+			Status:     http.StatusBadRequest,
+		}
+
+		// Convert the emptyJSON object to JSON format
+		jRes, _ := json.Marshal(obj)
+		_, err = w.Write(jRes)
+		if err != nil {
+			logctx.Error(r.Context(), "abortSwap - failed to write resp", logger.Error(err))
+		}
 	}
+
+	// Write the JSON response with a status code of 200
+	w.WriteHeader(http.StatusOK)
+	_, err := w.Write(h.okJson)
+	if err != nil {
+		logctx.Error(r.Context(), "abortSwap - failed to write resp", logger.Error(err))
+	}
+
 }

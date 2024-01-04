@@ -45,7 +45,11 @@ func NewPairMngr() *PairMngr {
 	m := PairMngr{
 		aToken2PairArr: make(map[string][]*Pair),
 	}
-	m.aToken2PairArr["ETH"] = []*Pair{NewPair("ETH", "USD")}
+	symbolPairs := GetAllSymbols()
+	for _, sp := range symbolPairs {
+		arr := strings.Split(sp.String(), "-")
+		m.aToken2PairArr[arr[0]] = []*Pair{NewPair(arr[0], arr[1])}
+	}
 	return &m
 }
 
