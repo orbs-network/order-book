@@ -73,6 +73,12 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 		return models.BeginSwapRes{}, err
 	}
 
+	err = s.orderBookStore.StoreSwap(ctx, swapId, res.Fragments)
+	if err != nil {
+		logctx.Error(ctx, "StoreSwap Failed", logger.Error(err))
+		return models.BeginSwapRes{}, err
+	}
+
 	// add oredebook signature on the buffer HERE if needed
 	return res, nil
 }
