@@ -25,10 +25,8 @@ type AmountOut struct {
 }
 
 type OrderFrag struct {
-	OrderId       uuid.UUID
-	Size          decimal.Decimal
-	eip712Sig     string
-	eip712MsgData string
+	OrderId uuid.UUID
+	Size    decimal.Decimal
 }
 
 func (f *OrderFrag) ToMap() map[string]string {

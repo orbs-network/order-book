@@ -175,15 +175,17 @@ func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 
 		// Convert the emptyJSON object to JSON format
 		jRes, _ := json.Marshal(obj)
-		w.Write(jRes)
-
-		//logctx.Error(ctx, logger.Error(err))
-		//http.Error(w, "Error abortSwap", http.StatusBadRequest)
-		return
+		_, err = w.Write(jRes)
+		if err != nil {
+			logctx.Error(r.Context(), "abortSwap - failed to write resp", logger.Error(err))
+		}
 	}
 
 	// Write the JSON response with a status code of 200
 	w.WriteHeader(http.StatusOK)
-	w.Write(h.okJson)
+	_, err := w.Write(h.okJson)
+	if err != nil {
+		logctx.Error(r.Context(), "abortSwap - failed to write resp", logger.Error(err))
+	}
 
 }
