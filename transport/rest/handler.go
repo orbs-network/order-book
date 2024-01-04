@@ -17,7 +17,7 @@ type Handler struct {
 	Router   *mux.Router
 	okJson   []byte
 }
-type successResponse struct {
+type genRes struct {
 	StatusText string `json:"statusText"`
 	Status     int    `json:"status"`
 }
@@ -32,7 +32,7 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 	}
 
 	// Create an empty JSON object
-	okJsonObj := successResponse{
+	okJsonObj := genRes{
 		StatusText: "OK",
 		Status:     http.StatusOK,
 	}

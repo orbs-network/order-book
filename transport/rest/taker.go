@@ -163,13 +163,24 @@ func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 	if swapId == nil {
 		return
 	}
-	if err := h.svc.AbortSwap(r.Context(), *swapId); err != nil {
-		//logctx.Error(ctx, logger.Error(err))
-		http.Error(w, "Error abortSwap", http.StatusBadRequest)
-		return
-	}
 	// Set the Content-Type header to application/json
 	w.Header().Set("Content-Type", "application/json")
+	if err := h.svc.AbortSwap(r.Context(), *swapId); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		// Create an empty JSON object
+		obj := genRes{
+			StatusText: err.Error(),
+			Status:     http.StatusBadRequest,
+		}
+
+		// Convert the emptyJSON object to JSON format
+		jRes, _ := json.Marshal(obj)
+		w.Write(jRes)
+
+		//logctx.Error(ctx, logger.Error(err))
+		//http.Error(w, "Error abortSwap", http.StatusBadRequest)
+		return
+	}
 
 	// Write the JSON response with a status code of 200
 	w.WriteHeader(http.StatusOK)
