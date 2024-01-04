@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -22,10 +21,18 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 	var err error
 	if side == models.BUY {
 		it = s.orderBookStore.GetMinAsk(ctx, symbol)
+		if it == nil {
+			logctx.Error(ctx, "GetMinAsk failed", logger.Error(err))
+			return models.AmountOut{}, models.ErrIterFail
+		}
 		res, err = getAmountOutInAToken(ctx, it, amountIn)
 
 	} else { // SELL
 		it = s.orderBookStore.GetMaxBid(ctx, symbol)
+		if it == nil {
+			logctx.Error(ctx, "GetMaxBid failed", logger.Error(err))
+			return models.AmountOut{}, models.ErrIterFail
+		}
 		res, err = getAmountOutInBToken(ctx, it, amountIn)
 	}
 	if err != nil {
@@ -33,32 +40,6 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 		return models.AmountOut{}, err
 	}
 
-	return res, nil
-}
-
-// orderID->amount bought or sold in A token always
-func (s *Service) GetAmountOut(ctx context.Context, swapId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
-
-	var it models.OrderIter
-	var res models.AmountOut
-	var err error
-	if side == models.BUY {
-		it = s.orderBookStore.GetMinAsk(ctx, symbol)
-		res, err = getAmountOutInAToken(ctx, it, amountIn)
-
-	} else { // SELL
-		it = s.orderBookStore.GetMaxBid(ctx, symbol)
-		res, err = getAmountOutInBToken(ctx, it, amountIn)
-	}
-	if err != nil {
-		logctx.Error(ctx, "getAmountOutIn failed", logger.Error(err))
-		return models.AmountOut{}, err
-	}
-	err = s.orderBookStore.StoreSwap(ctx, swapId, res.OrderFrags)
-	if err != nil {
-		logctx.Error(ctx, "StoreSwap failed", logger.Error(err))
-		return models.AmountOut{}, err
-	}
 	return res, nil
 }
 
@@ -71,22 +52,25 @@ func getAmountOutInAToken(ctx context.Context, it models.OrderIter, amountInB de
 	var order *models.Order
 	for it.HasNext() && amountInB.IsPositive() {
 		order = it.Next(ctx)
-		// max Spend in B token  for this order
-		orderSizeB := order.Price.Mul(order.GetAvailableSize())
-		// spend the min of orderSizeB/amountInB
-		spendB := decimal.Min(orderSizeB, amountInB)
+		// skip orders with locked funds
+		if order.GetAvailableSize().IsPositive() {
+			// max Spend in B token  for this order
+			orderSizeB := order.Price.Mul(order.GetAvailableSize())
+			// spend the min of orderSizeB/amountInB
+			spendB := decimal.Min(orderSizeB, amountInB)
 
-		// Gain
-		gainA := spendB.Div(order.Price)
+			// Gain
+			gainA := spendB.Div(order.Price)
 
-		// sub-add
-		amountInB = amountInB.Sub(spendB)
-		amountOutA = amountOutA.Add(gainA)
+			// sub-add
+			amountInB = amountInB.Sub(spendB)
+			amountOutA = amountOutA.Add(gainA)
 
-		// res
-		logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
-		logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
-		frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: gainA})
+			// res
+			logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
+			logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
+			frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: gainA})
+		}
 	}
 	// not all is Spent - error
 	if amountInB.IsPositive() {
