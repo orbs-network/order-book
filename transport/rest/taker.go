@@ -99,9 +99,12 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			return
 		}
 		for i := 0; i < len(swapData.Fragments); i++ {
+
 			frag := Fragment{
-				AmountOut: swapData.Fragments[i].Size.String(),
-				OrderId:   swapData.Orders[i].Id.String(),
+				OrderId:       swapData.Fragments[i].OrderId.String(),
+				AmountOut:     swapData.Fragments[i].Size.String(),
+				Eip712Sig:     swapData.Orders[i].Signature.Eip712Sig,
+				Eip712MsgData: swapData.Orders[i].Signature.Eip712MsgData,
 			}
 			quoteRes.Fragments = append(quoteRes.Fragments, frag)
 		}
@@ -152,7 +155,6 @@ func handleSwapId(w http.ResponseWriter, r *http.Request) *uuid.UUID {
 		return nil
 	}
 	return &res
-
 }
 
 // POST
@@ -162,7 +164,15 @@ func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.svc.AbortSwap(r.Context(), *swapId); err != nil {
-		http.Error(w, "Error GetAmountOut", http.StatusBadRequest)
+		//logctx.Error(ctx, logger.Error(err))
+		http.Error(w, "Error abortSwap", http.StatusBadRequest)
 		return
 	}
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+
+	// Write the JSON response with a status code of 200
+	w.WriteHeader(http.StatusOK)
+	w.Write(h.okJson)
+
 }
