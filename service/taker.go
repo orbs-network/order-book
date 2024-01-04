@@ -77,18 +77,6 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 }
 
 func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
-	// returns error if already confirmed
-	err := s.orderBookStore.UpdateSwapTracker(ctx, models.SWAP_ABORDTED, swapId)
-
-	if err != nil {
-		if err == models.ErrValAlreadyInSet {
-			logctx.Warn(ctx, "AbortSwap re-entry!", logger.String("swapId: ", swapId.String()))
-		} else {
-			logctx.Warn(ctx, "AbortSwap UpdateSwapTracker Failed", logger.String("swapId: ", swapId.String()), logger.Error(err))
-		}
-		return err
-	}
-
 	// get swap from store
 	frags, err := s.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
