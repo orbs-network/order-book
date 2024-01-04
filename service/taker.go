@@ -63,8 +63,10 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 	// set order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
-		res.Orders[i].SizePending = res.Fragments[i].Size
+		res.Orders[i].SizePending = res.Orders[i].SizePending.Add(res.Fragments[i].Size)
 	}
+
+	// save
 	err := s.orderBookStore.StoreOpenOrders(ctx, res.Orders)
 	if err != nil {
 		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
@@ -72,7 +74,6 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 	}
 
 	// add oredebook signature on the buffer HERE if needed
-
 	return res, nil
 }
 
