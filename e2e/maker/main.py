@@ -55,7 +55,7 @@ class Client:
             cur_size = Decimal((i + 1) * 10)
 
             order_input = CreateOrderInput(
-                price=str(cur_price),
+                price=str(self._round(cur_price)),
                 size=str(cur_size),
                 side="sell",
                 symbol=TICKER_SYMBOL,
@@ -89,7 +89,7 @@ class Client:
             cur_size = Decimal((i + 1) * 10)
 
             order_input = CreateOrderInput(
-                price=str(cur_price),
+                price=str(self._round(cur_price)),
                 size=str(cur_size),
                 side="buy",
                 symbol=TICKER_SYMBOL,
@@ -125,11 +125,19 @@ class Client:
         print(f"ETH-USD Price: {ticker.price}")
         return ticker
 
+    def _round(self, value):
+        decimal_value = Decimal(value)
+        # 8 decimal places
+        EIGHT_PLACES = Decimal("0.00000001")
+        rounded_value = decimal_value.quantize(EIGHT_PLACES)
+        return rounded_value
+
 
 def main():
+    sdk = OrderBookSDK(base_url=BASE_URL, api_key=API_KEY)
     ob_client = Client(
-        ob_sdk=OrderBookSDK(base_url=BASE_URL, api_key=API_KEY),
-        signer=OrderSigner(private_key=PRIVATE_KEY),
+        ob_sdk=sdk,
+        signer=OrderSigner(private_key=PRIVATE_KEY, sdk=sdk),
     )
 
     print("----------------------------------")

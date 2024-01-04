@@ -189,12 +189,16 @@ func parseFields(w http.ResponseWriter, input pFInput) (*pfParsed, error) {
 	if err != nil {
 		return nil, fmt.Errorf("'price' is not a valid number format")
 	}
+
 	if decPrice.IsNegative() {
 		return nil, fmt.Errorf("'price' must be positive")
 	}
 
-	// TODO: Am I OK to always round?
-	roundedDecPrice := decPrice.Round(2)
+	// Ensure price is 8 decimal places - aligns with Binance's precision
+	if decPrice.Exponent() < -8 {
+		return nil, fmt.Errorf("'price' must not exceed 8 decimal places")
+	}
+	roundedDecPrice := decPrice.Round(8)
 
 	decSize, err := decimal.NewFromString(input.size)
 	if err != nil {
