@@ -1,7 +1,9 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
@@ -13,6 +15,11 @@ type Handler struct {
 	svc      service.OrderBookService
 	pairMngr *models.PairMngr
 	Router   *mux.Router
+	okJson   []byte
+}
+type successResponse struct {
+	StatusText string `json:"statusText"`
+	Status     int    `json:"status"`
 }
 
 func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
@@ -24,10 +31,24 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		return nil, fmt.Errorf("router cannot be nil")
 	}
 
+	// Create an empty JSON object
+	okJsonObj := successResponse{
+		StatusText: "OK",
+		Status:     http.StatusOK,
+	}
+
+	// Convert the emptyJSON object to JSON format
+	okJson, err := json.Marshal(okJsonObj)
+	if err != nil {
+		//http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return nil, err
+	}
+
 	return &Handler{
 		svc:      svc,
 		Router:   r,
 		pairMngr: models.NewPairMngr(),
+		okJson:   okJson,
 	}, nil
 }
 
