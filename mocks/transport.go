@@ -77,9 +77,6 @@ func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId u
 	return ids, m.Error
 }
 
-func (m *MockOrderBookService) GetAmountOut(ctx context.Context, swapId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
-	return m.AmountOut, m.Error
-}
 func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
 	return m.AmountOut, m.Error
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -41,32 +40,6 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 		return models.AmountOut{}, err
 	}
 
-	return res, nil
-}
-
-// orderID->amount bought or sold in A token always
-func (s *Service) GetAmountOut(ctx context.Context, swapId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
-
-	var it models.OrderIter
-	var res models.AmountOut
-	var err error
-	if side == models.BUY {
-		it = s.orderBookStore.GetMinAsk(ctx, symbol)
-		res, err = getAmountOutInAToken(ctx, it, amountIn)
-
-	} else { // SELL
-		it = s.orderBookStore.GetMaxBid(ctx, symbol)
-		res, err = getAmountOutInBToken(ctx, it, amountIn)
-	}
-	if err != nil {
-		logctx.Error(ctx, "getAmountOutIn failed", logger.Error(err))
-		return models.AmountOut{}, err
-	}
-	err = s.orderBookStore.StoreSwap(ctx, swapId, res.OrderFrags)
-	if err != nil {
-		logctx.Error(ctx, "StoreSwap failed", logger.Error(err))
-		return models.AmountOut{}, err
-	}
 	return res, nil
 }
 
