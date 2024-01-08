@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
@@ -16,7 +17,7 @@ func (h *Handler) GetOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 
 	clientOId, err := uuid.Parse(clientOIdStr)
 	if err != nil {
-		http.Error(w, "invalid clientOId", http.StatusBadRequest)
+		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid clientOId")
 		return
 	}
 
@@ -24,12 +25,12 @@ func (h *Handler) GetOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 	order, err := h.svc.GetOrderByClientOId(r.Context(), clientOId)
 
 	if err != nil {
-		http.Error(w, "Internal error. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Internal error. Try again later")
 		return
 	}
 
 	if order == nil {
-		http.Error(w, "order not found", http.StatusNotFound)
+		restutils.WriteJSONError(w, http.StatusNotFound, "Order not found")
 		return
 	}
 
@@ -37,7 +38,7 @@ func (h *Handler) GetOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logctx.Error(r.Context(), "error marshaling order", logger.Error(err))
-		http.Error(w, "Error getting order by client ID", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting order by client ID")
 		return
 	}
 
@@ -45,7 +46,7 @@ func (h *Handler) GetOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
-		http.Error(w, "Error getting order by client ID", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting order by client ID")
 	}
 
 }

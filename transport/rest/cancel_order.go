@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -23,7 +24,7 @@ func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -32,7 +33,7 @@ func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 
 	orderId, err := uuid.Parse(orderIdStr)
 	if err != nil {
-		http.Error(w, "invalid order ID", http.StatusBadRequest)
+		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid order ID")
 		return
 	}
 
@@ -52,7 +53,7 @@ func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request)
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -61,7 +62,7 @@ func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request)
 
 	clientOId, err := uuid.Parse(clientOIdStr)
 	if err != nil {
-		http.Error(w, "invalid clientOId", http.StatusBadRequest)
+		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid clientOId")
 		return
 	}
 
@@ -95,37 +96,37 @@ func (h *Handler) handleCancelOrder(input hInput) {
 
 	if err == models.ErrNotFound {
 		logctx.Warn(input.ctx, "order not found", logger.String("id", input.id.String()))
-		http.Error(input.w, "Order not found", http.StatusNotFound)
+		restutils.WriteJSONError(input.w, http.StatusNotFound, "Order not found")
 		return
 	}
 
 	if err == models.ErrUnauthorized {
 		logctx.Warn(input.ctx, "user not authorized to cancel order", logger.String("id", input.id.String()))
-		http.Error(input.w, "Not authorized", http.StatusUnauthorized)
+		restutils.WriteJSONError(input.w, http.StatusUnauthorized, "Not authorized")
 		return
 	}
 
 	if err == models.ErrOrderPending {
 		logctx.Warn(input.ctx, "cancelling order not possible when order is pending", logger.String("id", input.id.String()))
-		http.Error(input.w, "Cannot cancel order due to pending fill", http.StatusConflict)
+		restutils.WriteJSONError(input.w, http.StatusConflict, "Cannot cancel order due to pending fill")
 		return
 	}
 
 	if err == models.ErrOrderFilled {
 		logctx.Warn(input.ctx, "cancelling order not possible when order is filled", logger.String("id", input.id.String()))
-		http.Error(input.w, "Cannot cancel filled order", http.StatusConflict)
+		restutils.WriteJSONError(input.w, http.StatusConflict, "Cannot cancel filled order")
 		return
 	}
 
 	if err != nil {
 		logctx.Error(input.ctx, "failed to cancel order", logger.Error(err))
-		http.Error(input.w, "Error cancelling order. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
 		return
 	}
 
 	if cancelledOrderId == nil {
 		logctx.Error(input.ctx, "cancelled order ID is nil")
-		http.Error(input.w, "Error cancelling order. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
 		return
 	}
 
@@ -136,7 +137,7 @@ func (h *Handler) handleCancelOrder(input hInput) {
 	resp, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(input.ctx, "failed to marshal created order", logger.Error(err))
-		http.Error(input.w, "Error cancelling order. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
 		return
 	}
 
@@ -146,6 +147,6 @@ func (h *Handler) handleCancelOrder(input hInput) {
 	if _, err := input.w.Write(resp); err != nil {
 		logctx.Error(input.ctx, "failed to write response", logger.Error(err), logger.String("orderId", cancelledOrderId.String()))
 
-		http.Error(input.w, "Error cancelling order. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
 	}
 }

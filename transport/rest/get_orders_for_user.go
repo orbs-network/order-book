@@ -6,6 +6,7 @@ import (
 
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/transport/middleware"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -16,7 +17,7 @@ func (h *Handler) GetOpenOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -26,7 +27,7 @@ func (h *Handler) GetOpenOrdersForUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logctx.Error(r.Context(), "error getting open orders for user", logger.Error(err), logger.String("userId", user.Id.String()))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -35,7 +36,7 @@ func (h *Handler) GetOpenOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	jsonData, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal response", logger.Error(err), logger.String("orderId", user.Id.String()))
-		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting orders. Try again later")
 		return
 	}
 
@@ -43,7 +44,7 @@ func (h *Handler) GetOpenOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(jsonData); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err), logger.String("orderId", user.Id.String()))
-		http.Error(w, "Error getting orders. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting orders. Try again later")
 	}
 
 }
@@ -53,7 +54,7 @@ func (h *Handler) GetFilledOrdersForUser(w http.ResponseWriter, r *http.Request)
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -63,7 +64,7 @@ func (h *Handler) GetFilledOrdersForUser(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		logctx.Error(r.Context(), "error getting filled orders for user", logger.Error(err), logger.String("userId", user.Id.String()))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -72,7 +73,7 @@ func (h *Handler) GetFilledOrdersForUser(w http.ResponseWriter, r *http.Request)
 	jsonData, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal response", logger.Error(err), logger.String("orderId", user.Id.String()))
-		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting orders. Try again later")
 		return
 	}
 
@@ -80,7 +81,7 @@ func (h *Handler) GetFilledOrdersForUser(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(jsonData); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err), logger.String("orderId", user.Id.String()))
-		http.Error(w, "Error getting orders. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting orders. Try again later")
 	}
 
 }

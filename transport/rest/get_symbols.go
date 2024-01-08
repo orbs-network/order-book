@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
@@ -19,7 +20,7 @@ func (h *Handler) GetSymbols(w http.ResponseWriter, r *http.Request) {
 	symbols, err := h.svc.GetSymbols(r.Context())
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal symbols", logger.Error(err))
-		http.Error(w, "Error getting order by ID", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting symbols. Try again later")
 		return
 	}
 
@@ -32,7 +33,7 @@ func (h *Handler) GetSymbols(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal symbols", logger.Error(err))
-		http.Error(w, "Error getting symbols. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting symbols. Try again later")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -40,6 +41,6 @@ func (h *Handler) GetSymbols(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
-		http.Error(w, "Error getting order by ID", http.StatusInternalServerError)
+		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting symbols. Try again later")
 	}
 }

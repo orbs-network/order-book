@@ -60,7 +60,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 		router.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rr.Code)
-		assert.Equal(t, "User not found\n", rr.Body.String())
+		assert.Equal(t, "{\"status\":401,\"msg\":\"User not found\"}\n", rr.Body.String())
 	})
 
 	ctx := mocks.AddUserToCtx(nil)
@@ -83,7 +83,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 			}),
 			http.StatusBadRequest,
-			"missing required field 'price'\n",
+			"{\"status\":400,\"msg\":\"missing required field 'price'\"}\n",
 		},
 		{
 			"no size in request body - should return `missing required field 'size'` error",
@@ -95,7 +95,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 			}),
 			http.StatusBadRequest,
-			"missing required field 'size'\n",
+			"{\"status\":400,\"msg\":\"missing required field 'size'\"}\n",
 		},
 		{
 			"no symbol in request body - should return `missing required field 'symbol'` error",
@@ -107,7 +107,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 			}),
 			http.StatusBadRequest,
-			"missing required field 'symbol'\n",
+			"{\"status\":400,\"msg\":\"missing required field 'symbol'\"}\n",
 		},
 		{
 			"no side in request body - should return `missing required field 'side'` error",
@@ -119,7 +119,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 			}),
 			http.StatusBadRequest,
-			"missing required field 'side'\n",
+			"{\"status\":400,\"msg\":\"missing required field 'side'\"}\n",
 		},
 		{
 			"no client order id in request body - should return `missing required field 'clientOrderId'` error",
@@ -131,7 +131,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Side:   "sell",
 			}),
 			http.StatusBadRequest,
-			"missing required field 'clientOrderId'\n",
+			"{\"status\":400,\"msg\":\"missing required field 'clientOrderId'\"}\n",
 		},
 		{
 			"no eip712 signature in request body - should return `missing required field 'eip712Sig'` error",
@@ -144,7 +144,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 			}),
 			http.StatusBadRequest,
-			"missing required field 'eip712Sig'\n",
+			"{\"status\":400,\"msg\":\"missing required field 'eip712Sig'\"}\n",
 		},
 		{
 			"no eip712 message data in request body - should return `missing required field 'eip712MsgData'` error",
@@ -158,9 +158,9 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712Sig:     "mock-sig",
 			}),
 			http.StatusBadRequest,
-			"missing required field 'eip712MsgData'\n",
+			"{\"status\":400,\"msg\":\"missing required field 'eip712MsgData'\"}\n",
 		},
-		// ----- Parse fields tests -----
+		// // ----- Parse fields tests -----
 		{
 			"invalid price format - should return `price is not a valid number format` error",
 			&mocks.MockOrderBookService{},
@@ -174,7 +174,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712MsgData: map[string]interface{}{},
 			}),
 			http.StatusBadRequest,
-			"'price' is not a valid number format\n",
+			"{\"status\":400,\"msg\":\"'price' is not a valid number format\"}\n",
 		},
 		{
 			"price format cannot exceed 8 decimal places - should return `price must not exceed 8 decimal places` error",
@@ -189,7 +189,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712MsgData: map[string]interface{}{},
 			}),
 			http.StatusBadRequest,
-			"'price' must not exceed 8 decimal places\n",
+			"{\"status\":400,\"msg\":\"'price' must not exceed 8 decimal places\"}\n",
 		},
 		{
 			"price format cannot exceed 8 decimal places - should return `price must not exceed 8 decimal places` error",
@@ -204,7 +204,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712MsgData: map[string]interface{}{},
 			}),
 			http.StatusBadRequest,
-			"'price' must not exceed 8 decimal places\n",
+			"{\"status\":400,\"msg\":\"'price' must not exceed 8 decimal places\"}\n",
 		},
 		{
 			"negative price - should return `price must be positive` error",
@@ -219,7 +219,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712MsgData: map[string]interface{}{},
 			}),
 			http.StatusBadRequest,
-			"'price' must be positive\n",
+			"{\"status\":400,\"msg\":\"'price' must be positive\"}\n",
 		},
 		{
 			"invalid size format - should return `size is not a valid number format` error",
@@ -234,7 +234,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712MsgData: map[string]interface{}{},
 			}),
 			http.StatusBadRequest,
-			"'size' is not a valid number format\n",
+			"{\"status\":400,\"msg\":\"'size' is not a valid number format\"}\n",
 		},
 		{
 			"negative size - should return `size must be positive` error",
@@ -249,7 +249,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712MsgData: map[string]interface{}{},
 			}),
 			http.StatusBadRequest,
-			"'size' must be positive\n",
+			"{\"status\":400,\"msg\":\"'size' must be positive\"}\n",
 		},
 		{
 			"invalid symbol - should return `symbol is not valid` error",
@@ -264,7 +264,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712MsgData: map[string]interface{}{},
 			}),
 			http.StatusBadRequest,
-			"'symbol' is not valid\n",
+			"{\"status\":400,\"msg\":\"'symbol' is not valid\"}\n",
 		},
 		{
 			"invalid side - should return `side is not valid` error",
@@ -279,7 +279,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712MsgData: map[string]interface{}{},
 			}),
 			http.StatusBadRequest,
-			"'side' is not valid\n",
+			"{\"status\":400,\"msg\":\"'side' is not valid\"}\n",
 		},
 		{
 			"invalid client order id - should return `clientOrderId is not valid` error",
@@ -294,7 +294,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 				Eip712MsgData: map[string]interface{}{},
 			}),
 			http.StatusBadRequest,
-			"'clientOrderId' is not valid\n",
+			"{\"status\":400,\"msg\":\"'clientOrderId' is not valid\"}\n",
 		},
 		// ----- Create order tests -----
 		{
@@ -309,35 +309,35 @@ func TestHandler_CreateOrder(t *testing.T) {
 			&mocks.MockOrderBookService{Order: &models.Order{}, Error: models.ErrSignatureVerificationError},
 			createBody(t, orderReq),
 			http.StatusBadRequest,
-			"Signature verification error\n",
+			"{\"status\":400,\"msg\":\"Signature verification error\"}\n",
 		},
 		{
 			"signature verification failed - should return `ErrSignatureVerificationFailed` error",
 			&mocks.MockOrderBookService{Order: &models.Order{}, Error: models.ErrSignatureVerificationFailed},
 			createBody(t, orderReq),
 			http.StatusUnauthorized,
-			"Signature verification failed\n",
+			"{\"status\":401,\"msg\":\"Extracted public key does not match user's public key\"}\n",
 		},
 		{
 			"clashing order id - should return `Clashing order ID. Please retry` error",
 			&mocks.MockOrderBookService{Order: &models.Order{}, Error: models.ErrClashingOrderId},
 			createBody(t, orderReq),
 			http.StatusConflict,
-			"Clashing order ID. Please retry\n",
+			"{\"status\":409,\"msg\":\"Clashing order ID. Please retry\"}\n",
 		},
 		{
-			"clashing client order id - should return `Order with clientOrderId %q already exists. You must first cancel this order` error",
+			"clashing client order id - should return `Order with clientOrderId ___ already exists. You must first cancel this order` error",
 			&mocks.MockOrderBookService{Order: &models.Order{}, Error: models.ErrClashingClientOrderId},
 			createBody(t, orderReq),
 			http.StatusConflict,
-			fmt.Sprintf("Order with clientOrderId %q already exists. You must first cancel this order\n", orderReq.ClientOrderId),
+			"{\"status\":409,\"msg\":\"Order with clientOrderId a677273e-12de-4acc-a4f8-de7fb5b86e37 already exists. You must first cancel this order\"}\n",
 		},
 		{
 			"unexpected error - should return `Error creating order. Try again later` error",
 			&mocks.MockOrderBookService{Order: &models.Order{}, Error: assert.AnError},
 			createBody(t, orderReq),
 			http.StatusInternalServerError,
-			"Error creating order. Try again later\n",
+			"{\"status\":500,\"msg\":\"Error creating order. Try again later\"}\n",
 		},
 	}
 
