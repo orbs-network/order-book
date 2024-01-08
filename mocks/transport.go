@@ -77,7 +77,7 @@ func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId u
 	return ids, m.Error
 }
 
-func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.QuoteRes, error) {
+func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal) (models.QuoteRes, error) {
 	return m.QuoteRes, m.Error
 }
 

@@ -10,10 +10,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.QuoteRes, error) {
+func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal) (models.QuoteRes, error) {
 
-	// make sure amountIn is positivr
-	if !amountIn.IsPositive() {
+	// make sure inAmount is positivr
+	if !inAmount.IsPositive() {
 		return models.QuoteRes{}, models.ErrInAmount
 	}
 	var it models.OrderIter
@@ -25,7 +25,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			logctx.Error(ctx, "GetMinAsk failed")
 			return models.QuoteRes{}, models.ErrIterFail
 		}
-		res, err = getOutAmountInAToken(ctx, it, amountIn)
+		res, err = getOutAmountInAToken(ctx, it, inAmount)
 
 	} else { // SELL
 		it = s.orderBookStore.GetMaxBid(ctx, symbol)
@@ -33,7 +33,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			logctx.Error(ctx, "GetMaxBid failed")
 			return models.QuoteRes{}, models.ErrIterFail
 		}
-		res, err = getOutAmountInBToken(ctx, it, amountIn)
+		res, err = getOutAmountInBToken(ctx, it, inAmount)
 	}
 	if err != nil {
 		logctx.Error(ctx, "getQuoteResIn failed", logger.Error(err))
