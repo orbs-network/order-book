@@ -15,7 +15,7 @@ type MockOrderBookService struct {
 	Order        *models.Order
 	Orders       []models.Order
 	MarketDepth  models.MarketDepth
-	AmountOut    models.AmountOut
+	QuoteRes     models.QuoteRes
 	Symbols      []models.Symbol
 	User         *models.User
 	BeginSwapRes models.BeginSwapRes
@@ -77,12 +77,12 @@ func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId u
 	return ids, m.Error
 }
 
-func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error) {
-	return m.AmountOut, m.Error
+func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.QuoteRes, error) {
+	return m.QuoteRes, m.Error
 }
 
 // taker api instead of swap
-func (m *MockOrderBookService) BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error) {
+func (m *MockOrderBookService) BeginSwap(ctx context.Context, data models.QuoteRes) (models.BeginSwapRes, error) {
 	return m.BeginSwapRes, m.Error
 }
 

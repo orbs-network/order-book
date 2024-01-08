@@ -23,13 +23,13 @@ type BeginSwapReq struct {
 }
 
 type BeginSwapRes struct {
-	SwapId    string `json:"swapId"`
-	AmountOut string `json:"amountOut"`
+	SwapId   string `json:"swapId"`
+	QuoteRes string `json:"quoteRes"`
 }
 
 type Fragment struct {
 	OrderId       string                 `json:"orderId"`
-	AmountOut     string                 `json:"amountOut"`
+	OutAmount     string                 `json:"outAmount"`
 	Eip712Sig     string                 `json:"eip712Sig"`
 	Eip712MsgData map[string]interface{} `json:"eip712MsgData"`
 }
@@ -90,19 +90,19 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		return
 	}
 	side := pair.GetSide(req.InToken)
-	amountOutRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount)
+	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, amountOutRes.Size)
+	convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, svcQuoteRes.Size)
 	if convOutAmount == "" {
 		http.Error(w, models.ErrTokenNotsupported.Error(), http.StatusBadRequest)
 		return
 	}
 	// convert res
-	quoteRes := QuoteRes{
+	res := QuoteRes{
 		OutAmount: convOutAmount,
 		OutToken:  req.OutToken,
 		InAmount:  req.InAmount,
@@ -112,7 +112,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 
 	if isSwap {
-		swapData, err := h.svc.BeginSwap(r.Context(), amountOutRes) //, pair.Symbol())//, side, inAmount)
+		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
 		if err != nil {
 			http.Error(w, "BeginSwap filed", http.StatusBadRequest)
 			return
@@ -121,16 +121,16 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].Size)
 			frag := Fragment{
 				OrderId:       swapData.Fragments[i].OrderId.String(),
-				AmountOut:     convOutAmount,
+				OutAmount:     convOutAmount,
 				Eip712Sig:     swapData.Orders[i].Signature.Eip712Sig,
 				Eip712MsgData: swapData.Orders[i].Signature.Eip712MsgData,
 			}
-			quoteRes.Fragments = append(quoteRes.Fragments, frag)
+			res.Fragments = append(res.Fragments, frag)
 		}
-		quoteRes.SwapId = swapData.SwapId.String()
+		res.SwapId = swapData.SwapId.String()
 	}
 
-	resp, err := json.Marshal(quoteRes)
+	resp, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal QuoteRes", logger.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -170,7 +170,7 @@ func handleSwapId(w http.ResponseWriter, r *http.Request) *uuid.UUID {
 	res, err := uuid.Parse(swapId)
 	if err != nil {
 		logctx.Error(ctx, fmt.Sprintf("invalid swapID: %s", swapId), logger.Error(err))
-		http.Error(w, "Error GetAmountOut", http.StatusInternalServerError)
+		http.Error(w, "Error GetQuoteRes", http.StatusInternalServerError)
 		return nil
 	}
 	return &res

@@ -29,7 +29,7 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 	return order.SizePending.GreaterThanOrEqual(frag.Size)
 }
 
-func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error) {
+func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.BeginSwapRes, error) {
 	// create swapID
 	swapId := uuid.New()
 	// no re-entry is needed
