@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetSupportedTokens(t *testing.T) {
+func TestLoadSupportedTokens(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("ReadFileError", func(t *testing.T) {
 		filePath := "nonexistent-file.json"
-		tokens, err := service.GetSupportedTokens(ctx, filePath)
+		tokens, err := service.LoadSupportedTokens(ctx, filePath)
 		assert.Error(t, err)
 		assert.Nil(t, tokens)
 	})
@@ -24,7 +24,7 @@ func TestGetSupportedTokens(t *testing.T) {
 		createInvalidFile(filePath)
 		defer deleteFile(filePath)
 
-		tokens, err := service.GetSupportedTokens(ctx, filePath)
+		tokens, err := service.LoadSupportedTokens(ctx, filePath)
 		assert.Error(t, err)
 		assert.Nil(t, tokens)
 	})
@@ -38,7 +38,7 @@ func TestGetSupportedTokens(t *testing.T) {
 			}}`))
 		defer deleteFile(filePath)
 
-		tokens, err := service.GetSupportedTokens(ctx, filePath)
+		tokens, err := service.LoadSupportedTokens(ctx, filePath)
 		assert.NoError(t, err)
 		assert.NotNil(t, tokens)
 		expected := service.SupportedTokens{

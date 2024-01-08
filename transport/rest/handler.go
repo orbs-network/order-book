@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,10 +13,11 @@ import (
 )
 
 type Handler struct {
-	svc      service.OrderBookService
-	pairMngr *models.PairMngr
-	Router   *mux.Router
-	okJson   []byte
+	svc             service.OrderBookService
+	pairMngr        *models.PairMngr
+	Router          *mux.Router
+	okJson          []byte
+	supportedTokens service.SupportedTokens
 }
 type genRes struct {
 	StatusText string `json:"statusText"`
@@ -44,11 +46,18 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		return nil, err
 	}
 
+	// load supported tokens
+	tokens, err := service.LoadSupportedTokens(context.Background(), "../../supportedTokens.json")
+	if err != nil {
+		return nil, err
+	}
+
 	return &Handler{
-		svc:      svc,
-		Router:   r,
-		pairMngr: models.NewPairMngr(),
-		okJson:   okJson,
+		svc:             svc,
+		Router:          r,
+		pairMngr:        models.NewPairMngr(),
+		okJson:          okJson,
+		supportedTokens: tokens,
 	}, nil
 }
 

@@ -1,12 +1,16 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
@@ -51,6 +55,16 @@ type QuoteRes struct {
 	//BookSignature? string     `json:"bookSignature"`
 }
 
+func (h *Handler) convertToTokenDec(ctx context.Context, outToken string, outAmount decimal.Decimal) string {
+	if token, ok := h.supportedTokens[strings.ToUpper(outToken)]; ok {
+		decMul := math.Pow10(token.Decimals)
+		mul := outAmount.Mul(decimal.NewFromInt(int64(decMul)))
+		return mul.Truncate(0).String()
+	}
+	logctx.Error(ctx, "Token is not found in supported tokens: "+outToken)
+	return ""
+
+}
 func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) {
 	var req QuoteReq
 	ctx := r.Context()
@@ -82,9 +96,14 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		return
 	}
 
+	convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, amountOutRes.Size)
+	if convOutAmount == "" {
+		http.Error(w, models.ErrTokenNotsupported.Error(), http.StatusBadRequest)
+		return
+	}
 	// convert res
 	quoteRes := QuoteRes{
-		OutAmount: amountOutRes.Size.String(),
+		OutAmount: convOutAmount,
 		OutToken:  req.OutToken,
 		InAmount:  req.InAmount,
 		InToken:   req.InToken,
@@ -99,10 +118,10 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			return
 		}
 		for i := 0; i < len(swapData.Fragments); i++ {
-
+			convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].Size)
 			frag := Fragment{
 				OrderId:       swapData.Fragments[i].OrderId.String(),
-				AmountOut:     swapData.Fragments[i].Size.String(),
+				AmountOut:     convOutAmount,
 				Eip712Sig:     swapData.Orders[i].Signature.Eip712Sig,
 				Eip712MsgData: swapData.Orders[i].Signature.Eip712MsgData,
 			}

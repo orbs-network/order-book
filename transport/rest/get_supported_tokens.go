@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -17,6 +18,23 @@ type res struct {
 	Tokens service.SupportedTokens `json:"tokens"`
 }
 
+func (h *Handler) LoadSupportedTokens() {
+	ctx := context.Background()
+
+	if filePath == "" {
+		logctx.Warn(ctx, "SUPPORTED_TOKENS_JSON_FILE_PATH env var not set, using default")
+		filePath = "supportedTokens.json"
+	}
+
+	logctx.Info(ctx, "User requesting supported tokens")
+	tokens, err := service.LoadSupportedTokens(ctx, filePath)
+	if err != nil {
+		logctx.Error(ctx, "failed to get supported tokens", logger.Error(err))
+		//http.Error(w, "Error getting supported tokens", http.StatusInternalServerError)
+	}
+	// success
+	h.supportedTokens = tokens
+}
 func (h *Handler) GetSupportedTokens(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
@@ -27,20 +45,7 @@ func (h *Handler) GetSupportedTokens(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if filePath == "" {
-		logctx.Warn(r.Context(), "SUPPORTED_TOKENS_JSON_FILE_PATH env var not set, using default")
-		filePath = "supportedTokens.json"
-	}
-
-	logctx.Info(ctx, "User requesting supported tokens", logger.String("user", user.Id.String()))
-	tokens, err := service.GetSupportedTokens(r.Context(), filePath)
-	if err != nil {
-		logctx.Error(r.Context(), "failed to get supported tokens", logger.Error(err))
-		http.Error(w, "Error getting supported tokens", http.StatusInternalServerError)
-		return
-	}
-
-	res := res{Tokens: tokens}
+	res := res{Tokens: h.supportedTokens}
 
 	jsonData, err := json.Marshal(res)
 	if err != nil {
