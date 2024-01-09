@@ -24,10 +24,9 @@ type OrderBookService interface {
 	GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
 	GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
 
-	GetAmountOut(ctx context.Context, swapId uuid.UUID, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
 	// taker api - INSTEAD
-	GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, amountIn decimal.Decimal) (models.AmountOut, error)
-	BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error)
+	GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal) (models.QuoteRes, error)
+	BeginSwap(ctx context.Context, data models.QuoteRes) (models.BeginSwapRes, error)
 	AbortSwap(ctx context.Context, swapId uuid.UUID) error
 	//txSent(ctx context.Context, swapId uuid.UUID) error
 }

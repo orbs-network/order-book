@@ -37,7 +37,7 @@ func runSwapServer(t *testing.T) {
 	if err != nil {
 		log.Fatalf("error creating handler: %v", err)
 	}
-	handler.initLHRoutes()
+	//handler.initLHRoutes()
 
 	httpServer = NewHTTPServer(":8080", handler.Router)
 	httpServer.StartServer()
@@ -127,8 +127,8 @@ func TestHandlers_BeginSwap(t *testing.T) {
 			swapId := uuid.New().String()
 
 			expectedRes := BeginSwapRes{
-				swapId: swapId,
-				AmountOut: test.amountOut,
+				swapId:    swapId,
+				QuoteRes: test.amountOut,
 			}
 
 			url := fmt.Sprintf("http://localhost:8080/lh/v1/begin_auction/%s", swapId)
@@ -219,9 +219,9 @@ func TestHandlers_ConfirmAuction(t *testing.T) {
 		err = json.NewDecoder(response.Body).Decode(&actualRes)
 		assert.NoError(t, err)
 		assert.Equal(t, len(actualRes.Fragments), 3)
-		assert.Equal(t, actualRes.Fragments[0].AmountOut, "1")
-		assert.Equal(t, actualRes.Fragments[1].AmountOut, "2")
-		assert.Equal(t, actualRes.Fragments[2].AmountOut, "1.5")
+		assert.Equal(t, actualRes.Fragments[0].QuoteRes, "1")
+		assert.Equal(t, actualRes.Fragments[1].QuoteRes, "2")
+		assert.Equal(t, actualRes.Fragments[2].QuoteRes, "1.5")
 
 		//assert.Equal(t, expectedRes, actualRes)
 	})

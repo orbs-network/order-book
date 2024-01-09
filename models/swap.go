@@ -19,7 +19,7 @@ func (a SwapStatus) String() string {
 	return string(a)
 }
 
-type AmountOut struct {
+type QuoteRes struct {
 	Size       decimal.Decimal
 	OrderFrags []OrderFrag
 }

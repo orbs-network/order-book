@@ -1,7 +1,10 @@
 package rest
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
@@ -10,9 +13,15 @@ import (
 )
 
 type Handler struct {
-	svc      service.OrderBookService
-	pairMngr *models.PairMngr
-	Router   *mux.Router
+	svc             service.OrderBookService
+	pairMngr        *models.PairMngr
+	Router          *mux.Router
+	okJson          []byte
+	supportedTokens service.SupportedTokens
+}
+type genRes struct {
+	StatusText string `json:"statusText"`
+	Status     int    `json:"status"`
 }
 
 func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
@@ -24,10 +33,30 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		return nil, fmt.Errorf("router cannot be nil")
 	}
 
+	// Create an empty JSON object
+	okJsonObj := genRes{
+		StatusText: "OK",
+		Status:     http.StatusOK,
+	}
+
+	// Convert the emptyJSON object to JSON format
+	okJson, err := json.Marshal(okJsonObj)
+	if err != nil {
+		return nil, err
+	}
+
+	// load supported tokens
+	tokens, err := service.LoadSupportedTokens(context.Background(), "../../supportedTokens.json")
+	if err != nil {
+		return nil, err
+	}
+
 	return &Handler{
-		svc:      svc,
-		Router:   r,
-		pairMngr: models.NewPairMngr(),
+		svc:             svc,
+		Router:          r,
+		pairMngr:        models.NewPairMngr(),
+		okJson:          okJson,
+		supportedTokens: tokens,
 	}, nil
 }
 

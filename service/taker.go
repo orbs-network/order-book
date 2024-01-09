@@ -29,7 +29,7 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 	return order.SizePending.GreaterThanOrEqual(frag.Size)
 }
 
-func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.BeginSwapRes, error) {
+func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.BeginSwapRes, error) {
 	// create swapID
 	swapId := uuid.New()
 	// no re-entry is needed
@@ -63,32 +63,27 @@ func (s *Service) BeginSwap(ctx context.Context, data models.AmountOut) (models.
 	// set order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
-		res.Orders[i].SizePending = res.Fragments[i].Size
+		res.Orders[i].SizePending = res.Orders[i].SizePending.Add(res.Fragments[i].Size)
 	}
+
+	// save
 	err := s.orderBookStore.StoreOpenOrders(ctx, res.Orders)
 	if err != nil {
 		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
 		return models.BeginSwapRes{}, err
 	}
 
-	// add oredebook signature on the buffer HERE if needed
+	err = s.orderBookStore.StoreSwap(ctx, swapId, res.Fragments)
+	if err != nil {
+		logctx.Error(ctx, "StoreSwap Failed", logger.Error(err))
+		return models.BeginSwapRes{}, err
+	}
 
+	// add oredebook signature on the buffer HERE if needed
 	return res, nil
 }
 
 func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
-	// returns error if already confirmed
-	err := s.orderBookStore.UpdateSwapTracker(ctx, models.SWAP_ABORDTED, swapId)
-
-	if err != nil {
-		if err == models.ErrValAlreadyInSet {
-			logctx.Warn(ctx, "AbortSwap re-entry!", logger.String("swapId: ", swapId.String()))
-		} else {
-			logctx.Warn(ctx, "AbortSwap UpdateSwapTracker Failed", logger.String("swapId: ", swapId.String()), logger.Error(err))
-		}
-		return err
-	}
-
 	// get swap from store
 	frags, err := s.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
