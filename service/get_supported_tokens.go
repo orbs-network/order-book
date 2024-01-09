@@ -17,7 +17,7 @@ type SupportedToken struct {
 
 type SupportedTokens map[string]SupportedToken
 
-func LoadSupportedTokens(ctx context.Context, filePath string) (SupportedTokens, error) {
+func (s *Service) LoadSupportedTokens(ctx context.Context, filePath string) (SupportedTokens, error) {
 	file, err := os.ReadFile(filePath)
 
 	if err != nil {
