@@ -49,7 +49,7 @@ func (h *Handler) GetSupportedTokens(w http.ResponseWriter, r *http.Request) {
 
 	jsonData, err := json.Marshal(res)
 	if err != nil {
-		logctx.Error(r.Context(), "failed to marshal response", logger.Error(err))
+		logctx.Error(ctx, "failed to marshal response", logger.Error(err))
 		http.Error(w, "Error getting supported tokens", http.StatusInternalServerError)
 		return
 	}
@@ -57,7 +57,7 @@ func (h *Handler) GetSupportedTokens(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(jsonData); err != nil {
-		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
+		logctx.Error(ctx, "failed to write response", logger.Error(err))
 		http.Error(w, "Error getting supported tokens", http.StatusInternalServerError)
 	}
 }

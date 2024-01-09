@@ -42,7 +42,6 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 	// Convert the emptyJSON object to JSON format
 	okJson, err := json.Marshal(okJsonObj)
 	if err != nil {
-		//http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return nil, err
 	}
 
