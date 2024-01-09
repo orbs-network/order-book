@@ -91,7 +91,7 @@ func TestService_getOutAmountInAToken(t *testing.T) {
 		assert.Equal(t, res.Size.String(), decimal.NewFromFloat(900*fract).String())
 	})
 
-	t.Run("getOutAmountInBToken- liquidity insuficinet", func(t *testing.T) {
+	t.Run("getOutAmountInBToken- liquidity insufficient", func(t *testing.T) {
 		_, err := getOutAmountInBToken(ctx, newBids(), decimal.NewFromFloat(1+2+3+1))
 		assert.Equal(t, err, models.ErrInsufficientLiquity)
 	})
