@@ -18,7 +18,7 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -27,7 +27,7 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 
 	orderId, err := uuid.Parse(orderIdStr)
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid orderId")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Invalid orderId")
 		return
 	}
 
@@ -35,19 +35,19 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 	order, err := h.svc.GetOrderById(r.Context(), orderId)
 
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Internal error. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Internal error. Try again later")
 		return
 	}
 
 	if order == nil {
-		restutils.WriteJSONError(w, http.StatusNotFound, fmt.Sprintf("Order not found for %s", orderIdStr))
+		restutils.WriteJSONError(ctx, w, http.StatusNotFound, fmt.Sprintf("Order not found for %s", orderIdStr))
 		return
 	}
 
 	resp, err := json.Marshal(order)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal order", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting order by ID")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting order by ID")
 		return
 	}
 
@@ -56,6 +56,6 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting order by ID")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting order by ID")
 	}
 }

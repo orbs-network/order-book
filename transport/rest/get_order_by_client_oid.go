@@ -17,7 +17,7 @@ func (h *Handler) GetOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 
 	clientOId, err := uuid.Parse(clientOIdStr)
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid clientOId")
+		restutils.WriteJSONError(r.Context(), w, http.StatusBadRequest, "Invalid clientOId")
 		return
 	}
 
@@ -25,12 +25,12 @@ func (h *Handler) GetOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 	order, err := h.svc.GetOrderByClientOId(r.Context(), clientOId)
 
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Internal error. Try again later")
+		restutils.WriteJSONError(r.Context(), w, http.StatusInternalServerError, "Internal error. Try again later")
 		return
 	}
 
 	if order == nil {
-		restutils.WriteJSONError(w, http.StatusNotFound, "Order not found")
+		restutils.WriteJSONError(r.Context(), w, http.StatusNotFound, "Order not found")
 		return
 	}
 
@@ -38,7 +38,7 @@ func (h *Handler) GetOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logctx.Error(r.Context(), "error marshaling order", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting order by client ID")
+		restutils.WriteJSONError(r.Context(), w, http.StatusInternalServerError, "Error getting order by client ID")
 		return
 	}
 
@@ -46,7 +46,7 @@ func (h *Handler) GetOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting order by client ID")
+		restutils.WriteJSONError(r.Context(), w, http.StatusInternalServerError, "Error getting order by client ID")
 	}
 
 }

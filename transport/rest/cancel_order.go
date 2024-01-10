@@ -24,7 +24,7 @@ func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -33,7 +33,7 @@ func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 
 	orderId, err := uuid.Parse(orderIdStr)
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid order ID")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Invalid order ID")
 		return
 	}
 
@@ -53,7 +53,7 @@ func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request)
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -62,7 +62,7 @@ func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request)
 
 	clientOId, err := uuid.Parse(clientOIdStr)
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid clientOId")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Invalid clientOId")
 		return
 	}
 
@@ -96,37 +96,37 @@ func (h *Handler) handleCancelOrder(input hInput) {
 
 	if err == models.ErrNotFound {
 		logctx.Warn(input.ctx, "order not found", logger.String("id", input.id.String()))
-		restutils.WriteJSONError(input.w, http.StatusNotFound, "Order not found")
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusNotFound, "Order not found")
 		return
 	}
 
 	if err == models.ErrUnauthorized {
 		logctx.Warn(input.ctx, "user not authorized to cancel order", logger.String("id", input.id.String()))
-		restutils.WriteJSONError(input.w, http.StatusUnauthorized, "Not authorized")
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusUnauthorized, "Not authorized")
 		return
 	}
 
 	if err == models.ErrOrderPending {
 		logctx.Warn(input.ctx, "cancelling order not possible when order is pending", logger.String("id", input.id.String()))
-		restutils.WriteJSONError(input.w, http.StatusConflict, "Cannot cancel order due to pending fill")
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusConflict, "Cannot cancel order due to pending fill")
 		return
 	}
 
 	if err == models.ErrOrderFilled {
 		logctx.Warn(input.ctx, "cancelling order not possible when order is filled", logger.String("id", input.id.String()))
-		restutils.WriteJSONError(input.w, http.StatusConflict, "Cannot cancel filled order")
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusConflict, "Cannot cancel filled order")
 		return
 	}
 
 	if err != nil {
 		logctx.Error(input.ctx, "failed to cancel order", logger.Error(err))
-		restutils.WriteJSONError(input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
 		return
 	}
 
 	if cancelledOrderId == nil {
 		logctx.Error(input.ctx, "cancelled order ID is nil")
-		restutils.WriteJSONError(input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
 		return
 	}
 
@@ -137,7 +137,7 @@ func (h *Handler) handleCancelOrder(input hInput) {
 	resp, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(input.ctx, "failed to marshal created order", logger.Error(err))
-		restutils.WriteJSONError(input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
 		return
 	}
 
@@ -147,6 +147,6 @@ func (h *Handler) handleCancelOrder(input hInput) {
 	if _, err := input.w.Write(resp); err != nil {
 		logctx.Error(input.ctx, "failed to write response", logger.Error(err), logger.String("orderId", cancelledOrderId.String()))
 
-		restutils.WriteJSONError(input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusInternalServerError, "Error cancelling order. Try again later")
 	}
 }

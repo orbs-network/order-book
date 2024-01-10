@@ -20,7 +20,7 @@ func (h *Handler) GetSupportedTokens(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 

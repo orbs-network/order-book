@@ -17,7 +17,7 @@ func WriteJSONResponse(ctx context.Context, w http.ResponseWriter, statusCode in
 	if err := encoder.Encode(resp); err != nil {
 		logFields = append(logFields, logger.Error(err))
 		logctx.Error(ctx, "failed to encode JSON response", logFields...)
-		WriteJSONError(w, http.StatusInternalServerError, "Error processing request. Try again later")
+		WriteJSONError(ctx, w, http.StatusInternalServerError, "Error processing request. Try again later")
 		return
 	}
 
@@ -27,7 +27,7 @@ func WriteJSONResponse(ctx context.Context, w http.ResponseWriter, statusCode in
 	if _, err := w.Write(buf.Bytes()); err != nil {
 		logFields = append(logFields, logger.Error(err))
 		logctx.Error(ctx, "failed to write response", logFields...)
-		WriteJSONError(w, http.StatusInternalServerError, "Error processing request. Try again later")
+		WriteJSONError(ctx, w, http.StatusInternalServerError, "Error processing request. Try again later")
 	}
 }
 
@@ -36,7 +36,7 @@ type ErrorResponse struct {
 	Msg    string `json:"msg"`
 }
 
-func WriteJSONError(w http.ResponseWriter, status int, message string) {
+func WriteJSONError(ctx context.Context, w http.ResponseWriter, status int, message string, logFields ...logger.Field) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
@@ -45,5 +45,8 @@ func WriteJSONError(w http.ResponseWriter, status int, message string) {
 		Msg:    message,
 	}
 
-	json.NewEncoder(w).Encode(errResponse)
+	if err := json.NewEncoder(w).Encode(errResponse); err != nil {
+		logFields = append(logFields, logger.Error(err))
+		logctx.Error(ctx, "failed to write error response", logFields...)
+	}
 }

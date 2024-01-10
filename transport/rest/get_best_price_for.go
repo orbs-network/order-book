@@ -23,7 +23,7 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -33,13 +33,13 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 
 	symbol, err := models.StrToSymbol(symbolStr)
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "invalid symbol")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "invalid symbol")
 		return
 	}
 
 	side, err := models.StrToSide(sideStr)
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "invalid side")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "invalid side")
 		return
 	}
 
@@ -48,13 +48,13 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logctx.Error(r.Context(), "failed to get best price", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting best price. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting best price. Try again later")
 		return
 	}
 
 	if price.IsZero() {
 		logctx.Info(r.Context(), "no orders found for symbol and side", logger.String("symbol", symbol.String()), logger.String("side", side.String()))
-		restutils.WriteJSONError(w, http.StatusNotFound, "No orders found for symbol and side")
+		restutils.WriteJSONError(ctx, w, http.StatusNotFound, "No orders found for symbol and side")
 		return
 	}
 
@@ -67,7 +67,7 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal best price", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting best price. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting best price. Try again later")
 		return
 	}
 
@@ -76,6 +76,6 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting best price. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting best price. Try again later")
 	}
 }

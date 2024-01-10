@@ -27,20 +27,20 @@ func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
 	vars := mux.Vars(r)
 	symbolStr, ok := vars["symbol"]
 	if !ok {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Symbol is required")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Symbol is required")
 		return
 	}
 
 	symbol, err := models.StrToSymbol(symbolStr)
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid symbol")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Invalid symbol")
 		return
 	}
 
@@ -50,13 +50,13 @@ func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 	if limitStr != "" {
 		limit, err = strconv.Atoi(limitStr)
 		if err != nil || limit <= 0 || limit > MAX_LIMIT {
-			restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid limit")
+			restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Invalid limit")
 			return
 		}
 	}
 
 	if limit <= 0 || limit > MAX_LIMIT {
-		restutils.WriteJSONError(w, http.StatusBadRequest, fmt.Sprintf("Invalid limit: must be between 1 and %d", MAX_LIMIT))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, fmt.Sprintf("Invalid limit: must be between 1 and %d", MAX_LIMIT))
 		return
 	}
 
@@ -64,7 +64,7 @@ func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 	marketDepth, err := h.svc.GetMarketDepth(r.Context(), symbol, limit)
 
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting market depth. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting market depth. Try again later")
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal market depth", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting market depth. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting market depth. Try again later")
 		return
 	}
 
@@ -85,6 +85,6 @@ func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting market depth. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting market depth. Try again later")
 	}
 }

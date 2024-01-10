@@ -20,7 +20,7 @@ func (h *Handler) GetSymbols(w http.ResponseWriter, r *http.Request) {
 	symbols, err := h.svc.GetSymbols(r.Context())
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal symbols", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting symbols. Try again later")
+		restutils.WriteJSONError(r.Context(), w, http.StatusInternalServerError, "Error getting symbols. Try again later")
 		return
 	}
 
@@ -33,7 +33,7 @@ func (h *Handler) GetSymbols(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal symbols", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting symbols. Try again later")
+		restutils.WriteJSONError(r.Context(), w, http.StatusInternalServerError, "Error getting symbols. Try again later")
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -41,6 +41,6 @@ func (h *Handler) GetSymbols(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error getting symbols. Try again later")
+		restutils.WriteJSONError(r.Context(), w, http.StatusInternalServerError, "Error getting symbols. Try again later")
 	}
 }

@@ -34,7 +34,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&args)
 	if err != nil {
 		logctx.Warn(ctx, "invalid JSON body", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid JSON body")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Invalid JSON body")
 		return
 	}
 
@@ -55,7 +55,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		eip712Sig:     args.Eip712Sig,
 		eip712MsgData: &args.Eip712MsgData,
 	}); err != nil {
-		restutils.WriteJSONError(w, http.StatusBadRequest, err.Error())
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -68,7 +68,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		logctx.Warn(ctx, "failed to parse order fields", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusBadRequest, err.Error())
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -86,31 +86,31 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	if err == models.ErrSignatureVerificationError {
 		logctx.Warn(ctx, "signature verification error", logger.Error(err), logger.String("userId", user.Id.String()))
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Signature verification error")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Signature verification error")
 		return
 	}
 
 	if err == models.ErrSignatureVerificationFailed {
 		logctx.Warn(ctx, "signature verification failed", logger.String("userId", user.Id.String()))
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "Extracted public key does not match user's public key")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "Extracted public key does not match user's public key")
 		return
 	}
 
 	if err == models.ErrClashingOrderId {
 		logctx.Warn(ctx, "clashing order ID", logger.String("userId", user.Id.String()), logger.String("orderId", parsedFields.clientOrderId.String()))
-		restutils.WriteJSONError(w, http.StatusConflict, "Clashing order ID. Please retry")
+		restutils.WriteJSONError(ctx, w, http.StatusConflict, "Clashing order ID. Please retry")
 		return
 	}
 
 	if err == models.ErrClashingClientOrderId {
 		logctx.Warn(ctx, "clashing client order ID", logger.String("userId", user.Id.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
-		restutils.WriteJSONError(w, http.StatusConflict, fmt.Sprintf("Order with clientOrderId %s already exists. You must first cancel this order", args.ClientOrderId))
+		restutils.WriteJSONError(ctx, w, http.StatusConflict, fmt.Sprintf("Order with clientOrderId %s already exists. You must first cancel this order", args.ClientOrderId))
 		return
 	}
 
 	if err != nil {
 		logctx.Error(ctx, "failed to create order", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error creating order. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error creating order. Try again later")
 		return
 	}
 
@@ -120,7 +120,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logctx.Error(ctx, "failed to marshal created order", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error creating order. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error creating order. Try again later")
 		return
 	}
 
@@ -129,7 +129,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(ctx, "failed to write response", logger.Error(err), logger.String("orderId", parsedFields.clientOrderId.String()))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error creating order. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error creating order. Try again later")
 	}
 }
 

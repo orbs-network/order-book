@@ -34,24 +34,24 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
 	var args CreateOrdersRequest
 	err := json.NewDecoder(r.Body).Decode(&args)
 	if err != nil {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid JSON body")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Invalid JSON body")
 		return
 	}
 
 	if len(args.Orders) == 0 {
-		restutils.WriteJSONError(w, http.StatusBadRequest, "Orders list is empty. Ensure you include 'symbol' and 'orders'")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Orders list is empty. Ensure you include 'symbol' and 'orders'")
 		return
 	}
 
 	if len(args.Orders) > NUM_OF_ORDERS_LIMIT {
-		restutils.WriteJSONError(w, http.StatusBadRequest, fmt.Sprintf("Maximum %d orders allowed", NUM_OF_ORDERS_LIMIT))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, fmt.Sprintf("Maximum %d orders allowed", NUM_OF_ORDERS_LIMIT))
 		return
 	}
 

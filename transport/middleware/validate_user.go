@@ -24,7 +24,7 @@ func ValidateUserMiddleware(getUserByApiKey GetUserByApiKeyFunc) func(http.Handl
 
 			if err != nil {
 				logctx.Warn(r.Context(), "incorrect API key format", logger.Error(err))
-				restutils.WriteJSONError(w, http.StatusBadRequest, "Invalid API key (ensure the format is 'Bearer YOUR-API-KEY')")
+				restutils.WriteJSONError(r.Context(), w, http.StatusBadRequest, "Invalid API key (ensure the format is 'Bearer YOUR-API-KEY')")
 				return
 			}
 
@@ -32,10 +32,10 @@ func ValidateUserMiddleware(getUserByApiKey GetUserByApiKeyFunc) func(http.Handl
 			if err != nil {
 				if err == models.ErrNotFound {
 					logctx.Warn(r.Context(), "user not found by api key")
-					restutils.WriteJSONError(w, http.StatusUnauthorized, "Unauthorized")
+					restutils.WriteJSONError(r.Context(), w, http.StatusUnauthorized, "Unauthorized")
 				} else {
 					logctx.Error(r.Context(), "unexpected error getting user by api key", logger.Error(err))
-					restutils.WriteJSONError(w, http.StatusInternalServerError, "Internal server error")
+					restutils.WriteJSONError(r.Context(), w, http.StatusInternalServerError, "Internal server error")
 				}
 				return
 			}

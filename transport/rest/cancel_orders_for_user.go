@@ -21,7 +21,7 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		restutils.WriteJSONError(w, http.StatusUnauthorized, "User not found")
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -30,13 +30,13 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 
 	if err == models.ErrNotFound {
 		logctx.Info(ctx, "no orders found for user", logger.String("userId", user.Id.String()))
-		restutils.WriteJSONError(w, http.StatusNotFound, "No orders found")
+		restutils.WriteJSONError(ctx, w, http.StatusNotFound, "No orders found")
 		return
 	}
 
 	if err != nil {
 		logctx.Error(ctx, "could not cancel orders for user", logger.Error(err), logger.String("userId", user.Id.String()))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Unable to cancel orders. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Unable to cancel orders. Try again later")
 		return
 	}
 
@@ -49,7 +49,7 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	orderIdsJSON, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(ctx, "could not marshal orderIds to JSON", logger.Error(err))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Unable to marshal orderIds to JSON")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Unable to marshal orderIds to JSON")
 		return
 	}
 
@@ -58,6 +58,6 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(orderIdsJSON); err != nil {
 		logctx.Error(ctx, "failed to write response", logger.Error(err), logger.String("userId", user.Id.String()))
-		restutils.WriteJSONError(w, http.StatusInternalServerError, "Error cancelling orders. Try again later")
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error cancelling orders. Try again later")
 	}
 }
