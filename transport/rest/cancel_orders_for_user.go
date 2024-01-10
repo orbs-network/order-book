@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -20,7 +21,7 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -29,13 +30,13 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 
 	if err == models.ErrNotFound {
 		logctx.Info(ctx, "no orders found for user", logger.String("userId", user.Id.String()))
-		http.Error(w, "No orders found", http.StatusNotFound)
+		restutils.WriteJSONError(ctx, w, http.StatusNotFound, "No orders found")
 		return
 	}
 
 	if err != nil {
 		logctx.Error(ctx, "could not cancel orders for user", logger.Error(err), logger.String("userId", user.Id.String()))
-		http.Error(w, "Unable to cancel orders. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Unable to cancel orders. Try again later")
 		return
 	}
 
@@ -48,7 +49,7 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	orderIdsJSON, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(ctx, "could not marshal orderIds to JSON", logger.Error(err))
-		http.Error(w, "Unable to marshal orderIds to JSON", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Unable to marshal orderIds to JSON")
 		return
 	}
 
@@ -57,6 +58,6 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(orderIdsJSON); err != nil {
 		logctx.Error(ctx, "failed to write response", logger.Error(err), logger.String("userId", user.Id.String()))
-		http.Error(w, "Error cancelling orders. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error cancelling orders. Try again later")
 	}
 }

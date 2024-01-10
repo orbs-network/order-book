@@ -32,7 +32,7 @@ func TestHandler_CancelOrdersForUser(t *testing.T) {
 		router.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rr.Code)
-		assert.Equal(t, "User not found\n", rr.Body.String())
+		assert.Equal(t, "{\"status\":401,\"msg\":\"User not found\"}\n", rr.Body.String())
 	})
 
 	ctx := mocks.AddUserToCtx(nil)
@@ -47,13 +47,13 @@ func TestHandler_CancelOrdersForUser(t *testing.T) {
 			"no orders found for user",
 			&mocks.MockOrderBookService{Error: models.ErrNotFound},
 			http.StatusNotFound,
-			"No orders found\n",
+			"{\"status\":404,\"msg\":\"No orders found\"}\n",
 		},
 		{
 			"error cancelling orders for user",
 			&mocks.MockOrderBookService{Error: assert.AnError},
 			http.StatusInternalServerError,
-			"Unable to cancel orders. Try again later\n",
+			"{\"status\":500,\"msg\":\"Unable to cancel orders. Try again later\"}\n",
 		},
 		{
 			"successfully cancelled orders for user",

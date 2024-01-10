@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/service"
 	"github.com/stretchr/testify/assert"
 )
@@ -12,9 +13,11 @@ import (
 func TestLoadSupportedTokens(t *testing.T) {
 	ctx := context.Background()
 
+	svc, _ := service.New(&mocks.MockOrderBookStore{}, &mocks.MockBcClient{})
+
 	t.Run("ReadFileError", func(t *testing.T) {
 		filePath := "nonexistent-file.json"
-		tokens, err := service.LoadSupportedTokens(ctx, filePath)
+		tokens, err := svc.LoadSupportedTokens(ctx, filePath)
 		assert.Error(t, err)
 		assert.Nil(t, tokens)
 	})
@@ -24,7 +27,7 @@ func TestLoadSupportedTokens(t *testing.T) {
 		createInvalidFile(filePath)
 		defer deleteFile(filePath)
 
-		tokens, err := service.LoadSupportedTokens(ctx, filePath)
+		tokens, err := svc.LoadSupportedTokens(ctx, filePath)
 		assert.Error(t, err)
 		assert.Nil(t, tokens)
 	})
@@ -38,7 +41,7 @@ func TestLoadSupportedTokens(t *testing.T) {
 			}}`))
 		defer deleteFile(filePath)
 
-		tokens, err := service.LoadSupportedTokens(ctx, filePath)
+		tokens, err := svc.LoadSupportedTokens(ctx, filePath)
 		assert.NoError(t, err)
 		assert.NotNil(t, tokens)
 		expected := service.SupportedTokens{

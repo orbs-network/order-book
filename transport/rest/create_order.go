@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -33,7 +34,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -41,7 +42,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&args)
 	if err != nil {
 		logctx.Warn(ctx, "invalid JSON body", logger.Error(err))
-		http.Error(w, "invalid JSON body", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Invalid JSON body")
 		return
 	}
 
@@ -54,7 +55,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		eip712Sig:     args.Eip712Sig,
 		eip712MsgData: &args.Eip712MsgData,
 	}); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -67,7 +68,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		logctx.Warn(ctx, "failed to parse order fields", logger.Error(err))
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -85,29 +86,31 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	if err == models.ErrSignatureVerificationError {
 		logctx.Warn(ctx, "signature verification error", logger.Error(err), logger.String("userId", user.Id.String()))
-		http.Error(w, "Signature verification error", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Signature verification error")
 		return
 	}
 
 	if err == models.ErrSignatureVerificationFailed {
 		logctx.Warn(ctx, "signature verification failed", logger.String("userId", user.Id.String()))
-		http.Error(w, "Signature verification failed", http.StatusUnauthorized)
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "Extracted public key does not match user's public key")
 		return
 	}
 
 	if err == models.ErrClashingOrderId {
-		http.Error(w, "Clashing order ID. Please retry", http.StatusConflict)
+		logctx.Warn(ctx, "clashing order ID", logger.String("userId", user.Id.String()), logger.String("orderId", parsedFields.clientOrderId.String()))
+		restutils.WriteJSONError(ctx, w, http.StatusConflict, "Clashing order ID. Please retry")
 		return
 	}
 
 	if err == models.ErrClashingClientOrderId {
-		http.Error(w, fmt.Sprintf("Order with clientOrderId %q already exists. You must first cancel this order", args.ClientOrderId), http.StatusConflict)
+		logctx.Warn(ctx, "clashing client order ID", logger.String("userId", user.Id.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
+		restutils.WriteJSONError(ctx, w, http.StatusConflict, fmt.Sprintf("Order with clientOrderId %s already exists. You must first cancel this order", args.ClientOrderId))
 		return
 	}
 
 	if err != nil {
 		logctx.Error(ctx, "failed to create order", logger.Error(err))
-		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error creating order. Try again later")
 		return
 	}
 
@@ -117,7 +120,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logctx.Error(ctx, "failed to marshal created order", logger.Error(err))
-		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error creating order. Try again later")
 		return
 	}
 
@@ -126,7 +129,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(ctx, "failed to write response", logger.Error(err), logger.String("orderId", parsedFields.clientOrderId.String()))
-		http.Error(w, "Error creating order. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error creating order. Try again later")
 	}
 }
 

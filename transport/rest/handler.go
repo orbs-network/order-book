@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/transport/middleware"
+	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
 type Handler struct {
@@ -23,6 +25,8 @@ type genRes struct {
 	StatusText string `json:"statusText"`
 	Status     int    `json:"status"`
 }
+
+var filePath = os.Getenv("SUPPORTED_TOKENS_JSON_FILE_PATH")
 
 func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 	if svc == nil {
@@ -45,8 +49,13 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		return nil, err
 	}
 
+	if filePath == "" {
+		logctx.Warn(context.Background(), "SUPPORTED_TOKENS_JSON_FILE_PATH env var not set, using default")
+		filePath = "supportedTokens.json"
+	}
+
 	// load supported tokens
-	tokens, err := service.LoadSupportedTokens(context.Background(), "../../supportedTokens.json")
+	tokens, err := svc.LoadSupportedTokens(context.Background(), filePath)
 	if err != nil {
 		return nil, err
 	}

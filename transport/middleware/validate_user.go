@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -23,7 +24,7 @@ func ValidateUserMiddleware(getUserByApiKey GetUserByApiKeyFunc) func(http.Handl
 
 			if err != nil {
 				logctx.Warn(r.Context(), "incorrect API key format", logger.Error(err))
-				http.Error(w, "Invalid API key (ensure the format is 'Bearer YOUR-API-KEY')", http.StatusBadRequest)
+				restutils.WriteJSONError(r.Context(), w, http.StatusBadRequest, "Invalid API key (ensure the format is 'Bearer YOUR-API-KEY')")
 				return
 			}
 
@@ -31,10 +32,10 @@ func ValidateUserMiddleware(getUserByApiKey GetUserByApiKeyFunc) func(http.Handl
 			if err != nil {
 				if err == models.ErrNotFound {
 					logctx.Warn(r.Context(), "user not found by api key")
-					http.Error(w, "Unauthorized", http.StatusUnauthorized)
+					restutils.WriteJSONError(r.Context(), w, http.StatusUnauthorized, "Unauthorized")
 				} else {
 					logctx.Error(r.Context(), "unexpected error getting user by api key", logger.Error(err))
-					http.Error(w, "Internal server error", http.StatusInternalServerError)
+					restutils.WriteJSONError(r.Context(), w, http.StatusInternalServerError, "Internal server error")
 				}
 				return
 			}

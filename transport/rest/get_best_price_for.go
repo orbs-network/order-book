@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -22,7 +23,7 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -32,13 +33,13 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 
 	symbol, err := models.StrToSymbol(symbolStr)
 	if err != nil {
-		http.Error(w, "invalid symbol", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "invalid symbol")
 		return
 	}
 
 	side, err := models.StrToSide(sideStr)
 	if err != nil {
-		http.Error(w, "invalid side", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "invalid side")
 		return
 	}
 
@@ -47,13 +48,13 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		logctx.Error(r.Context(), "failed to get best price", logger.Error(err))
-		http.Error(w, "Error getting best price. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting best price. Try again later")
 		return
 	}
 
 	if price.IsZero() {
 		logctx.Info(r.Context(), "no orders found for symbol and side", logger.String("symbol", symbol.String()), logger.String("side", side.String()))
-		http.Error(w, "No orders found for symbol and side", http.StatusNotFound)
+		restutils.WriteJSONError(ctx, w, http.StatusNotFound, "No orders found for symbol and side")
 		return
 	}
 
@@ -66,7 +67,7 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 	resp, err := json.Marshal(res)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal best price", logger.Error(err))
-		http.Error(w, "Error getting best price. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting best price. Try again later")
 		return
 	}
 
@@ -75,6 +76,6 @@ func (h *Handler) GetBestPriceFor(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
-		http.Error(w, "Error getting best price. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting best price. Try again later")
 	}
 }
