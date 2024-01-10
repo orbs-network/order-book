@@ -59,7 +59,7 @@ func newBids() models.OrderIter {
 }
 
 // /////////////////////////////////////////////////////////////////
-func TestService_getOutAmountInAToken(t *testing.T) {
+func TestService_getOutAmount(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("getOutAmountInAToken- happy path", func(t *testing.T) {

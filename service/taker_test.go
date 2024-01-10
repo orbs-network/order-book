@@ -19,24 +19,40 @@ func TestTaker_Quote(t *testing.T) {
 	ctx := context.Background()
 	evmClient := &service.EvmClient{}
 
-	t.Run("QUOTE should return error zero amount in ", func(t *testing.T) {
+	t.Run("QUOTE should return error zero amount in", func(t *testing.T) {
 		store := mocks.MockOrderBookStore{
 			Error: models.ErrSwapInvalid,
 			Sets:  make(map[string]map[string]struct{}),
 		}
+		// buy
 		svc, _ := service.New(&store, evmClient)
 		_, err := svc.GetQuote(ctx, symbol, models.BUY, decimal.Zero)
+		assert.Error(t, err, models.ErrInAmount)
+		// sell
+		svc, _ = service.New(&store, evmClient)
+		_, err = svc.GetQuote(ctx, symbol, models.SELL, decimal.Zero)
 		assert.Error(t, err, models.ErrInAmount)
 
 	})
 
-	t.Run("QUOTE HappyPath", func(t *testing.T) {
+	t.Run("QUOTE HappyPath buy", func(t *testing.T) {
 		mock := mocks.CreateSwapMock()
 		svc, _ := service.New(mock, evmClient)
 
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
 		res, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
+		assert.True(t, res.Size.Equals(outAmount))
+		assert.NoError(t, err)
+	})
+
+	t.Run("QUOTE HappyPath Sell", func(t *testing.T) {
+		mock := mocks.CreateSwapMock()
+		svc, _ := service.New(mock, evmClient)
+
+		inAmount := decimal.NewFromInt(1)
+		outAmount := decimal.NewFromInt(900)
+		res, err := svc.GetQuote(ctx, symbol, models.SELL, inAmount)
 		assert.True(t, res.Size.Equals(outAmount))
 		assert.NoError(t, err)
 	})
