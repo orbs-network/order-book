@@ -1,4 +1,4 @@
-package rest
+package restutils
 
 import (
 	"context"
@@ -21,7 +21,7 @@ func TestWriteJSONResponse(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	writeJSONResponse(context.Background(), w, http.StatusBadRequest, CreateOrdersResponse{
+	WriteJSONResponse(context.Background(), w, http.StatusBadRequest, CreateOrdersResponse{
 		Data:          []*models.Order{},
 		Status:        "400",
 		FailureReason: "Bad order",
@@ -47,9 +47,9 @@ func TestWriteJSONResponse_EncodeError(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	writeJSONResponse(context.Background(), w, http.StatusOK, UnsupportedType{}, logger.String("test", "test"))
+	WriteJSONResponse(context.Background(), w, http.StatusOK, UnsupportedType{}, logger.String("test", "test"))
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.Equal(t, "text/plain; charset=utf-8", w.Header().Get("Content-Type"))
-	assert.Equal(t, "Error processing request. Try again later\n", w.Body.String())
+	assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
+	assert.Equal(t, "{\"status\":500,\"msg\":\"Error processing request. Try again later\"}\n", w.Body.String())
 }

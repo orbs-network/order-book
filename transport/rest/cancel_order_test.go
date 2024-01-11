@@ -33,7 +33,7 @@ func TestHandler_CancelOrderByOrderId(t *testing.T) {
 		router.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rr.Code)
-		assert.Equal(t, "User not found\n", rr.Body.String())
+		assert.Equal(t, "{\"status\":401,\"msg\":\"User not found\"}\n", rr.Body.String())
 	})
 
 	ctx := mocks.AddUserToCtx(nil)
@@ -50,35 +50,35 @@ func TestHandler_CancelOrderByOrderId(t *testing.T) {
 			&mocks.MockOrderBookService{},
 			"/order/invalid",
 			http.StatusBadRequest,
-			"invalid order ID\n",
+			"{\"status\":400,\"msg\":\"Invalid order ID\"}\n",
 		},
 		{
 			"order not found",
 			&mocks.MockOrderBookService{Error: models.ErrNotFound},
 			fmt.Sprintf("/order/%s", orderId.String()),
 			http.StatusNotFound,
-			"Order not found\n",
+			"{\"status\":404,\"msg\":\"Order not found\"}\n",
 		},
 		{
 			"unexpected error from service",
 			&mocks.MockOrderBookService{Error: assert.AnError},
 			fmt.Sprintf("/order/%s", orderId.String()),
 			http.StatusInternalServerError,
-			"Error cancelling order. Try again later\n",
+			"{\"status\":500,\"msg\":\"Error cancelling order. Try again later\"}\n",
 		},
 		{
 			"no cancelledOrderId returned from service",
 			&mocks.MockOrderBookService{},
 			fmt.Sprintf("/order/%s", orderId.String()),
 			http.StatusInternalServerError,
-			"Error cancelling order. Try again later\n",
+			"{\"status\":500,\"msg\":\"Error cancelling order. Try again later\"}\n",
 		},
 		{
 			"cannot currently cancel due to pending fill",
 			&mocks.MockOrderBookService{Error: models.ErrOrderPending},
 			fmt.Sprintf("/order/%s", orderId.String()),
 			http.StatusConflict,
-			"Cannot cancel order due to pending fill\n",
+			"{\"status\":409,\"msg\":\"Cannot cancel order due to pending fill\"}\n",
 		},
 		{
 			"successful cancel",
@@ -137,7 +137,7 @@ func TestHandler_CancelOrderByClientOId(t *testing.T) {
 		router.ServeHTTP(rr, req)
 
 		assert.Equal(t, http.StatusUnauthorized, rr.Code)
-		assert.Equal(t, "User not found\n", rr.Body.String())
+		assert.Equal(t, "{\"status\":401,\"msg\":\"User not found\"}\n", rr.Body.String())
 	})
 
 	ctx := mocks.AddUserToCtx(nil)
@@ -154,28 +154,28 @@ func TestHandler_CancelOrderByClientOId(t *testing.T) {
 			&mocks.MockOrderBookService{},
 			"/order/client-order/invalid",
 			http.StatusBadRequest,
-			"invalid clientOId\n",
+			"{\"status\":400,\"msg\":\"Invalid clientOId\"}\n",
 		},
 		{
 			"order not found",
 			&mocks.MockOrderBookService{Error: models.ErrNotFound},
 			fmt.Sprintf("/order/client-order/%s", clientOId.String()),
 			http.StatusNotFound,
-			"Order not found\n",
+			"{\"status\":404,\"msg\":\"Order not found\"}\n",
 		},
 		{
 			"unexpected error from service",
 			&mocks.MockOrderBookService{Error: assert.AnError},
 			fmt.Sprintf("/order/client-order/%s", clientOId.String()),
 			http.StatusInternalServerError,
-			"Error cancelling order. Try again later\n",
+			"{\"status\":500,\"msg\":\"Error cancelling order. Try again later\"}\n",
 		},
 		{
 			"no cancelledOrderId returned from service",
 			&mocks.MockOrderBookService{},
 			fmt.Sprintf("/order/client-order/%s", clientOId.String()),
 			http.StatusInternalServerError,
-			"Error cancelling order. Try again later\n",
+			"{\"status\":500,\"msg\":\"Error cancelling order. Try again later\"}\n",
 		},
 		{
 			"successful cancel",

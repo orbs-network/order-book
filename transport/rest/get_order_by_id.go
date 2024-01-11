@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -17,7 +18,7 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
-		http.Error(w, "User not found", http.StatusUnauthorized)
+		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "User not found")
 		return
 	}
 
@@ -26,7 +27,7 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 
 	orderId, err := uuid.Parse(orderIdStr)
 	if err != nil {
-		http.Error(w, "invalid orderId", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Invalid orderId")
 		return
 	}
 
@@ -34,19 +35,19 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 	order, err := h.svc.GetOrderById(r.Context(), orderId)
 
 	if err != nil {
-		http.Error(w, "Internal error. Try again later", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Internal error. Try again later")
 		return
 	}
 
 	if order == nil {
-		http.Error(w, fmt.Sprintf("order not found for %q", orderIdStr), http.StatusNotFound)
+		restutils.WriteJSONError(ctx, w, http.StatusNotFound, fmt.Sprintf("Order not found for %s", orderIdStr))
 		return
 	}
 
 	resp, err := json.Marshal(order)
 	if err != nil {
 		logctx.Error(r.Context(), "failed to marshal order", logger.Error(err))
-		http.Error(w, "Error getting order by ID", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting order by ID")
 		return
 	}
 
@@ -55,6 +56,6 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := w.Write(resp); err != nil {
 		logctx.Error(r.Context(), "failed to write response", logger.Error(err))
-		http.Error(w, "Error getting order by ID", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error getting order by ID")
 	}
 }
