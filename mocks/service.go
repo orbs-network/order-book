@@ -68,13 +68,6 @@ func (m *MockOrderBookStore) GetOrdersAtPrice(ctx context.Context, symbol models
 	return m.Orders, nil
 }
 
-func (m *MockOrderBookStore) GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (models.Order, error) {
-	if m.Error != nil {
-		return models.Order{}, m.Error
-	}
-	return *m.Order, nil
-}
-
 func (m *MockOrderBookStore) GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error) {
 	if m.Error != nil {
 		return models.MarketDepth{}, m.Error
