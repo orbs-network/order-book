@@ -19,9 +19,13 @@ type Logger struct {
 func New(opts ...Option) Logger {
 	cfg := getConfig(opts)
 
+	defaultFields := map[string]Field{
+		"service": String("service", "orderbook"),
+	}
+
 	return Logger{
 		zap:           cfg.zapLogger,
-		defaultFields: make(map[string]Field),
+		defaultFields: defaultFields,
 	}
 }
 
