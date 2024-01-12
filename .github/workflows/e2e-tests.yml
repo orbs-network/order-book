@@ -1,0 +1,52 @@
+name: End-to-End Tests
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-run-e2e-tests:
+    runs-on: ubuntu-latest
+
+    env:
+      REDIS_HOST: localhost
+      REDIS_PASSWORD: "0"
+      REDIS_PORT: 6379
+      API_KEY: og4lpqQUILyciacspkFESHE1qrXIxpX1
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.8"
+
+      - name: Install dependencies
+        run: |
+          pip install -r e2e/tests/requirements.txt
+
+      - name: Install Redis CLI
+        run: sudo apt-get install redis-tools
+
+      - uses: isbang/compose-action@v1.5.1
+        with:
+          up-flags: -d --wait
+        env:
+          RPC_URL: ${{ secrets.RPC_URL }}
+
+      - name: Wait for services to be ready
+        run: |
+          sleep 10
+
+      - name: Set up Market Maker User
+        run: |
+          ./scripts/redis/store-mm-user.sh
+
+      - name: Run market maker endpoint tests
+        run: |
+          cd e2e/tests && pytest -v -s --showlocals -rA
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Reports
+          path: e2e/tests/results.xml

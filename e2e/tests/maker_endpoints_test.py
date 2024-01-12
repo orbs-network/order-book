@@ -1,0 +1,200 @@
+"""
+A set of e2e tests for the Maker endpoints of the Orderbook API.
+The tests use the Python SDK to interact with the API.
+A local Orderbook instance is required to run the tests.
+"""
+
+
+import os
+
+import pytest
+from orbs_orderbook import CreateOrderInput, OrderBookSDK, OrderSigner
+
+BASE_URL = os.environ.get("BASE_URL", "http://localhost")
+PRIVATE_KEY = os.environ.get(
+    "PRIVATE_KEY", "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+)
+API_KEY = os.environ.get("API_KEY", "og4lpqQUILyciacspkFESHE1qrXIxpX1")
+
+CLIENT_OID = "550e8400-e29b-41d4-a716-446655440000"
+SYMBOL = "MATIC-USDC"
+PRICE = "0.86500000"
+SIZE = "40"
+
+
+# TODO 1: Update Python SDK to support get supported tokens and get filled orders for user
+# TODO 2: Add test for get market depth
+# TODO 3: Add different test scenaries (eg. different failed states)
+
+
+@pytest.fixture
+def ob_client():
+    yield OrderBookSDK(base_url=BASE_URL, api_key=API_KEY)
+
+
+@pytest.fixture
+def ob_signer(ob_client):
+    yield OrderSigner(
+        private_key=PRIVATE_KEY,
+        sdk=ob_client,
+    )
+
+
+@pytest.fixture(autouse=True, scope="function")
+def cancel_all_orders(ob_client, ob_signer):
+    ob_client.cancel_all_orders()
+
+
+@pytest.fixture
+def create_new_orders(ob_client, ob_signer, cancel_all_orders):
+    order_input = CreateOrderInput(
+        price=PRICE,
+        size=SIZE,
+        symbol=SYMBOL,
+        side="sell",
+        clientOrderId=CLIENT_OID,
+    )
+
+    signature, message_data = ob_signer.prepare_and_sign_order(order_input)
+
+    yield [
+        ob_client.create_order(
+            order_input=order_input,
+            signature=signature,
+            message_data=message_data,
+        )
+    ]
+
+
+def test_create_order_success(ob_client, ob_signer):
+    order_input = CreateOrderInput(
+        price="0.86500000",
+        size="40",
+        symbol="MATIC-USDC",
+        side="sell",
+        clientOrderId=CLIENT_OID,
+    )
+
+    signature, message_data = ob_signer.prepare_and_sign_order(order_input)
+
+    res = ob_client.create_order(
+        order_input=order_input,
+        signature=signature,
+        message_data=message_data,
+    )
+
+    assert "orderId" in res, "Order was not created"
+
+
+def test_create_order_fails_with_same_clientoid(
+    ob_client, ob_signer, create_new_orders
+):
+    order_input = CreateOrderInput(
+        price="0.86500000",
+        size="40",
+        symbol="MATIC-USDC",
+        side="sell",
+        clientOrderId=CLIENT_OID,
+    )
+
+    signature, message_data = ob_signer.prepare_and_sign_order(order_input)
+
+    res = ob_client.create_order(
+        order_input=order_input,
+        signature=signature,
+        message_data=message_data,
+    )
+
+    assert (
+        res["error"] == "Conflict"
+    ), "Order was created when it should have been rejected due to same clientOrderId"
+
+
+def test_cancel_order_by_oid(ob_client, ob_signer, create_new_orders):
+    new_oid = create_new_orders[0]["orderId"]
+
+    res = ob_client.cancel_order_by_id(new_oid)
+
+    assert res["orderId"] == new_oid, "Order was not cancelled by orderId"
+
+
+def test_cancel_order_by_oid_fails_when_cancelling_same_order(
+    ob_client, ob_signer, create_new_orders
+):
+    new_oid = create_new_orders[0]["orderId"]
+
+    success = ob_client.cancel_order_by_id(new_oid)
+
+    assert success["orderId"] == new_oid, "Order was not cancelled by orderId"
+
+    fail = ob_client.cancel_order_by_id(new_oid)
+
+    assert fail["status_code"] == 404, "Order was cancelled when it should have failed"
+
+
+def test_cancel_order_by_clientoid(ob_client, ob_signer, create_new_orders):
+    new_oid = create_new_orders[0]["orderId"]
+
+    res = ob_client.cancel_order_by_client_id(CLIENT_OID)
+
+    assert res["orderId"] == new_oid, "Order was not cancelled by clientOrderId"
+
+
+def test_cancel_order_by_clientoid_fails_when_cancelling_same_order(
+    ob_client, ob_signer, create_new_orders
+):
+    new_oid = create_new_orders[0]["orderId"]
+
+    success = ob_client.cancel_order_by_client_id(CLIENT_OID)
+
+    assert success["orderId"] == new_oid, "Order was not cancelled by clientOrderId"
+
+    fail = ob_client.cancel_order_by_client_id(CLIENT_OID)
+
+    assert fail["status_code"] == 404, "Order was cancelled when it should have failed"
+
+
+def test_get_symbols(ob_client):
+    res = ob_client.get_symbols()
+
+    assert len(res) > 0, "No symbols returned"
+    assert "symbol" in res[0], "Symbol not returned"
+    assert "name" in res[0], "Name not returned"
+
+
+def test_get_order_by_id(ob_client, ob_signer, create_new_orders):
+    new_oid = create_new_orders[0]["orderId"]
+
+    res = ob_client.get_order_by_id(new_oid)
+
+    assert res["orderId"] == new_oid, "Order was not returned by orderId"
+    assert res["clientOrderId"] == CLIENT_OID, "Order was not returned by clientOrderId"
+    assert res["price"] == "0.865", "Order was not returned by price"
+    assert res["size"] == SIZE, "Order was not returned by size"
+    assert res["side"] == "sell", "Order was not returned by side"
+    assert res["symbol"] == SYMBOL, "Order was not returned by symbol"
+
+
+def test_get_order_by_clientoid(ob_client, ob_signer, create_new_orders):
+    new_oid = create_new_orders[0]["orderId"]
+
+    res = ob_client.get_order_by_client_id(CLIENT_OID)
+
+    assert res["orderId"] == new_oid, "Order was not returned by orderId"
+    assert res["clientOrderId"] == CLIENT_OID, "Order was not returned by clientOrderId"
+    assert res["price"] == "0.865", "Order was not returned by price"
+    assert res["size"] == SIZE, "Order was not returned by size"
+    assert res["side"] == "sell", "Order was not returned by side"
+    assert res["symbol"] == SYMBOL, "Order was not returned by symbol"
+
+
+def test_get_orders_for_user(ob_client, ob_signer, create_new_orders):
+    res = ob_client.get_orders_for_user(page=1, page_size=25)
+
+    assert len(res["data"]) > 0, "No orders returned"
+    assert "orderId" in res["data"][0], "orderId not returned"
+    assert "clientOrderId" in res["data"][0], "clientOrderId not returned"
+    assert "price" in res["data"][0], "price not returned"
+    assert "size" in res["data"][0], "size not returned"
+    assert "side" in res["data"][0], "side not returned"
+    assert "symbol" in res["data"][0], "symbol not returned"

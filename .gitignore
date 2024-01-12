@@ -8,3 +8,4 @@ address.txt
 coverage.out
 .venv
 .makerc
+__pycache__
