@@ -91,8 +91,6 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	// ------- READ -------
 	// Get an order by client order ID
 	mmApi.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId).Methods("GET")
-	// Get the best price for a symbol and side
-	mmApi.HandleFunc("/order/{side}/{symbol}", h.GetBestPriceFor).Methods("GET")
 	// Get an order by ID
 	mmApi.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
 	// Get all open orders for a user

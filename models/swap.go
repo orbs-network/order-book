@@ -36,37 +36,6 @@ func (f *OrderFrag) ToMap() map[string]string {
 	}
 }
 
-func (f *OrderFrag) ToOrderFrag(data map[string]string) error {
-	if len(data) == 0 {
-		return nil
-	}
-
-	orderIdStr, exists := data["orderId"]
-	if !exists {
-		return nil
-	}
-
-	amountStr, exists := data["size"]
-	if !exists {
-		return nil
-	}
-
-	orderId, err := uuid.Parse(orderIdStr)
-	if err != nil {
-		return err
-	}
-
-	amount, err := decimal.NewFromString(amountStr)
-	if err != nil {
-		return err
-	}
-
-	f.OrderId = orderId
-	f.Size = amount
-
-	return nil
-}
-
 func MarshalOrderFrags(orderFrags []OrderFrag) ([]byte, error) {
 	swapMap := make([]map[string]string, len(orderFrags))
 	for i, frag := range orderFrags {
