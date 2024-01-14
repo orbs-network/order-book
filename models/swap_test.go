@@ -25,6 +25,5 @@ func Test_Swap(t *testing.T) {
 		res, err := MarshalOrderFrags(frags)
 		assert.NoError(t, err)
 		assert.Equal(t, string(res), expected)
-		println(string(res))
 	})
 }
