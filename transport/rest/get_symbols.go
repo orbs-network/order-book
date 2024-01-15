@@ -11,6 +11,7 @@ import (
 
 type symbol struct {
 	Symbol string `json:"symbol"`
+	Name   string `json:"name"`
 	// TODO: add more fields
 }
 
@@ -26,7 +27,7 @@ func (h *Handler) GetSymbols(w http.ResponseWriter, r *http.Request) {
 
 	symbolsSlice := getSymbolsResponse{}
 	for _, s := range symbols {
-		symbolsSlice = append(symbolsSlice, symbol{Symbol: s.String()})
+		symbolsSlice = append(symbolsSlice, symbol{Symbol: s.String(), Name: s.String()})
 	}
 
 	resp, err := json.Marshal(symbolsSlice)
