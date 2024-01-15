@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
@@ -88,6 +89,15 @@ func TestTaker_BeginSwap(t *testing.T) {
 	})
 }
 
+func TestTaker_SwapStarted(t *testing.T) {
+	ctx := context.Background()
+	evmClient := &service.EvmClient{}
+	mock := mocks.CreateSwapMock()
+	svc, _ := service.New(mock, evmClient)
+
+	err := svc.SwapStarted(ctx, uuid.New(), "0x123334")
+	assert.NoError(t, err)
+}
 func TestService_AbortSwap(t *testing.T) {
 	ctx := context.Background()
 	evmClient := &service.EvmClient{}
