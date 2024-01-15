@@ -43,10 +43,6 @@ func (m *MockOrderBookService) CancelOrder(ctx context.Context, input service.Ca
 	return &m.Order.Id, m.Error
 }
 
-func (m *MockOrderBookService) GetBestPriceFor(ctx context.Context, symbol models.Symbol, side models.Side) (decimal.Decimal, error) {
-	return decimal.Zero, m.Error
-}
-
 func (m *MockOrderBookService) GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error) {
 	return m.Order, m.Error
 }
@@ -94,4 +90,8 @@ func (m *MockOrderBookService) AbortSwap(ctx context.Context, swapId uuid.UUID) 
 
 func (m *MockOrderBookService) LoadSupportedTokens(ctx context.Context, filePath string) (service.SupportedTokens, error) {
 	return m.SupportedTokens, m.LoadSupportedTokensError
+}
+
+func (m *MockOrderBookService) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error {
+	return m.Error
 }
