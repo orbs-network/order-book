@@ -177,6 +177,42 @@ func handleSwapId(w http.ResponseWriter, r *http.Request) *uuid.UUID {
 }
 
 // POST
+func (h *Handler) swapStarted(w http.ResponseWriter, r *http.Request) {
+	swapId := handleSwapId(w, r)
+	if swapId == nil {
+		return
+	}
+
+	// get txHash
+	vars := mux.Vars(r)
+	txhash := vars["txHash"]
+	ctx := r.Context()
+	if txhash == "" {
+		logctx.Error(ctx, "txhash is empty")
+		http.Error(w, "txhash is empty", http.StatusBadRequest)
+		return
+	}
+
+	// Set the Content-Type header to application/json
+	w.Header().Set("Content-Type", "application/json")
+	if err := h.svc.SwapStarted(r.Context(), *swapId, txhash); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		// Create an empty JSON object
+		obj := genRes{
+			StatusText: err.Error(),
+			Status:     http.StatusBadRequest,
+		}
+
+		// Convert the emptyJSON object to JSON format
+		jRes, _ := json.Marshal(obj)
+		_, err = w.Write(jRes)
+		if err != nil {
+			logctx.Error(r.Context(), "abortSwap - failed to write resp", logger.Error(err))
+		}
+	}
+}
+
+// POST
 func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 	swapId := handleSwapId(w, r)
 	if swapId == nil {
