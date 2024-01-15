@@ -53,6 +53,8 @@ func (r *redisRepository) GetOrdersForUser(ctx context.Context, userId uuid.UUID
 		orderIds[i] = orderId
 	}
 
+	ordersSlice := []models.Order{}
+
 	// Fetch all orders for the user (in batches)
 	for i := 0; i < len(orderIds); i += MAX_ORDER_IDS {
 		end := i + MAX_ORDER_IDS
@@ -66,9 +68,9 @@ func (r *redisRepository) GetOrdersForUser(ctx context.Context, userId uuid.UUID
 			return []models.Order{}, 0, fmt.Errorf("failed to find orders by IDs: %v", err)
 		}
 
-		orders = append(orders, o...)
+		ordersSlice = append(ordersSlice, o...)
 	}
 
 	logctx.Info(ctx, "got orders for user", logger.String("userId", userId.String()), logger.Int("count", len(orders)))
-	return orders, totalOrders, nil
+	return ordersSlice, totalOrders, nil
 }
