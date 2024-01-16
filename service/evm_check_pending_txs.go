@@ -26,6 +26,8 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 		return nil
 	}
 
+	logctx.Info(ctx, "Found pending transactions to process", logger.Int("numPending", len(pendingSwaps)))
+
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 

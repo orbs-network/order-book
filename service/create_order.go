@@ -15,14 +15,16 @@ import (
 )
 
 type CreateOrderInput struct {
-	UserId        uuid.UUID
-	Price         decimal.Decimal
-	Symbol        models.Symbol
-	Size          decimal.Decimal
-	Side          models.Side
-	ClientOrderID uuid.UUID
-	Eip712Sig     string
-	Eip712MsgData map[string]interface{}
+	UserId         uuid.UUID
+	Price          decimal.Decimal
+	Symbol         models.Symbol
+	Size           decimal.Decimal
+	Side           models.Side
+	ClientOrderID  uuid.UUID
+	Eip712Sig      string
+	Eip712Domain   *map[string]interface{}
+	Eip712MsgTypes *map[string]interface{}
+	Eip712Msg      *map[string]interface{}
 }
 
 func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (models.Order, error) {
@@ -37,7 +39,7 @@ func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (mode
 		}
 
 		isVerifed, err := s.blockchainClient.VerifySignature(ctx, VerifySignatureInput{
-			MessageData: input.Eip712MsgData,
+			MessageData: *input.Eip712Msg,
 			Signature:   input.Eip712Sig,
 			PublicKey:   user.PubKey,
 		})
@@ -93,8 +95,10 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 		Symbol:    input.Symbol,
 		Size:      input.Size,
 		Signature: models.Signature{
-			Eip712Sig:     input.Eip712Sig,
-			Eip712MsgData: input.Eip712MsgData,
+			Eip712Sig:      input.Eip712Sig,
+			Eip712Domain:   *input.Eip712Domain,
+			Eip712MsgTypes: *input.Eip712MsgTypes,
+			Eip712Msg:      *input.Eip712Msg,
 		},
 		Side:      input.Side,
 		Timestamp: time.Now().UTC(),
