@@ -22,9 +22,11 @@ type BeginSwapRes struct {
 }
 
 type Fragment struct {
-	OutAmount     string                 `json:"outAmount"`
-	Eip712Sig     string                 `json:"eip712Sig"`
-	Eip712MsgData map[string]interface{} `json:"eip712MsgData"`
+	OutAmount      string                 `json:"outAmount"`
+	Eip712Sig      string                 `json:"eip712Sig"`
+	Eip712Domain   map[string]interface{} `json:"eip712Domain"`
+	Eip712Msg      map[string]interface{} `json:"eip712Msg"`
+	Eip712MsgTypes map[string]interface{} `json:"eip712MsgTypes"`
 }
 type ConfirmSwapRes struct {
 	SwapId        string     `json:"swapId"`
@@ -140,9 +142,11 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		for i := 0; i < len(swapData.Fragments); i++ {
 			convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].Size)
 			frag := Fragment{
-				OutAmount:     convOutAmount,
-				Eip712Sig:     swapData.Orders[i].Signature.Eip712Sig,
-				Eip712MsgData: swapData.Orders[i].Signature.Eip712MsgData,
+				OutAmount:      convOutAmount,
+				Eip712Sig:      swapData.Orders[i].Signature.Eip712Sig,
+				Eip712Domain:   swapData.Orders[i].Signature.Eip712Domain,
+				Eip712MsgTypes: swapData.Orders[i].Signature.Eip712MsgTypes,
+				Eip712Msg:      swapData.Orders[i].Signature.Eip712Msg,
 			}
 			res.Fragments = append(res.Fragments, frag)
 		}

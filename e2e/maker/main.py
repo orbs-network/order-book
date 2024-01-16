@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import requests
 from orbs_orderbook import CreateOrderInput, OrderBookSDK, OrderSigner
+from orbs_orderbook.exceptions import ErrApiRequest
 
 IS_DISABLED = os.environ.get("IS_DISABLED", "false").lower() == "true"
 BASE_URL = os.environ.get("BASE_URL", "http://localhost")
@@ -35,8 +36,8 @@ class Client:
     def update_orders(self, price):
         try:
             self.ob_sdk.cancel_all_orders()
-        except requests.exceptions.HTTPError as e:
-            if e.response.status_code == 404:
+        except ErrApiRequest as e:
+            if e.status_code == 404:
                 print("No orders to cancel")
             else:
                 print("Error cancelling orders:", e)
@@ -58,16 +59,16 @@ class Client:
                 size=str(cur_size),
                 side="sell",
                 symbol=TICKER_SYMBOL,
-                clientOrderId=str(uuid4()),
+                client_order_id=str(uuid4()),
             )
 
-            signature, message_data = self.signer.prepare_and_sign_order(order_input)
+            signature, message = self.signer.prepare_and_sign_order(order_input)
 
             try:
                 self.ob_sdk.create_order(
                     order_input=order_input,
                     signature=signature,
-                    message_data=message_data,
+                    message=message,
                 )
             except Exception as e:
                 print("Error creating sell order:", e)
@@ -92,16 +93,16 @@ class Client:
                 size=str(cur_size),
                 side="buy",
                 symbol=TICKER_SYMBOL,
-                clientOrderId=str(uuid4()),
+                client_order_id=str(uuid4()),
             )
 
-            signature, message_data = self.signer.prepare_and_sign_order(order_input)
+            signature, message = self.signer.prepare_and_sign_order(order_input)
 
             try:
                 self.ob_sdk.create_order(
                     order_input=order_input,
                     signature=signature,
-                    message_data=message_data,
+                    message=message,
                 )
             except Exception as e:
                 print("Error creating buy order:", e)

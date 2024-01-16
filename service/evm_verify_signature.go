@@ -61,7 +61,7 @@ func (e *EvmClient) VerifySignature(ctx context.Context, input VerifySignatureIn
 	// Normalize the `v` value in the signature (adjust for EVM's signature format)
 	v := signatureBytes[64]
 	if v == 27 || v == 28 {
-		logctx.Info(ctx, "signature v value is normalized", logger.String("publicKey", fullPubKey))
+		logctx.Debug(ctx, "signature v value is normalized", logger.String("publicKey", fullPubKey))
 		v -= 27
 		signatureBytes[64] = v
 	}

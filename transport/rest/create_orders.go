@@ -62,13 +62,15 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 
 	for _, order := range args.Orders {
 		if err = handleValidateRequiredFields(hVRFArgs{
-			price:         order.Price,
-			size:          order.Size,
-			symbol:        args.Symbol,
-			side:          order.Side,
-			clientOrderId: order.ClientOrderId,
-			eip712Sig:     order.Eip712Sig,
-			eip712MsgData: &order.Eip712MsgData,
+			price:          order.Price,
+			size:           order.Size,
+			symbol:         args.Symbol,
+			side:           order.Side,
+			clientOrderId:  order.ClientOrderId,
+			eip712Sig:      order.Eip712Sig,
+			eip712Msg:      &order.Eip712Msg,
+			eip712MsgTypes: &order.Eip712MsgTypes,
+			eip712Domain:   &order.Eip712Domain,
 		}); err != nil {
 			logctx.Warn(ctx, "failed to validate required fields", logger.Error(err), logger.String("userId", user.Id.String()))
 			response.Status = http.StatusBadRequest
@@ -96,14 +98,16 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 		}
 
 		order, err := h.svc.CreateOrder(ctx, service.CreateOrderInput{
-			UserId:        user.Id,
-			Price:         parsedFields.roundedDecPrice,
-			Symbol:        parsedFields.symbol,
-			Size:          parsedFields.decSize,
-			Side:          parsedFields.side,
-			ClientOrderID: parsedFields.clientOrderId,
-			Eip712Sig:     order.Eip712Sig,
-			Eip712MsgData: order.Eip712MsgData,
+			UserId:         user.Id,
+			Price:          parsedFields.roundedDecPrice,
+			Symbol:         parsedFields.symbol,
+			Size:           parsedFields.decSize,
+			Side:           parsedFields.side,
+			ClientOrderID:  parsedFields.clientOrderId,
+			Eip712Sig:      order.Eip712Sig,
+			Eip712Domain:   &order.Eip712Domain,
+			Eip712MsgTypes: &order.Eip712MsgTypes,
+			Eip712Msg:      &order.Eip712Msg,
 		})
 
 		if err == models.ErrSignatureVerificationError {
