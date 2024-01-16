@@ -84,11 +84,14 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 }
 
 func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error {
-	s.orderBookStore.StoreNewPendingSwap(ctx, models.SwapTx{
+	err := s.orderBookStore.StoreNewPendingSwap(ctx, models.SwapTx{
 		SwapId: swapId,
 		TxHash: txHash,
 	})
-	return nil
+	if err != nil {
+		logctx.Error(ctx, "StoreNewPendingSwap failed", logger.Error(err))
+	}
+	return err
 }
 
 func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
