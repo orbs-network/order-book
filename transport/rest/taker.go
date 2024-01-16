@@ -28,7 +28,6 @@ type BeginSwapRes struct {
 }
 
 type Fragment struct {
-	OrderId       string                 `json:"orderId"`
 	OutAmount     string                 `json:"outAmount"`
 	Eip712Sig     string                 `json:"eip712Sig"`
 	Eip712MsgData map[string]interface{} `json:"eip712MsgData"`
@@ -120,7 +119,6 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		for i := 0; i < len(swapData.Fragments); i++ {
 			convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].Size)
 			frag := Fragment{
-				OrderId:       swapData.Fragments[i].OrderId.String(),
 				OutAmount:     convOutAmount,
 				Eip712Sig:     swapData.Orders[i].Signature.Eip712Sig,
 				Eip712MsgData: swapData.Orders[i].Signature.Eip712MsgData,
