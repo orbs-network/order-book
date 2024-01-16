@@ -10,7 +10,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal) (models.QuoteRes, error) {
+func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal) (models.QuoteRes, error) {
 
 	// make sure inAmount is positivr
 	if !inAmount.IsPositive() {
@@ -38,6 +38,11 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 	if err != nil {
 		logctx.Error(ctx, "getQuoteResIn failed", logger.Error(err))
 		return models.QuoteRes{}, err
+	}
+
+	// apply min amount out threshold
+	if minOutAmount != nil && (*minOutAmount).GreaterThanOrEqual(res.Size) {
+		return models.QuoteRes{}, models.ErrMinOutAmount
 	}
 
 	return res, nil
