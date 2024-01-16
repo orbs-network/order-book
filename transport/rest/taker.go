@@ -16,12 +16,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type BeginSwapReq struct {
-	AmountIn string `json:"amountIn"`
-	Symbol   string `json:"symbol"`
-	Side     string `json:"side"`
-}
-
 type BeginSwapRes struct {
 	SwapId   string `json:"swapId"`
 	QuoteRes string `json:"quoteRes"`
@@ -41,9 +35,10 @@ type ConfirmSwapRes struct {
 }
 
 type QuoteReq struct {
-	InAmount string `json:"inAmount"`
-	InToken  string `json:"inToken"`
-	OutToken string `json:"outToken"`
+	InAmount     string `json:"inAmount"`
+	InToken      string `json:"inToken"`
+	OutToken     string `json:"outToken"`
+	MinOutAmount string `json:"minOutAmount"`
 }
 
 type QuoteRes struct {
@@ -56,16 +51,31 @@ type QuoteRes struct {
 	//BookSignature? string     `json:"bookSignature"`
 }
 
-func (h *Handler) convertToTokenDec(ctx context.Context, outToken string, outAmount decimal.Decimal) string {
+func (h *Handler) convertToTokenDec(ctx context.Context, outToken string, amount decimal.Decimal) string {
 	if token, ok := h.supportedTokens[strings.ToUpper(outToken)]; ok {
 		decMul := math.Pow10(token.Decimals)
-		mul := outAmount.Mul(decimal.NewFromInt(int64(decMul)))
+		mul := amount.Mul(decimal.NewFromInt(int64(decMul)))
 		return mul.Truncate(0).String()
 	}
 	logctx.Error(ctx, "Token is not found in supported tokens: "+outToken)
 	return ""
-
 }
+
+func (h *Handler) convertFromTokenDec(ctx context.Context, outToken, amountStr string) (decimal.Decimal, error) {
+	if token, ok := h.supportedTokens[strings.ToUpper(outToken)]; ok {
+		decDiv := math.Pow10(token.Decimals)
+		amount, err := decimal.NewFromString(amountStr)
+		if err != nil {
+			logctx.Error(ctx, "error converting amountStr: "+amountStr)
+			return decimal.Zero, err
+		}
+		res := amount.Div(decimal.NewFromInt(int64(decDiv)))
+		return res, nil
+	}
+	logctx.Error(ctx, "Token is not found in supported tokens: "+outToken)
+	return decimal.Zero, models.ErrTokenNotsupported
+}
+
 func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) {
 	var req QuoteReq
 	ctx := r.Context()
@@ -76,11 +86,22 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		return
 	}
 
-	inAmount, err := decimal.NewFromString(req.InAmount)
+	inAmount, err := h.convertFromTokenDec(ctx, req.InToken, req.InAmount)
 	if err != nil {
 		logctx.Error(ctx, "'Quote::inAmount' is not a valid number format", logger.Error(err))
 		http.Error(w, "'Quote::inAmount' is not a valid number format", http.StatusBadRequest)
 		return
+	}
+
+	// a threshold for min amount out expect, return error if
+	var minOutAmount *decimal.Decimal = nil
+	if req.MinOutAmount != "" {
+		convMinOutAmount, err := h.convertFromTokenDec(ctx, req.OutToken, req.MinOutAmount)
+		if err != nil {
+			logctx.Warn(ctx, "'Quote::minOutAmount' is not a valid number format - passing nil", logger.Error(err))
+		} else {
+			minOutAmount = &convMinOutAmount
+		}
 	}
 
 	pair := h.pairMngr.Resolve(req.InToken, req.OutToken)
@@ -91,7 +112,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		return
 	}
 	side := pair.GetSide(req.InToken)
-	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount)
+	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount, minOutAmount)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
