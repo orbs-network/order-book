@@ -16,13 +16,15 @@ import (
 )
 
 type CreateOrderRequest struct {
-	Price         string                 `json:"price"`
-	Size          string                 `json:"size"`
-	Symbol        string                 `json:"symbol"`
-	Side          string                 `json:"side"`
-	ClientOrderId string                 `json:"clientOrderId"`
-	Eip712Sig     string                 `json:"eip712Sig"`
-	Eip712MsgData map[string]interface{} `json:"eip712MsgData"`
+	Price          string                 `json:"price"`
+	Size           string                 `json:"size"`
+	Symbol         string                 `json:"symbol"`
+	Side           string                 `json:"side"`
+	ClientOrderId  string                 `json:"clientOrderId"`
+	Eip712Sig      string                 `json:"eip712Sig"`
+	Eip712Domain   map[string]interface{} `json:"eip712Domain"`
+	Eip712MsgTypes map[string]interface{} `json:"eip712MsgTypes"`
+	Eip712Msg      map[string]interface{} `json:"eip712Msg"`
 }
 
 type CreateOrderResponse struct {
@@ -47,13 +49,15 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := handleValidateRequiredFields(hVRFArgs{
-		price:         args.Price,
-		size:          args.Size,
-		symbol:        args.Symbol,
-		side:          args.Side,
-		clientOrderId: args.ClientOrderId,
-		eip712Sig:     args.Eip712Sig,
-		eip712MsgData: &args.Eip712MsgData,
+		price:          args.Price,
+		size:           args.Size,
+		symbol:         args.Symbol,
+		side:           args.Side,
+		clientOrderId:  args.ClientOrderId,
+		eip712Sig:      args.Eip712Sig,
+		eip712Msg:      &args.Eip712Msg,
+		eip712MsgTypes: &args.Eip712MsgTypes,
+		eip712Domain:   &args.Eip712Domain,
 	}); err != nil {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return
@@ -74,14 +78,16 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	logctx.Info(ctx, "user trying to create order", logger.String("userId", user.Id.String()), logger.String("price", parsedFields.roundedDecPrice.String()), logger.String("size", parsedFields.decSize.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
 	order, err := h.svc.CreateOrder(ctx, service.CreateOrderInput{
-		UserId:        user.Id,
-		Price:         parsedFields.roundedDecPrice,
-		Symbol:        parsedFields.symbol,
-		Size:          parsedFields.decSize,
-		Side:          parsedFields.side,
-		ClientOrderID: parsedFields.clientOrderId,
-		Eip712Sig:     args.Eip712Sig,
-		Eip712MsgData: args.Eip712MsgData,
+		UserId:         user.Id,
+		Price:          parsedFields.roundedDecPrice,
+		Symbol:         parsedFields.symbol,
+		Size:           parsedFields.decSize,
+		Side:           parsedFields.side,
+		ClientOrderID:  parsedFields.clientOrderId,
+		Eip712Sig:      args.Eip712Sig,
+		Eip712Domain:   &args.Eip712Domain,
+		Eip712MsgTypes: &args.Eip712MsgTypes,
+		Eip712Msg:      &args.Eip712Msg,
 	})
 
 	if err == models.ErrSignatureVerificationError {
@@ -134,13 +140,15 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 type hVRFArgs struct {
-	price         string
-	size          string
-	symbol        string
-	side          string
-	clientOrderId string
-	eip712Sig     string
-	eip712MsgData *map[string]interface{}
+	price          string
+	size           string
+	symbol         string
+	side           string
+	clientOrderId  string
+	eip712Sig      string
+	eip712Msg      *map[string]interface{}
+	eip712MsgTypes *map[string]interface{}
+	eip712Domain   *map[string]interface{}
 }
 
 func handleValidateRequiredFields(args hVRFArgs) error {
@@ -163,8 +171,14 @@ func handleValidateRequiredFields(args hVRFArgs) error {
 	case args.eip712Sig == "":
 		return fmt.Errorf("missing required field 'eip712Sig'")
 
-	case args.eip712MsgData == nil || *args.eip712MsgData == nil:
-		return fmt.Errorf("missing required field 'eip712MsgData'")
+	case args.eip712Msg == nil || *args.eip712Msg == nil:
+		return fmt.Errorf("missing required field 'eip712Msg'")
+
+	case args.eip712MsgTypes == nil || *args.eip712MsgTypes == nil:
+		return fmt.Errorf("missing required field 'eip712MsgTypes'")
+
+	case args.eip712Domain == nil || *args.eip712Domain == nil:
+		return fmt.Errorf("missing required field 'eip712Domain'")
 
 	default:
 		return nil
