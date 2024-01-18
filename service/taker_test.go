@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
@@ -26,12 +27,12 @@ func TestTaker_Quote(t *testing.T) {
 		}
 		// buy
 		svc, _ := service.New(&store, evmClient)
-		res, err := svc.GetQuote(ctx, symbol, models.BUY, decimal.Zero)
+		res, err := svc.GetQuote(ctx, symbol, models.BUY, decimal.Zero, nil)
 		assert.Equal(t, res, models.QuoteRes{})
 		assert.Error(t, err, models.ErrInAmount)
 		// sell
 		svc, _ = service.New(&store, evmClient)
-		res, err = svc.GetQuote(ctx, symbol, models.SELL, decimal.Zero)
+		res, err = svc.GetQuote(ctx, symbol, models.SELL, decimal.Zero, nil)
 		assert.Equal(t, res, models.QuoteRes{})
 		assert.Error(t, err, models.ErrInAmount)
 
@@ -43,7 +44,7 @@ func TestTaker_Quote(t *testing.T) {
 
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
-		res, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
+		res, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil)
 		assert.True(t, res.Size.Equals(outAmount))
 		assert.NoError(t, err)
 	})
@@ -54,7 +55,7 @@ func TestTaker_Quote(t *testing.T) {
 
 		inAmount := decimal.NewFromInt(1)
 		outAmount := decimal.NewFromInt(900)
-		res, err := svc.GetQuote(ctx, symbol, models.SELL, inAmount)
+		res, err := svc.GetQuote(ctx, symbol, models.SELL, inAmount, nil)
 		assert.True(t, res.Size.Equals(outAmount))
 		assert.NoError(t, err)
 	})
@@ -70,7 +71,7 @@ func TestTaker_BeginSwap(t *testing.T) {
 		// get quote does not lock liquidity
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
-		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
+		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil)
 		assert.True(t, oaRes.Size.Equals(outAmount))
 		assert.NoError(t, err)
 
@@ -82,12 +83,21 @@ func TestTaker_BeginSwap(t *testing.T) {
 		assert.True(t, oaRes.Size.Equals(swapRes.OutAmount))
 
 		// second quote however should return different outAmount as first order has already been filled
-		oaRes2, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
+		oaRes2, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil)
 		assert.NoError(t, err)
 		assert.NotEqual(t, oaRes.Size, oaRes2.Size)
 	})
 }
 
+func TestTaker_SwapStarted(t *testing.T) {
+	ctx := context.Background()
+	evmClient := &service.EvmClient{}
+	mock := mocks.CreateSwapMock()
+	svc, _ := service.New(mock, evmClient)
+
+	err := svc.SwapStarted(ctx, uuid.New(), "0x123334")
+	assert.NoError(t, err)
+}
 func TestService_AbortSwap(t *testing.T) {
 	ctx := context.Background()
 	evmClient := &service.EvmClient{}
@@ -98,7 +108,7 @@ func TestService_AbortSwap(t *testing.T) {
 
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
-		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount)
+		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil)
 		assert.True(t, oaRes.Size.Equals(outAmount))
 		assert.NoError(t, err)
 

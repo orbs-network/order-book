@@ -83,6 +83,17 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 	return res, nil
 }
 
+func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error {
+	err := s.orderBookStore.StoreNewPendingSwap(ctx, models.SwapTx{
+		SwapId: swapId,
+		TxHash: txHash,
+	})
+	if err != nil {
+		logctx.Error(ctx, "StoreNewPendingSwap failed", logger.Error(err))
+	}
+	return err
+}
+
 func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 	// get swap from store
 	frags, err := s.orderBookStore.GetSwap(ctx, swapId)

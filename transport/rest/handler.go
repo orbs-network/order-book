@@ -125,6 +125,10 @@ func (h *Handler) initTakerRoutes() {
 	// OUT: Locked outAmount, SwapID
 	takerApi.HandleFunc("/swap", h.swap).Methods("POST")
 	// IN: SwapID given in /swap
+	// IN: txHash
+	// start tracking txhash onchain
+	takerApi.HandleFunc("/started/{swapId}/{txHash}", h.swapStarted).Methods("POST")
+	// IN: SwapID given in /swap
 	// release locked orders of start to be used by other match
 	// called when lh doesnt want to use swap outAmount
 	takerApi.HandleFunc("/abort/{swapId}", h.abortSwap).Methods("POST")
