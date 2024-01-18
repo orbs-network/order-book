@@ -18,11 +18,14 @@ import (
 func main() {
 	ctx := context.Background()
 
-	// Prompt for REDIS_URL
-	fmt.Print("Enter REDIS_URL: ")
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-	redisURL := scanner.Text()
+	// Retrieve REDIS_URL from environment variable or prompt for it
+	redisURL := os.Getenv("REDIS_URL")
+	if redisURL == "" {
+		fmt.Print("Enter REDIS_URL: ")
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Scan()
+		redisURL = scanner.Text()
+	}
 
 	// Create a Redis client
 	opt, err := redis.ParseURL(redisURL)
@@ -41,10 +44,14 @@ func main() {
 		log.Fatalf("Failed to create user service: %v", err)
 	}
 
-	// Prompt for public key
-	fmt.Print("Enter public key: ")
-	scanner.Scan()
-	publicKey := scanner.Text()
+	// Retrieve public key from environment variable or prompt for it
+	publicKey := os.Getenv("PUBLIC_KEY")
+	if publicKey == "" {
+		fmt.Print("Enter public key: ")
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Scan()
+		publicKey = scanner.Text()
+	}
 
 	// Create a new user
 	user, apiKey, err := usersvc.CreateUser(ctx, serviceuser.CreateUserInput{
@@ -60,4 +67,26 @@ func main() {
 	fmt.Printf("API Key: %s\n", apiKey)
 	fmt.Println("⚠️⚠️⚠️ The API key is SHA256 hashed and cannot be recovered ⚠️⚠️⚠️")
 	fmt.Println("----------------------------------------")
+
+	err = writeToFile("api_key.txt", apiKey)
+	if err != nil {
+		log.Fatalf("Failed to write API key to file: %v", err)
+	}
+	fmt.Println("API key written to api_key.txt")
+
+}
+
+func writeToFile(filename, text string) error {
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.WriteString(text)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

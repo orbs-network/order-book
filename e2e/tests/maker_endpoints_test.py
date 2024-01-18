@@ -15,7 +15,7 @@ BASE_URL = os.environ.get("BASE_URL", "http://localhost")
 PRIVATE_KEY = os.environ.get(
     "PRIVATE_KEY", "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 )
-API_KEY = os.environ.get("API_KEY", "og4lpqQUILyciacspkFESHE1qrXIxpX1")
+API_KEY = os.environ["API_KEY"]
 
 CLIENT_OID = "550e8400-e29b-41d4-a716-446655440000"
 SYMBOL = "MATIC-USDC"
