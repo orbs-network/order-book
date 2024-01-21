@@ -71,7 +71,7 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 
 func (h *Handler) Init(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 	h.initMakerRoutes(getUserByApiKey)
-	h.initTakerRoutes()
+	h.initTakerRoutes(getUserByApiKey)
 }
 
 // Market Maker specific routes
@@ -114,13 +114,18 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 }
 
 // Liquidity Hub specific routes
-func (h *Handler) initTakerRoutes() {
+func (h *Handler) initTakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 	/////////////////////////////////////////////////////////////////////
 	// TAKER side
 	takerApi := h.Router.PathPrefix("/taker/v1").Subrouter()
+
+	//
+	middlewareValidUser := middleware.ValidateUserMiddleware(getUserByApiKey)
+	takerApi.Use(middlewareValidUser)
+
 	// IN: InAmount, InToken, OutToken
 	// OUT: CURRENT potential outAmount
-	takerApi.HandleFunc("/quote", h.quote).Methods("GET")
+	takerApi.HandleFunc("/quote", h.quote).Methods("POST")
 	// IN: InAmount, InToken, OutToken
 	// OUT: Locked outAmount, SwapID
 	takerApi.HandleFunc("/swap", h.swap).Methods("POST")
