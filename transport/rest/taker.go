@@ -170,12 +170,12 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 }
 
-// Quote METHOD GET
+// Quote METHOD POST
 func (h *Handler) quote(w http.ResponseWriter, r *http.Request) {
 	h.handleQuote(w, r, false)
 }
 
-// SWAP METHOD GET
+// SWAP METHOD POST
 func (h *Handler) swap(w http.ResponseWriter, r *http.Request) {
 	h.handleQuote(w, r, true)
 }
