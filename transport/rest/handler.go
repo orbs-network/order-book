@@ -71,7 +71,7 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 
 func (h *Handler) Init(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 	h.initMakerRoutes(getUserByApiKey)
-	h.initTakerRoutes()
+	h.initTakerRoutes(getUserByApiKey)
 }
 
 // Market Maker specific routes
