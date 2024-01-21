@@ -9,12 +9,15 @@ import os
 
 import pytest
 import uuid
+import json
 import requests
 import math
+from decimal import *
 
 from orbs_orderbook import CreateOrderInput, OrderBookSDK, OrderSigner
 from orbs_orderbook.exceptions import ErrApiRequest
 
+TOKEN_DEC = {"MATIC": 18, "USDC": 6}
 
 PRIVATE_KEY = os.environ.get(
     "PRIVATE_KEY", "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -25,8 +28,9 @@ BASE_URL = os.environ.get("BASE_URL", "http://localhost")
 API_KEY = os.environ.get("API_KEY", "og4lpqQUILyciacspkFESHE1qrXIxpX1")
 
 SYMBOL = "MATIC-USDC"
-PRICE = "0.86500000"
-SIZE = "40"
+SPREAD_PRICE = 0.8
+PRICER_OFFSET = 0.02
+SPREAD_SIZE = 10
 
 
 @pytest.fixture
@@ -60,12 +64,12 @@ def create_spread(ob_client, ob_signer):
     # clear ob
     # cancel_all_orders(ob_client, ob_signer)
 
-    price = 0.8
-    size = 10
+    price = SPREAD_PRICE
+    size = SPREAD_SIZE
     orders = []
 
     for i in range(3):
-        sell_price = price + (i + 1) * 0.01
+        sell_price = price + (i + 1) * PRICER_OFFSET
         sell_price = math.floor(sell_price * 100) / 100
 
         print("sell_price: " + str(sell_price))
@@ -86,7 +90,7 @@ def create_spread(ob_client, ob_signer):
         )
         orders.append(order)
 
-        buy_price = price - (i + 1) * 0.01
+        buy_price = price - (i + 1) * PRICER_OFFSET
         buy_price = math.floor(buy_price * 100) / 100
         print("buy_price: " + str(buy_price))
         order_input = CreateOrderInput(
@@ -109,17 +113,45 @@ def create_spread(ob_client, ob_signer):
     yield orders
 
 
-# test simple quote on depth spread 1200-700
+def toTokenDec(num, dec):
+    return str(int(num * 10**dec))
+
+
+def call_quote(inAmount, inToken, outToken):
+    json_data = {"InAmount": str(inAmount), "InToken": inToken, "OutToken": outToken}
+    # Convert the JSON data to a string
+    json_string = json.dumps(json_data)
+    # Set the headers for the request
+    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+
+    url = f"{BASE_URL}/taker/v1/quote"
+    res = requests.get(url, data=json_string, headers=headers)
+    assert res.status_code == 200, "res is not 200"
+    return res
+
+
+def call_quote_size(inToken, inSize, outToken, outSize):
+    # test simple quote on depth spread
+    res = call_quote(toTokenDec(inSize, TOKEN_DEC[inToken]), inToken, outToken)
+
+    obj = res.json()
+    assert obj is not None, "json is none"
+
+    expectedOutAmount = toTokenDec(outSize, TOKEN_DEC[outToken])
+    # breakpoint()
+    assert obj["outAmount"] == expectedOutAmount, "outAmount is wrong"
+    assert obj["outToken"][:4] == outToken[:4], "outToken is wrong"
+    assert obj["inToken"] == inToken, "inToken is wrong"
+    assert obj["swapId"] == "", "swapId should be empty"
+
+
 def test_quote(cancel_all_orders, create_spread):
-    print("tes quote")
-    # json_data = {"InAmount": "1000000", "InToken": "USDC", "OutToken": "MATIC"}
-    # # Convert the JSON data to a string
-    # json_string = json.dumps(json_data)
-    # # Set the headers for the request
-    # headers = {"Content-Type": "application/json", "Accept": "application/json"}
+    # sell to bids
+    # call_quote_size("MATIC", 1, "USDC", SPREAD_PRICE - PRICER_OFFSET)
 
-    # url = f"{BASE_URL}/taker/v1/quote"
-    # print(url)
+    # buy from ask
+    call_quote_size("USDC", 1, "MATIC", 1 / (SPREAD_PRICE + PRICER_OFFSET))
 
-    # response = requests.get(url, data=json_string, headers=headers)
-    # print(response)
+    # call_quote_size(
+    #     SPREAD_SIZE, SPREAD_SIZE * (SPREAD_PRICE - PRICER_OFFSET), "MATIC", "USDC"
+    # )
