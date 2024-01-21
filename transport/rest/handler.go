@@ -119,7 +119,7 @@ func (h *Handler) initTakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	// TAKER side
 	takerApi := h.Router.PathPrefix("/taker/v1").Subrouter()
 
-	//
+	// disabled!
 	//middlewareValidUser := middleware.ValidateUserMiddleware(getUserByApiKey)
 	//takerApi.Use(middlewareValidUser) disable for now
 
