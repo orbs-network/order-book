@@ -22,7 +22,7 @@ jobs:
 
       - name: Build Docker Image for Server
         run: |
-          docker build --build-arg APP_PATH=./cmd/order-book -t registry.heroku.com/order-book-server/web:$GITHUB_SHA -f cmd/order-book.Dockerfile .
+          docker build --build-arg APP_PATH=./cmd/order-book -t registry.heroku.com/order-book-server/web -f cmd/order-book.Dockerfile .
 
       - name: Push Docker Image for Server to Registry
         run: docker push registry.heroku.com/order-book-server/web
