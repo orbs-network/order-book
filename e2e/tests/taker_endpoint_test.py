@@ -31,6 +31,7 @@ SYMBOL = "MATIC-USDC"
 SPREAD_PRICE = 0.8
 PRICER_OFFSET = 0.02
 SPREAD_SIZE = 10
+ORDER_SIDE_COUNT = 3
 
 
 @pytest.fixture
@@ -68,14 +69,14 @@ def create_spread(ob_client, ob_signer):
     size = SPREAD_SIZE
     orders = []
 
-    for i in range(3):
+    for i in range(ORDER_SIDE_COUNT):
         sell_price = price + (i + 1) * PRICER_OFFSET
         sell_price = math.floor(sell_price * 100) / 100
 
         print("sell_price: " + str(sell_price))
         order_input = CreateOrderInput(
             price=str(sell_price),
-            size=str(size + i * 10),
+            size=str(size + i * SPREAD_SIZE),
             symbol=SYMBOL,
             side="sell",
             client_order_id=str(uuid.uuid4()),
@@ -95,7 +96,7 @@ def create_spread(ob_client, ob_signer):
         print("buy_price: " + str(buy_price))
         order_input = CreateOrderInput(
             price=str(buy_price),
-            size=str(size + i * 10),
+            size=str(size + i * SPREAD_SIZE),
             symbol=SYMBOL,
             side="buy",
             client_order_id=str(uuid.uuid4()),
@@ -138,20 +139,42 @@ def call_quote_size(inToken, inSize, outToken, outSize):
     assert obj is not None, "json is none"
 
     expectedOutAmount = toTokenDec(outSize, TOKEN_DEC[outToken])
+    outTokenDec = TOKEN_DEC[outToken] - 2
     # breakpoint()
-    assert obj["outAmount"] == expectedOutAmount, "outAmount is wrong"
-    assert obj["outToken"][:4] == outToken[:4], "outToken is wrong"
+    assert (
+        obj["outAmount"][:outTokenDec] == expectedOutAmount[:outTokenDec]
+    ), "outAmount is wrong"
+    assert obj["outToken"] == outToken, "outToken is wrong"
     assert obj["inToken"] == inToken, "inToken is wrong"
     assert obj["swapId"] == "", "swapId should be empty"
 
 
 def test_quote(cancel_all_orders, create_spread):
-    # sell to bids
-    # call_quote_size("MATIC", 1, "USDC", SPREAD_PRICE - PRICER_OFFSET)
+    # sell to bids single
+    call_quote_size("MATIC", 1, "USDC", SPREAD_PRICE - PRICER_OFFSET)
+
+    # entire sell side
+    tot_matic = 0
+    tot_usdc = 0
+    for i in range(ORDER_SIDE_COUNT):
+        matic_size = SPREAD_SIZE + i * SPREAD_SIZE
+        price = SPREAD_PRICE - (i + 1) * PRICER_OFFSET
+        tot_usdc += matic_size * price
+        tot_matic += matic_size
+
+    call_quote_size("MATIC", tot_matic, "USDC", tot_usdc)
 
     # buy from ask
-    call_quote_size("USDC", 1, "MATIC", 1 / (SPREAD_PRICE + PRICER_OFFSET))
+    call_quote_size(
+        "USDC", 1, "MATIC", Decimal(1) / Decimal(SPREAD_PRICE + PRICER_OFFSET)
+    )
 
-    # call_quote_size(
-    #     SPREAD_SIZE, SPREAD_SIZE * (SPREAD_PRICE - PRICER_OFFSET), "MATIC", "USDC"
-    # )
+    tot_matic = 0
+    tot_usdc = 0
+    for i in range(ORDER_SIDE_COUNT):
+        matic_size = SPREAD_SIZE + i * SPREAD_SIZE
+        price = SPREAD_PRICE + (i + 1) * PRICER_OFFSET
+        tot_usdc += matic_size * price
+        tot_matic += matic_size
+
+    call_quote_size("USDC", tot_usdc, "MATIC", tot_matic)
