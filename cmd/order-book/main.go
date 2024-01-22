@@ -16,11 +16,16 @@ import (
 	"github.com/orbs-network/order-book/transport/rest"
 )
 
+// TODO: handle build version better
+const VERSION = "1.0.0"
+
 func main() {
 	setup()
 }
 
 func setup() {
+	log.Print("Order book version: ", VERSION)
+
 	redisAddress, found := os.LookupEnv("REDIS_URL")
 	if !found {
 		panic("REDIS_URL not set")
