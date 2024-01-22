@@ -25,7 +25,7 @@ jobs:
           docker build --build-arg APP_PATH=./cmd/order-book -t registry.heroku.com/order-book-server/web:$GITHUB_SHA -f cmd/order-book.Dockerfile .
 
       - name: Push Docker Image for Server to Registry
-        run: docker push registry.heroku.com/order-book-server/web:$GITHUB_SHA
+        run: docker push registry.heroku.com/order-book-server/web
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
@@ -43,10 +43,10 @@ jobs:
 
       - name: Build Docker Image for Swaps Tracker
         run: |
-          docker build --build-arg APP_PATH=./cmd/pending-swaps-tracker -t registry.heroku.com/order-book-pending-swaps-track/worker:$GITHUB_SHA -f cmd/order-book.Dockerfile .
+          docker build --build-arg APP_PATH=./cmd/pending-swaps-tracker -t registry.heroku.com/order-book-pending-swaps-track/worker -f cmd/order-book.Dockerfile .
 
       - name: Push Docker Image for Swaps Tracker to Registry
-        run: docker push registry.heroku.com/order-book-pending-swaps-track/worker:$GITHUB_SHA
+        run: docker push registry.heroku.com/order-book-pending-swaps-track/worker
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
@@ -63,16 +63,12 @@ jobs:
 
       - name: Pull and Release Image for Server Nonprod
         run: |
-          docker pull registry.heroku.com/order-book-server/web:$GITHUB_SHA
-          docker tag registry.heroku.com/order-book-server/web:$GITHUB_SHA registry.heroku.com/order-book-server/web
           heroku container:release web --app order-book-server
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
       - name: Pull and Release Image for Swaps Tracker Nonprod
         run: |
-          docker pull registry.heroku.com/order-book-pending-swaps-track/worker:$GITHUB_SHA
-          docker tag registry.heroku.com/order-book-pending-swaps-track/worker:$GITHUB_SHA registry.heroku.com/order-book-pending-swaps-track/worker
           heroku container:release worker --app order-book-pending-swaps-track
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
@@ -90,8 +86,8 @@ jobs:
 
       - name: Pull and Release Image for Server Prod
         run: |
-          docker pull registry.heroku.com/order-book-server/web:$GITHUB_SHA
-          docker tag registry.heroku.com/order-book-server/web:$GITHUB_SHA registry.heroku.com/order-book-server-prod/web
+          docker pull registry.heroku.com/order-book-server/web
+          docker tag registry.heroku.com/order-book-server/web registry.heroku.com/order-book-server-prod/web
           docker push registry.heroku.com/order-book-server-prod/web
           heroku container:release web --app order-book-server-prod
         env:
@@ -99,8 +95,8 @@ jobs:
 
       - name: Pull and Release Image for Swaps Tracker Prod
         run: |
-          docker pull registry.heroku.com/order-book-pending-swaps-track/worker:$GITHUB_SHA
-          docker tag registry.heroku.com/order-book-pending-swaps-track/worker:$GITHUB_SHA registry.heroku.com/order-book-swaps-track-prod/worker
+          docker pull registry.heroku.com/order-book-pending-swaps-track/worker
+          docker tag registry.heroku.com/order-book-pending-swaps-track/worker registry.heroku.com/order-book-swaps-track-prod/worker
           docker push registry.heroku.com/order-book-swaps-track-prod/worker
           heroku container:release worker --app order-book-swaps-track-prod
         env:
