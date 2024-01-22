@@ -127,26 +127,34 @@ def call_quote(inAmount, inToken, outToken):
 
     url = f"{BASE_URL}/taker/v1/quote"
     res = requests.get(url, data=json_string, headers=headers)
-    assert res.status_code == 200, "res is not 200"
+
     return res
 
 
-def call_quote_size(inToken, inSize, outToken, outSize):
-    # test simple quote on depth spread
+def call_quote_size(inToken, inSize, outToken, outSize, except_status=200):
+    # test calls
     res = call_quote(toTokenDec(inSize, TOKEN_DEC[inToken]), inToken, outToken)
+    assert (
+        res.status_code == except_status
+    ), f"status_code({res.status_code}) is not as expected: {except_status}"
 
+    if res.status_code != 200:
+        return res
+
+    # test fields
     obj = res.json()
     assert obj is not None, "json is none"
 
     expectedOutAmount = toTokenDec(outSize, TOKEN_DEC[outToken])
     outTokenDec = TOKEN_DEC[outToken] - 2
-    # breakpoint()
     assert (
         obj["outAmount"][:outTokenDec] == expectedOutAmount[:outTokenDec]
     ), "outAmount is wrong"
     assert obj["outToken"] == outToken, "outToken is wrong"
     assert obj["inToken"] == inToken, "inToken is wrong"
     assert obj["swapId"] == "", "swapId should be empty"
+
+    return obj
 
 
 def test_quote(cancel_all_orders, create_spread):
@@ -164,6 +172,12 @@ def test_quote(cancel_all_orders, create_spread):
 
     call_quote_size("MATIC", tot_matic, "USDC", tot_usdc)
 
+    # insufficient liq
+    obj = call_quote_size("MATIC", tot_matic + 1, "USDC", tot_usdc, 400)
+    assert (
+        obj.text == "not enough liquidity in book to satisfy inAmount\n"
+    ), "insufficient liq text is incorrect"
+
     # buy from ask
     call_quote_size(
         "USDC", 1, "MATIC", Decimal(1) / Decimal(SPREAD_PRICE + PRICER_OFFSET)
@@ -178,3 +192,9 @@ def test_quote(cancel_all_orders, create_spread):
         tot_matic += matic_size
 
     call_quote_size("USDC", tot_usdc, "MATIC", tot_matic)
+
+    # insufficient liq
+    obj = call_quote_size("USDC", tot_usdc + 1, "MATIC", tot_matic, 400)
+    assert (
+        obj.text == "not enough liquidity in book to satisfy inAmount\n"
+    ), "insufficient liq text is incorrect"
