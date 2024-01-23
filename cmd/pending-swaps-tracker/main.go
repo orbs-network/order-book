@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -32,6 +34,12 @@ func main() {
 	rpcUrl, found := os.LookupEnv("RPC_URL")
 	if !found {
 		panic("RPC_URL not set")
+	}
+
+	if strings.HasPrefix(redisAddress, "rediss") {
+		opt.TLSConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
 	}
 
 	rdb := redis.NewClient(opt)
