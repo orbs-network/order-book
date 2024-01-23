@@ -70,7 +70,7 @@ func (e *EvmClient) VerifySignature(ctx context.Context, input VerifySignatureIn
 	domain := apitypes.TypedDataDomain{
 		Name:              "RePermit",
 		ChainId:           math.NewHexOrDecimal256(137),
-		VerifyingContract: "0x000000000022d473030f116ddee9f6b43ac78ba3",
+		VerifyingContract: "0x4d415B58EA43988FfF7f50A3475718b0858fE0f1",
 	}
 
 	// EIP712 message types
