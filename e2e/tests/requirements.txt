@@ -1,2 +1,2 @@
-orbs-orderbook-sdk==0.6.0
+orbs-orderbook-sdk==0.7.0
 pytest==7.4.4
