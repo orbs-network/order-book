@@ -6,9 +6,11 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/orbs-network/order-book/data/redisrepo"
 	"github.com/orbs-network/order-book/serviceuser"
@@ -32,6 +34,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to parse Redis URL: %v", err)
 	}
+
+	if strings.HasPrefix(redisURL, "rediss") {
+		opt.TLSConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+	}
+
 	rdb := redis.NewClient(opt)
 
 	// Instantiate repository and service
@@ -44,18 +53,18 @@ func main() {
 		log.Fatalf("Failed to create user service: %v", err)
 	}
 
-	// Retrieve public key from environment variable or prompt for it
-	publicKey := os.Getenv("PUBLIC_KEY")
-	if publicKey == "" {
-		fmt.Print("Enter public key: ")
+	// Retrieve wallet address from environment variable or prompt for it
+	walletAddress := os.Getenv("WALLET_ADDRESS")
+	if walletAddress == "" {
+		fmt.Print("Enter wallet address: ")
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
-		publicKey = scanner.Text()
+		walletAddress = scanner.Text()
 	}
 
 	// Create a new user
 	user, apiKey, err := usersvc.CreateUser(ctx, serviceuser.CreateUserInput{
-		PubKey: publicKey,
+		PubKey: walletAddress,
 	})
 	if err != nil {
 		log.Fatalf("Failed to create user: %v", err)

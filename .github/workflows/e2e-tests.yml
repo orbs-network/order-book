@@ -9,10 +9,10 @@ jobs:
 
     env:
       REDIS_URL: redis://localhost:6379/0
-      PUBLIC_KEY: "0x6a04ab98d9e4774ad806e302dddeb63bea16b5cb5f223ee77478e861bb583eb336b6fbcb60b5b3d4f1551ac45e5ffc4936466e7d98f6c7c0ec736539f74691a6"
+      WALLET_ADDRESS: "0x8fd379246834eac74B8419FfdA202CF8051F7A03"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v5
         with:
