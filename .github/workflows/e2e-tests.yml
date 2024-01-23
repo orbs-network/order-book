@@ -8,13 +8,11 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      REDIS_HOST: localhost
-      REDIS_PASSWORD: "0"
-      REDIS_PORT: 6379
-      API_KEY: og4lpqQUILyciacspkFESHE1qrXIxpX1
+      REDIS_URL: redis://localhost:6379/0
+      WALLET_ADDRESS: "0x8fd379246834eac74B8419FfdA202CF8051F7A03"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v5
         with:
@@ -24,10 +22,8 @@ jobs:
         run: |
           pip install -r e2e/tests/requirements.txt
 
-      - name: Install Redis CLI
-        run: sudo apt-get install redis-tools
-
       - uses: isbang/compose-action@v1.5.1
+        name: Start services
         with:
           up-flags: -d --wait
         env:
@@ -39,7 +35,11 @@ jobs:
 
       - name: Set up Market Maker User
         run: |
-          ./scripts/redis/store-mm-user.sh
+          ./scripts/create-user/create-user-x86_64
+
+      - name: Set API key as env var
+        run: |
+          echo "API_KEY=$(cat api_key.txt)" >> $GITHUB_ENV
 
       - name: Run market maker endpoint tests
         run: |

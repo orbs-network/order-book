@@ -11,7 +11,9 @@ import (
 
 func (s *Service) GetUserByApiKey(ctx context.Context, apiKey string) (*models.User, error) {
 
-	user, err := s.userStore.GetUserByApiKey(ctx, apiKey)
+	hashedApiKey := HashAPIKey(apiKey)
+
+	user, err := s.userStore.GetUserByApiKey(ctx, hashedApiKey)
 
 	if err == models.ErrNotFound {
 		logctx.Warn(ctx, "user not found", logger.Error(err))

@@ -12,7 +12,7 @@ import (
 type UserService interface {
 	GetUserById(ctx context.Context, userId uuid.UUID) (*models.User, error)
 	GetUserByApiKey(ctx context.Context, apiKey string) (*models.User, error)
-	CreateUser(ctx context.Context, input CreateUserInput) (models.User, error)
+	CreateUser(ctx context.Context, input CreateUserInput) (user models.User, apiKey string, err error)
 	UpdateUser(ctx context.Context, input UpdateUserInput) error
 }
 

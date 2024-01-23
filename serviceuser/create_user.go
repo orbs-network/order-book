@@ -14,35 +14,35 @@ type CreateUserInput struct {
 	PubKey string
 }
 
-func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (models.User, error) {
+func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (user models.User, apiKey string, err error) {
 
-	apiKey, err := GenerateAPIKey()
+	apiKey, err = GenerateAPIKey()
 	if err != nil {
 		logctx.Error(ctx, "failed to generate api key", logger.Error(err))
-		return models.User{}, fmt.Errorf("failed to generate api key: %w", err)
+		return models.User{}, "", fmt.Errorf("failed to generate api key: %w", err)
 	}
 
 	userId := uuid.New()
 
-	user, err := s.userStore.CreateUser(ctx, models.User{
+	createdUser, err := s.userStore.CreateUser(ctx, models.User{
 		Id:     userId,
 		PubKey: input.PubKey,
 		Type:   models.MARKET_MAKER,
-		ApiKey: apiKey,
+		ApiKey: HashAPIKey(apiKey),
 	})
 
 	if err == models.ErrUserAlreadyExists {
 		logctx.Warn(ctx, "user already exists for that pub key", logger.String("pubKey", input.PubKey))
-		return models.User{}, err
+		return models.User{}, "", err
 	}
 
 	if err != nil {
 		logctx.Error(ctx, "failed to create user", logger.String("userId", userId.String()), logger.Error(err))
-		return models.User{}, fmt.Errorf("failed to create user: %w", err)
+		return models.User{}, "", fmt.Errorf("failed to create user: %w", err)
 	}
 
-	logctx.Info(ctx, "user created", logger.String("userId", user.Id.String()), logger.String("pubKey",
-		user.PubKey))
+	logctx.Info(ctx, "user created", logger.String("userId", createdUser.Id.String()), logger.String("pubKey",
+		createdUser.PubKey))
 
-	return user, nil
+	return createdUser, apiKey, nil
 }
