@@ -231,17 +231,17 @@ func createSwaps() {
 
 	fakeSwapOne := models.OrderFrag{
 		OrderId: uuid.New(),
-		Size:    decimal.NewFromFloat(200.0),
+		OutSize: decimal.NewFromFloat(200.0),
 	}
 
 	fakeSwapTwo := models.OrderFrag{
 		OrderId: uuid.New(),
-		Size:    decimal.NewFromFloat(300.0),
+		OutSize: decimal.NewFromFloat(300.0),
 	}
 
 	fakeSwapThree := models.OrderFrag{
 		OrderId: uuid.New(),
-		Size:    decimal.NewFromFloat(400.0),
+		OutSize: decimal.NewFromFloat(400.0),
 	}
 
 	fillOrders := []models.OrderFrag{fakeSwapOne, fakeSwapTwo, fakeSwapThree}
@@ -262,7 +262,7 @@ func createSwaps() {
 	log.Print("--------------------------")
 	log.Printf("swap: %v", swap)
 	log.Print(swap[0].OrderId)
-	log.Print(swap[0].Size)
+	log.Print(swap[0].OutSize)
 }
 
 func createOrders() {
