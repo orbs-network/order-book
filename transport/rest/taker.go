@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/big"
 	"net/http"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
@@ -22,10 +24,9 @@ type BeginSwapRes struct {
 }
 
 type Fragment struct {
-	OutAmount string `json:"outAmount"`
-	Signature string `json:"signature"`
-	// TODO: update
-	AbiData any
+	Signature string      `json:"signature"`
+	Abi       string      `json:"string"`
+	AbiData   AbiFragment `json:"abiData"`
 }
 type ConfirmSwapRes struct {
 	SwapId        string     `json:"swapId"`
@@ -138,12 +139,54 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			http.Error(w, "BeginSwap filed", http.StatusBadRequest)
 			return
 		}
+		inToken, ok := h.supportedTokens[req.InToken]
+		if !ok {
+			http.Error(w, "InToken address not found", http.StatusBadRequest)
+			return
+		}
+		outToken, ok := h.supportedTokens[req.OutToken]
+		if !ok {
+			http.Error(w, "InToken address not found", http.StatusBadRequest)
+			return
+		}
+
 		for i := 0; i < len(swapData.Fragments); i++ {
-			convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].Size)
+			convInAmount := h.convertToTokenDec(r.Context(), req.InToken, swapData.Fragments[i].InSize)
+			convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].OutSize)
+
+			inputAmount := big.NewInt(0)
+			inputAmount.SetString(convInAmount, 10)
+			abiInput := PartialInput{
+				Token:  common.HexToAddress(inToken.Address),
+				Amount: inputAmount,
+			}
+			outputAmount := big.NewInt(0)
+			outputAmount.SetString(convOutAmount, 10)
+
+			abiOutput := PartialOutput{
+				Token:     common.HexToAddress(outToken.Address),
+				Amount:    outputAmount,
+				Recipient: common.HexToAddress("0x8fd379246834eac74B8419FfdA202CF8051F7A03"),
+			}
+			orderInfo := OrderInfo{
+				Reactor:                      common.HexToAddress("0x0B94c1A3E11F8aaA25D27cAf8DD05818e6f2Ad97"),
+				Swapper:                      common.HexToAddress("0x8fd379246834eac74B8419FfdA202CF8051F7A03"),
+				Nonce:                        big.NewInt(1000),
+				Deadline:                     big.NewInt(1709071200),
+				AdditionalValidationContract: common.Address{},
+				AdditionalValidationData:     []byte{},
+			}
+			abiData := AbiFragment{
+				Info:                   orderInfo,
+				ExclusiveFiller:        common.HexToAddress("0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e"),
+				ExclusivityOverrideBps: big.NewInt(0),
+				Input:                  abiInput,
+				Outputs:                []PartialOutput{abiOutput},
+			}
 			frag := Fragment{
-				OutAmount: convOutAmount,
 				Signature: swapData.Orders[i].Signature.Eip712Sig,
-				AbiData:   swapData.Orders[i].Signature.AbiFragment,
+				Abi:       encodeFragData(abiData),
+				AbiData:   abiData,
 			}
 			res.Fragments = append(res.Fragments, frag)
 		}
