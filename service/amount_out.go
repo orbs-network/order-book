@@ -74,7 +74,7 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 			// res
 			logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
 			logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
-			frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: gainA})
+			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainA, InSize: spendB})
 		}
 	}
 	// not all is Spent - error
@@ -111,7 +111,7 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 		// res
 		logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendA: %s", spendA.String()))
 		logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainB: %s", gainB.String()))
-		frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: spendA})
+		frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: spendA, InSize: gainB})
 	}
 	if inAmountA.IsPositive() {
 		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
