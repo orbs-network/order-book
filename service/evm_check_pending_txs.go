@@ -110,7 +110,7 @@ func (e *EvmClient) processCompletedTransaction(ctx context.Context, p models.Sw
 
 	for _, frag := range orderFrags {
 		orderIds = append(orderIds, frag.OrderId)
-		orderSizes[frag.OrderId] = frag.Size
+		orderSizes[frag.OrderId] = frag.OutSize
 	}
 
 	orders, err := e.orderBookStore.FindOrdersByIds(ctx, orderIds)

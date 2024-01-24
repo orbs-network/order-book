@@ -41,7 +41,7 @@ func newFrags(orders []models.Order) []models.OrderFrag {
 		if i == len(orders)-1 {
 			sz = sz.Div(decimal.NewFromInt(2))
 		}
-		frags = append(frags, models.OrderFrag{OrderId: order.Id, Size: sz})
+		frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: sz})
 	}
 	return frags
 }

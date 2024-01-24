@@ -16,7 +16,7 @@ func Test_Swap(t *testing.T) {
 		sz := int32(1000 * (i + 1))
 		frags = append(frags, OrderFrag{
 			OrderId: orderId,
-			Size:    decimal.NewFromInt32(sz),
+			OutSize: decimal.NewFromInt32(sz),
 		})
 	}
 

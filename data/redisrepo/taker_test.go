@@ -39,9 +39,9 @@ func TestRedisRepository_GetSwap(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Len(t, swap, 3, "Should have 3 orders in the swap")
 		assert.ElementsMatch(t, []models.OrderFrag{
-			{OrderId: uuid1, Size: amount1},
-			{OrderId: uuid2, Size: amount2},
-			{OrderId: uuid3, Size: amount3},
+			{OrderId: uuid1, OutSize: amount1},
+			{OrderId: uuid2, OutSize: amount2},
+			{OrderId: uuid3, OutSize: amount3},
 		}, swap, "The swap contents do not match expected")
 	})
 
