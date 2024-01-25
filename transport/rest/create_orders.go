@@ -62,15 +62,13 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 
 	for _, order := range args.Orders {
 		if err = handleValidateRequiredFields(hVRFArgs{
-			price:          order.Price,
-			size:           order.Size,
-			symbol:         args.Symbol,
-			side:           order.Side,
-			clientOrderId:  order.ClientOrderId,
-			eip712Sig:      order.Eip712Sig,
-			eip712Msg:      &order.Eip712Msg,
-			eip712MsgTypes: &order.Eip712MsgTypes,
-			eip712Domain:   &order.Eip712Domain,
+			price:         order.Price,
+			size:          order.Size,
+			symbol:        args.Symbol,
+			side:          order.Side,
+			clientOrderId: order.ClientOrderId,
+			eip712Sig:     order.Eip712Sig,
+			eip712Msg:     &order.Eip712Msg,
 		}); err != nil {
 			logctx.Warn(ctx, "failed to validate required fields", logger.Error(err), logger.String("userId", user.Id.String()))
 			response.Status = http.StatusBadRequest
@@ -97,17 +95,24 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		abiFragment, err := restutils.ConvertToAbiFragment(order.Eip712Msg)
+		if err != nil {
+			logctx.Warn(ctx, "failed to convert eip712Msg to abi fragment", logger.Error(err))
+			response.Status = http.StatusBadRequest
+			response.Msg = fmt.Errorf("failed to parse eip712Msg: %w", err).Error()
+			response.Created = createdOrders
+			break
+		}
+
 		order, err := h.svc.CreateOrder(ctx, service.CreateOrderInput{
-			UserId:         user.Id,
-			Price:          parsedFields.roundedDecPrice,
-			Symbol:         parsedFields.symbol,
-			Size:           parsedFields.decSize,
-			Side:           parsedFields.side,
-			ClientOrderID:  parsedFields.clientOrderId,
-			Eip712Sig:      order.Eip712Sig,
-			Eip712Domain:   &order.Eip712Domain,
-			Eip712MsgTypes: &order.Eip712MsgTypes,
-			Eip712Msg:      &order.Eip712Msg,
+			UserId:        user.Id,
+			Price:         parsedFields.roundedDecPrice,
+			Symbol:        parsedFields.symbol,
+			Size:          parsedFields.decSize,
+			Side:          parsedFields.side,
+			ClientOrderID: parsedFields.clientOrderId,
+			Eip712Sig:     order.Eip712Sig,
+			AbiFragment:   abiFragment,
 		})
 
 		if err == models.ErrSignatureVerificationError {
@@ -160,6 +165,6 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 
 	logctx.Info(ctx, "user created orders", logger.String("userId", user.Id.String()), logger.Int("numOfOrders", len(createdOrders)))
 	response.Status = http.StatusCreated
-	restutils.WriteJSONResponse(ctx, w, http.StatusOK, response, logger.String("userId", user.Id.String()))
+	restutils.WriteJSONResponse(ctx, w, http.StatusCreated, response, logger.String("userId", user.Id.String()))
 
 }

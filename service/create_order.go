@@ -6,54 +6,24 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/orbs-network/order-book/featureflags"
 	"github.com/orbs-network/order-book/models"
-	"github.com/orbs-network/order-book/utils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
 )
 
 type CreateOrderInput struct {
-	UserId         uuid.UUID
-	Price          decimal.Decimal
-	Symbol         models.Symbol
-	Size           decimal.Decimal
-	Side           models.Side
-	ClientOrderID  uuid.UUID
-	Eip712Sig      string
-	Eip712Domain   *map[string]interface{}
-	Eip712MsgTypes *map[string]interface{}
-	Eip712Msg      *map[string]interface{}
+	UserId        uuid.UUID
+	Price         decimal.Decimal
+	Symbol        models.Symbol
+	Size          decimal.Decimal
+	Side          models.Side
+	ClientOrderID uuid.UUID
+	Eip712Sig     string
+	AbiFragment   models.AbiFragment
 }
 
 func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (models.Order, error) {
-
-	if featureflags.ShouldVerifySig == "" || featureflags.ShouldVerifySig == "true" {
-		logctx.Info(ctx, "verifying signature", logger.String("userId", input.UserId.String()))
-
-		user := utils.GetUserCtx(ctx)
-		if user == nil {
-			logctx.Error(ctx, "user should be in context")
-			return models.Order{}, fmt.Errorf("user should be in context")
-		}
-
-		isVerifed, err := s.blockchainClient.VerifySignature(ctx, VerifySignatureInput{
-			MessageData: *input.Eip712Msg,
-			Signature:   input.Eip712Sig,
-			PublicKey:   user.PubKey,
-		})
-
-		if err != nil {
-			logctx.Warn(ctx, "signature verification error", logger.Error(err), logger.String("userId", user.Id.String()))
-			return models.Order{}, models.ErrSignatureVerificationError
-		}
-
-		if !isVerifed {
-			logctx.Warn(ctx, "signature verification failed", logger.String("userId", user.Id.String()))
-			return models.Order{}, models.ErrSignatureVerificationFailed
-		}
-	}
 
 	existingOrder, err := s.orderBookStore.FindOrderById(ctx, input.ClientOrderID, true)
 
@@ -95,10 +65,8 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 		Symbol:    input.Symbol,
 		Size:      input.Size,
 		Signature: models.Signature{
-			Eip712Sig:      input.Eip712Sig,
-			Eip712Domain:   *input.Eip712Domain,
-			Eip712MsgTypes: *input.Eip712MsgTypes,
-			Eip712Msg:      *input.Eip712Msg,
+			Eip712Sig:   input.Eip712Sig,
+			AbiFragment: input.AbiFragment,
 		},
 		Side:      input.Side,
 		Timestamp: time.Now().UTC(),
