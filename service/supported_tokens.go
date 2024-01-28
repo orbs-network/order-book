@@ -12,11 +12,12 @@ import (
 )
 
 type Token struct {
+	Name     string `json:"name"`
 	Address  string `json:"address"`
 	Decimals int    `json:"decimals"`
 }
 
-type TokenMap map[string]Token
+type TokenMap map[string]*Token
 
 type SupportedTokens struct {
 	Name2Token TokenMap
@@ -29,13 +30,13 @@ type GetTokensRes struct {
 
 func (s *SupportedTokens) ByName(name string) *Token {
 	if token, ok := s.Name2Token[strings.ToUpper(name)]; ok {
-		return &token
+		return token
 	}
 	return nil
 }
 func (s *SupportedTokens) ByAddress(adrs string) *Token {
 	if token, ok := s.Adrs2Token[strings.ToUpper(adrs)]; ok {
-		return &token
+		return token
 	}
 	return nil
 }
@@ -53,9 +54,18 @@ func NewSupportedTokens(ctx context.Context, filePath string) *SupportedTokens {
 	if err != nil {
 		return nil
 	}
+	adrs2Token := TokenMap{}
+	// set name fields in token, and assign to address map
+	for name, token := range name2Token {
+		// set name field
+		token.Name = strings.ToUpper(name)
+		// add address entry
+		adrs2Token[strings.ToUpper(token.Address)] = token
+	}
+
 	return &SupportedTokens{
 		Name2Token: name2Token,
-		Adrs2Token: TokenMap{},
+		Adrs2Token: adrs2Token,
 	}
 }
 func loadSupportedTokens(ctx context.Context, filePath string) (TokenMap, error) {
