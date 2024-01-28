@@ -23,7 +23,7 @@ type BeginSwapRes struct {
 
 type Fragment struct {
 	Signature string             `json:"signature"`
-	Abi       string             `json:"string"`
+	Abi       string             `json:"abi"`
 	AbiData   models.AbiFragment `json:"abiData"`
 }
 type ConfirmSwapRes struct {
@@ -33,10 +33,12 @@ type ConfirmSwapRes struct {
 }
 
 type QuoteReq struct {
-	InAmount     string `json:"inAmount"`
-	InToken      string `json:"inToken"`
-	OutToken     string `json:"outToken"`
-	MinOutAmount string `json:"minOutAmount"`
+	InAmount        string `json:"inAmount"`
+	InToken         string `json:"inToken"`
+	InTokenAddress  string `json:"inTokenAddress"`
+	OutToken        string `json:"outToken"`
+	OutTokenAddress string `json:"outTokenAddress"`
+	MinOutAmount    string `json:"minOutAmount"`
 }
 
 type QuoteRes struct {
@@ -74,6 +76,39 @@ func (h *Handler) convertFromTokenDec(ctx context.Context, tokenName, amountStr 
 	return decimal.Zero, models.ErrTokenNotsupported
 }
 
+// returns resolve name
+// only if
+// 1. name is missing
+// 2. address exists
+// 3. address is found in supported tokens
+// returns error if needed
+// returns empty string if no need to resolve
+func (h *Handler) nameFromAddress(name, address string) (string, error) {
+	token := h.supportedTokens.ByAddress(address)
+	if token == nil {
+		return "", models.ErrTokenNotsupported
+	}
+	return token.Name, nil
+}
+
+func (h *Handler) resolveQuoteTokenNames(req *QuoteReq) error {
+	// has address but no name
+	InName, err := h.nameFromAddress(req.InToken, req.InTokenAddress)
+	if err != nil {
+		return err
+	}
+	if len(InName) > 0 {
+		req.InToken = InName
+	}
+	OutName, err := h.nameFromAddress(req.OutToken, req.OutTokenAddress)
+	if err != nil {
+		return err
+	}
+	if len(OutName) > 0 {
+		req.OutToken = OutName
+	}
+	return nil
+}
 func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) {
 	var req QuoteReq
 	ctx := r.Context()
@@ -81,6 +116,14 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	if err != nil {
 		logctx.Error(ctx, "handleQuote - failed to decode body", logger.Error(err))
 		http.Error(w, "Quote invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	// ensure token names if only addresses were sent
+	err = h.resolveQuoteTokenNames(&req)
+	if err != nil {
+		logctx.Error(ctx, "resolveQuoteTokenNames failed", logger.Error(err))
+		http.Error(w, "'Quote::inAmount' token names/address invalid", http.StatusBadRequest)
 		return
 	}
 
