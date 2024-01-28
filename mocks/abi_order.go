@@ -16,7 +16,6 @@ var AbiFragment = models.AbiFragment{
 		Nonce:                        &BigInt,
 		Deadline:                     &BigInt,
 		AdditionalValidationContract: common.Address{},
-		AdditionalValidationData:     []byte{},
 	},
 	ExclusiveFiller:        common.Address{},
 	ExclusivityOverrideBps: &BigInt,

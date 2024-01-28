@@ -1,12 +1,14 @@
-package rest
+package models
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/orbs-network/order-book/utils/logger"
+	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
 type OrderInfo struct {
@@ -37,7 +39,7 @@ type AbiFragment struct {
 	Outputs                []PartialOutput
 }
 
-func getArguments() (abi.Arguments, error) {
+func getAbiArguments() (abi.Arguments, error) {
 	abiFrag, err := abi.NewType("tuple", "AbiFragment", []abi.ArgumentMarshaling{
 		{Name: "Info", Type: "tuple", Components: []abi.ArgumentMarshaling{
 			{Name: "Reactor", Type: "address"},
@@ -48,7 +50,7 @@ func getArguments() (abi.Arguments, error) {
 			{Name: "AdditionalValidationData", Type: "bytes"},
 		}},
 		{Name: "ExclusiveFiller", Type: "address"},
-		{Name: "ExclusivityOverride", Type: "uint256"},
+		{Name: "ExclusivityOverrideBps", Type: "uint256"},
 		{Name: "Input", Type: "tuple", Components: []abi.ArgumentMarshaling{
 			{Name: "Token", Type: "address"},
 			{Name: "Amount", Type: "uint256"},
@@ -61,9 +63,7 @@ func getArguments() (abi.Arguments, error) {
 		}},
 	)
 	if err != nil {
-		log.Fatalf("Failed to create ABI type for PartialOrder: %v", err)
 		return abi.Arguments{}, err
-
 	}
 
 	// Define the ABI arguments
@@ -75,16 +75,21 @@ func getArguments() (abi.Arguments, error) {
 	}
 	return arguments, nil
 }
-func encodeFragData(frag AbiFragment) string {
-	args, _ := getArguments()
+func EncodeFragData(ctx context.Context, frag AbiFragment) (string, error) {
+	args, err := getAbiArguments()
+	if err != nil {
+		logctx.Error(ctx, "args.Pack failed %s", logger.Error(err))
+		return "", err
+	}
 
 	//Encode the data
 	encodedData, err := args.Pack(frag)
 	if err != nil {
-		log.Fatalf("Failed to ABI encode frag: %v", err)
+		logctx.Error(ctx, "args.Pack failed %s", logger.Error(err))
+		return "", err
 	}
 
-	fmt.Printf("Encoded Data (hex): %x\n", encodedData)
-	fmt.Printf("Length: %d\n", len(encodedData))
-	return fmt.Sprintf("%x", encodedData)
+	hexRes := fmt.Sprintf("%x", encodedData)
+	logctx.Debug(ctx, "EncodeFragData", logger.String("buffer", hexRes))
+	return hexRes, nil
 }
