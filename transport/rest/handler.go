@@ -56,7 +56,7 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 
 	// load supported tokens
 	st := service.NewSupportedTokens(context.Background(), filePath)
-	if st != nil {
+	if st == nil {
 		return nil, err
 	}
 
