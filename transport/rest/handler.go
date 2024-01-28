@@ -19,7 +19,7 @@ type Handler struct {
 	pairMngr        *models.PairMngr
 	Router          *mux.Router
 	okJson          []byte
-	supportedTokens service.SupportedTokens
+	supportedTokens *service.SupportedTokens
 }
 type genRes struct {
 	StatusText string `json:"statusText"`
@@ -55,8 +55,8 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 	}
 
 	// load supported tokens
-	tokens, err := svc.LoadSupportedTokens(context.Background(), filePath)
-	if err != nil {
+	st := service.NewSupportedTokens(context.Background(), filePath)
+	if st != nil {
 		return nil, err
 	}
 
@@ -65,7 +65,7 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		Router:          r,
 		pairMngr:        models.NewPairMngr(),
 		okJson:          okJson,
-		supportedTokens: tokens,
+		supportedTokens: st,
 	}, nil
 }
 
@@ -123,10 +123,10 @@ func (h *Handler) initTakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	//middlewareValidUser := middleware.ValidateUserMiddleware(getUserByApiKey)
 	//takerApi.Use(middlewareValidUser) disable for now
 
-	// IN: InAmount, InToken, OutToken
+	// IN: InAmount, InToken, OutToken or InTokenAddress, OutTokenAddress
 	// OUT: CURRENT potential outAmount
 	takerApi.HandleFunc("/quote", h.quote).Methods("POST")
-	// IN: InAmount, InToken, OutToken
+	// IN: InAmount, InToken, OutToken or InTokenAddress, OutTokenAddress
 	// OUT: Locked outAmount, SwapID
 	takerApi.HandleFunc("/swap", h.swap).Methods("POST")
 	// IN: SwapID given in /swap

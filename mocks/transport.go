@@ -88,10 +88,6 @@ func (m *MockOrderBookService) AbortSwap(ctx context.Context, swapId uuid.UUID) 
 	return m.Error
 }
 
-func (m *MockOrderBookService) LoadSupportedTokens(ctx context.Context, filePath string) (service.SupportedTokens, error) {
-	return m.SupportedTokens, m.LoadSupportedTokensError
-}
-
 func (m *MockOrderBookService) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error {
 	return m.Error
 }

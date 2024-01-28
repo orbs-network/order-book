@@ -7,7 +7,6 @@ import (
 	"math"
 	"math/big"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -50,18 +49,18 @@ type QuoteRes struct {
 	//BookSignature? string     `json:"bookSignature"`
 }
 
-func (h *Handler) convertToTokenDec(ctx context.Context, outToken string, amount decimal.Decimal) string {
-	if token, ok := h.supportedTokens[strings.ToUpper(outToken)]; ok {
+func (h *Handler) convertToTokenDec(ctx context.Context, tokenName string, amount decimal.Decimal) string {
+	if token := h.supportedTokens.ByName(tokenName); token != nil {
 		decMul := math.Pow10(token.Decimals)
 		mul := amount.Mul(decimal.NewFromInt(int64(decMul)))
 		return mul.Truncate(0).String()
 	}
-	logctx.Error(ctx, "Token is not found in supported tokens: "+outToken)
+	logctx.Error(ctx, "Token is not found in supported tokens: "+tokenName)
 	return ""
 }
 
-func (h *Handler) convertFromTokenDec(ctx context.Context, outToken, amountStr string) (decimal.Decimal, error) {
-	if token, ok := h.supportedTokens[strings.ToUpper(outToken)]; ok {
+func (h *Handler) convertFromTokenDec(ctx context.Context, tokenName, amountStr string) (decimal.Decimal, error) {
+	if token := h.supportedTokens.ByName(tokenName); token != nil {
 		decDiv := math.Pow10(token.Decimals)
 		amount, err := decimal.NewFromString(amountStr)
 		if err != nil {
@@ -71,7 +70,7 @@ func (h *Handler) convertFromTokenDec(ctx context.Context, outToken, amountStr s
 		res := amount.Div(decimal.NewFromInt(int64(decDiv)))
 		return res, nil
 	}
-	logctx.Error(ctx, "Token is not found in supported tokens: "+outToken)
+	logctx.Error(ctx, "Token is not found in supported tokens: "+tokenName)
 	return decimal.Zero, models.ErrTokenNotsupported
 }
 
