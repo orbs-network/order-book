@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
@@ -33,7 +32,7 @@ func TestSupportedTokens(t *testing.T) {
 		filePath := "valid-file.json"
 
 		inText := `{"0XBTC":{"address":"0x71b821aa52a49f32eed535fca6eb5aa130085978","decimals":8}}`
-		expectedOutText := fmt.Sprintf(`{"tokens":%s}`, inText)
+		expectedOutText := `{"tokens":{"0XBTC":{"Name":"0XBTC","address":"0x71b821aa52a49f32eed535fca6eb5aa130085978","decimals":8}}}`
 		createValidFile(filePath, []byte(inText))
 		defer deleteFile(filePath)
 
@@ -47,6 +46,21 @@ func TestSupportedTokens(t *testing.T) {
 		t.Logf("out text:  %s", outText)
 		t.Logf("expected:  %s", expectedOutText)
 		assert.Equal(t, expectedOutText, outText)
+
+		// test byName
+		tokenbyName := st.ByName("0XBTC")
+		assert.NotNil(t, tokenbyName)
+		assert.Equal(t, tokenbyName.Name, "0XBTC")
+
+		// should fail
+		tokenNil := st.ByAddress("0XBTC")
+		assert.Nil(t, tokenNil)
+
+		// should succeed
+		tokenByAdrs := st.ByAddress("0x71b821aa52a49f32eed535fca6eb5aa130085978")
+		assert.NotNil(t, tokenByAdrs)
+
+		assert.Equal(t, tokenbyName, tokenByAdrs)
 	})
 
 }
