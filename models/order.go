@@ -14,10 +14,8 @@ import (
 
 // EIP712 signature components
 type Signature struct {
-	Eip712Sig      string                 `json:"eip712Sig"`
-	Eip712Domain   map[string]interface{} `json:"eip712Domain"`
-	Eip712MsgTypes map[string]interface{} `json:"eip712MsgTypes"`
-	Eip712Msg      map[string]interface{} `json:"eip712Msg"`
+	Eip712Sig   string      `json:"sig"`
+	AbiFragment AbiFragment `json:"abiFragment"`
 }
 
 type Order struct {
@@ -37,30 +35,22 @@ type Order struct {
 
 func (o *Order) OrderToMap() map[string]string {
 	// error can be ignored here because we know the data is valid
-	eip712MsgBytes, _ := json.Marshal(o.Signature.Eip712Msg)
-	eip712MsgStr := string(eip712MsgBytes)
-
-	eip712DomainBytes, _ := json.Marshal(o.Signature.Eip712Domain)
-	eip712DomainStr := string(eip712DomainBytes)
-
-	eip712MsgTypesBytes, _ := json.Marshal(o.Signature.Eip712MsgTypes)
-	eip712MsgTypesStr := string(eip712MsgTypesBytes)
+	abiFragmentBytes, _ := json.Marshal(o.Signature.AbiFragment)
+	abiFragmentStr := string(abiFragmentBytes)
 
 	return map[string]string{
-		"id":             o.Id.String(),
-		"clientOId":      o.ClientOId.String(),
-		"userId":         o.UserId.String(),
-		"price":          o.Price.String(),
-		"symbol":         o.Symbol.String(),
-		"size":           o.Size.String(),
-		"sizePending":    o.SizePending.String(),
-		"sizeFilled":     o.SizeFilled.String(),
-		"side":           o.Side.String(),
-		"timestamp":      o.Timestamp.Format(time.RFC3339),
-		"eip712Sig":      o.Signature.Eip712Sig,
-		"eip712Domain":   eip712DomainStr,
-		"eip712MsgTypes": eip712MsgTypesStr,
-		"eip712Msg":      eip712MsgStr,
+		"id":          o.Id.String(),
+		"clientOId":   o.ClientOId.String(),
+		"userId":      o.UserId.String(),
+		"price":       o.Price.String(),
+		"symbol":      o.Symbol.String(),
+		"size":        o.Size.String(),
+		"sizePending": o.SizePending.String(),
+		"sizeFilled":  o.SizeFilled.String(),
+		"side":        o.Side.String(),
+		"timestamp":   o.Timestamp.Format(time.RFC3339),
+		"eip712Sig":   o.Signature.Eip712Sig,
+		"abiFragment": abiFragmentStr,
 	}
 }
 
@@ -114,19 +104,9 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("no signature provided")
 	}
 
-	eip712DomainJson, exists := data["eip712Domain"]
+	abiFragmentJSON, exists := data["abiFragment"]
 	if !exists {
-		return fmt.Errorf("no eip712DomainJson provided")
-	}
-
-	eipMsgTypesJson, exists := data["eip712MsgTypes"]
-	if !exists {
-		return fmt.Errorf("no eip712MsgTypes provided")
-	}
-
-	eip712MsgJson, exists := data["eip712Msg"]
-	if !exists {
-		return fmt.Errorf("no eip712MsgJson provided")
+		return fmt.Errorf("no abiFragmentJSON provided")
 	}
 
 	sideStr, exists := data["side"]
@@ -189,22 +169,10 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("invalid timestamp: %v", err)
 	}
 
-	eip712Msg := map[string]interface{}{}
+	var abiFragment AbiFragment
 
-	if err := json.Unmarshal([]byte(eip712MsgJson), &eip712Msg); err != nil {
-		return fmt.Errorf("invalid eip712Msg: %v", err)
-	}
-
-	eip712Domain := map[string]interface{}{}
-
-	if err := json.Unmarshal([]byte(eip712DomainJson), &eip712Domain); err != nil {
-		return fmt.Errorf("invalid eip712Domain: %v", err)
-	}
-
-	eip712MsgTypes := map[string]interface{}{}
-
-	if err := json.Unmarshal([]byte(eipMsgTypesJson), &eip712MsgTypes); err != nil {
-		return fmt.Errorf("invalid eip712MsgTypes: %v", err)
+	if err := json.Unmarshal([]byte(abiFragmentJSON), &abiFragment); err != nil {
+		return fmt.Errorf("invalid abiFragmen: %v", err)
 	}
 
 	o.Id = id
@@ -216,10 +184,8 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	o.SizePending = sizePending
 	o.SizeFilled = sizeFilled
 	o.Signature = Signature{
-		Eip712Sig:      signatureStr,
-		Eip712Domain:   eip712Domain,
-		Eip712MsgTypes: eip712MsgTypes,
-		Eip712Msg:      eip712Msg,
+		Eip712Sig:   signatureStr,
+		AbiFragment: abiFragment,
 	}
 	o.Side = side
 	o.Timestamp = timestamp

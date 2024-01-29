@@ -17,7 +17,7 @@ func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 		return false
 	}
 	// order.size - (Order.filled + Order.pending) >= frag.size
-	return order.GetAvailableSize().GreaterThanOrEqual(frag.Size)
+	return order.GetAvailableSize().GreaterThanOrEqual(frag.OutSize)
 }
 
 func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
@@ -26,7 +26,7 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 		return false
 	}
 	// order.Size pending should be greater or equal to orderFrag: (Order.sizePending + Order.pending) >= frag.size
-	return order.SizePending.GreaterThanOrEqual(frag.Size)
+	return order.SizePending.GreaterThanOrEqual(frag.OutSize)
 }
 
 func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.BeginSwapRes, error) {
@@ -63,7 +63,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 	// set order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
-		res.Orders[i].SizePending = res.Orders[i].SizePending.Add(res.Fragments[i].Size)
+		res.Orders[i].SizePending = res.Orders[i].SizePending.Add(res.Fragments[i].OutSize)
 	}
 
 	// save
@@ -114,7 +114,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
 		} else {
 			// success
-			order.SizePending = order.SizePending.Sub(frag.Size)
+			order.SizePending = order.SizePending.Sub(frag.OutSize)
 			orders = append(orders, *order)
 		}
 	}

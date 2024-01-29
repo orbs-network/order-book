@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/big"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -22,11 +22,9 @@ type BeginSwapRes struct {
 }
 
 type Fragment struct {
-	OutAmount      string                 `json:"outAmount"`
-	Eip712Sig      string                 `json:"eip712Sig"`
-	Eip712Domain   map[string]interface{} `json:"eip712Domain"`
-	Eip712Msg      map[string]interface{} `json:"eip712Msg"`
-	Eip712MsgTypes map[string]interface{} `json:"eip712MsgTypes"`
+	Signature string             `json:"signature"`
+	Abi       string             `json:"abi"`
+	AbiData   models.AbiFragment `json:"abiData"`
 }
 type ConfirmSwapRes struct {
 	SwapId        string     `json:"swapId"`
@@ -35,10 +33,12 @@ type ConfirmSwapRes struct {
 }
 
 type QuoteReq struct {
-	InAmount     string `json:"inAmount"`
-	InToken      string `json:"inToken"`
-	OutToken     string `json:"outToken"`
-	MinOutAmount string `json:"minOutAmount"`
+	InAmount        string `json:"inAmount"`
+	InToken         string `json:"inToken"`
+	InTokenAddress  string `json:"inTokenAddress"`
+	OutToken        string `json:"outToken"`
+	OutTokenAddress string `json:"outTokenAddress"`
+	MinOutAmount    string `json:"minOutAmount"`
 }
 
 type QuoteRes struct {
@@ -51,18 +51,18 @@ type QuoteRes struct {
 	//BookSignature? string     `json:"bookSignature"`
 }
 
-func (h *Handler) convertToTokenDec(ctx context.Context, outToken string, amount decimal.Decimal) string {
-	if token, ok := h.supportedTokens[strings.ToUpper(outToken)]; ok {
+func (h *Handler) convertToTokenDec(ctx context.Context, tokenName string, amount decimal.Decimal) string {
+	if token := h.supportedTokens.ByName(tokenName); token != nil {
 		decMul := math.Pow10(token.Decimals)
 		mul := amount.Mul(decimal.NewFromInt(int64(decMul)))
 		return mul.Truncate(0).String()
 	}
-	logctx.Error(ctx, "Token is not found in supported tokens: "+outToken)
+	logctx.Error(ctx, "Token is not found in supported tokens: "+tokenName)
 	return ""
 }
 
-func (h *Handler) convertFromTokenDec(ctx context.Context, outToken, amountStr string) (decimal.Decimal, error) {
-	if token, ok := h.supportedTokens[strings.ToUpper(outToken)]; ok {
+func (h *Handler) convertFromTokenDec(ctx context.Context, tokenName, amountStr string) (decimal.Decimal, error) {
+	if token := h.supportedTokens.ByName(tokenName); token != nil {
 		decDiv := math.Pow10(token.Decimals)
 		amount, err := decimal.NewFromString(amountStr)
 		if err != nil {
@@ -72,10 +72,43 @@ func (h *Handler) convertFromTokenDec(ctx context.Context, outToken, amountStr s
 		res := amount.Div(decimal.NewFromInt(int64(decDiv)))
 		return res, nil
 	}
-	logctx.Error(ctx, "Token is not found in supported tokens: "+outToken)
+	logctx.Error(ctx, "Token is not found in supported tokens: "+tokenName)
 	return decimal.Zero, models.ErrTokenNotsupported
 }
 
+// returns resolve name
+// only if
+// 1. name is missing
+// 2. address exists
+// 3. address is found in supported tokens
+// returns error if needed
+// returns empty string if no need to resolve
+func (h *Handler) nameFromAddress(name, address string) (string, error) {
+	token := h.supportedTokens.ByAddress(address)
+	if token == nil {
+		return "", models.ErrTokenNotsupported
+	}
+	return token.Name, nil
+}
+
+func (h *Handler) resolveQuoteTokenNames(req *QuoteReq) error {
+	// has address but no name
+	InName, err := h.nameFromAddress(req.InToken, req.InTokenAddress)
+	if err != nil {
+		return err
+	}
+	if len(InName) > 0 {
+		req.InToken = InName
+	}
+	OutName, err := h.nameFromAddress(req.OutToken, req.OutTokenAddress)
+	if err != nil {
+		return err
+	}
+	if len(OutName) > 0 {
+		req.OutToken = OutName
+	}
+	return nil
+}
 func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) {
 	var req QuoteReq
 	ctx := r.Context()
@@ -83,6 +116,14 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	if err != nil {
 		logctx.Error(ctx, "handleQuote - failed to decode body", logger.Error(err))
 		http.Error(w, "Quote invalid JSON body", http.StatusBadRequest)
+		return
+	}
+
+	// ensure token names if only addresses were sent
+	err = h.resolveQuoteTokenNames(&req)
+	if err != nil {
+		logctx.Error(ctx, "resolveQuoteTokenNames failed", logger.Error(err))
+		http.Error(w, "'Quote::inAmount' token names/address invalid", http.StatusBadRequest)
 		return
 	}
 
@@ -139,14 +180,50 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			http.Error(w, "BeginSwap filed", http.StatusBadRequest)
 			return
 		}
+		// inToken, ok := h.supportedTokens[req.InToken]
+		// if !ok {
+		// 	http.Error(w, "InToken address not found", http.StatusBadRequest)
+		// 	return
+		// }
+		// outToken, ok := h.supportedTokens[req.OutToken]
+		// if !ok {
+		// 	http.Error(w, "InToken address not found", http.StatusBadRequest)
+		// 	return
+		// }
+
 		for i := 0; i < len(swapData.Fragments); i++ {
-			convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].Size)
+			// conver In/Out amount to token decimals
+			convInAmount := h.convertToTokenDec(r.Context(), req.InToken, swapData.Fragments[i].InSize)
+			convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].OutSize)
+
+			// convert to uint256 for abi encode
+			inputAmount := big.NewInt(0)
+			inputAmount.SetString(convInAmount, 10)
+
+			outputAmount := big.NewInt(0)
+			outputAmount.SetString(convOutAmount, 10)
+
+			abiData := swapData.Orders[i].Signature.AbiFragment
+			abiData.ExclusivityOverrideBps = big.NewInt(0)
+			abiData.Input.Amount = inputAmount
+			if len(abiData.Outputs) == 0 {
+				logctx.Error(r.Context(), "abiData.Outputs length is 0")
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			abiData.Outputs[0].Amount.SetString(convOutAmount, 10)
+			abiEncoded, err := models.EncodeFragData(ctx, abiData)
+
+			if err != nil {
+				logctx.Error(ctx, "args.Pack failed %s", logger.Error(err))
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
 			frag := Fragment{
-				OutAmount:      convOutAmount,
-				Eip712Sig:      swapData.Orders[i].Signature.Eip712Sig,
-				Eip712Domain:   swapData.Orders[i].Signature.Eip712Domain,
-				Eip712MsgTypes: swapData.Orders[i].Signature.Eip712MsgTypes,
-				Eip712Msg:      swapData.Orders[i].Signature.Eip712Msg,
+				Signature: swapData.Orders[i].Signature.Eip712Sig,
+				Abi:       abiEncoded,
+				AbiData:   abiData,
 			}
 			res.Fragments = append(res.Fragments, frag)
 		}

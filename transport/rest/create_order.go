@@ -16,15 +16,13 @@ import (
 )
 
 type CreateOrderRequest struct {
-	Price          string                 `json:"price"`
-	Size           string                 `json:"size"`
-	Symbol         string                 `json:"symbol"`
-	Side           string                 `json:"side"`
-	ClientOrderId  string                 `json:"clientOrderId"`
-	Eip712Sig      string                 `json:"eip712Sig"`
-	Eip712Domain   map[string]interface{} `json:"eip712Domain"`
-	Eip712MsgTypes map[string]interface{} `json:"eip712MsgTypes"`
-	Eip712Msg      map[string]interface{} `json:"eip712Msg"`
+	Price         string                 `json:"price"`
+	Size          string                 `json:"size"`
+	Symbol        string                 `json:"symbol"`
+	Side          string                 `json:"side"`
+	ClientOrderId string                 `json:"clientOrderId"`
+	Eip712Sig     string                 `json:"eip712Sig"`
+	Eip712Msg     map[string]interface{} `json:"eip712Msg"`
 }
 
 type CreateOrderResponse struct {
@@ -49,15 +47,13 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := handleValidateRequiredFields(hVRFArgs{
-		price:          args.Price,
-		size:           args.Size,
-		symbol:         args.Symbol,
-		side:           args.Side,
-		clientOrderId:  args.ClientOrderId,
-		eip712Sig:      args.Eip712Sig,
-		eip712Msg:      &args.Eip712Msg,
-		eip712MsgTypes: &args.Eip712MsgTypes,
-		eip712Domain:   &args.Eip712Domain,
+		price:         args.Price,
+		size:          args.Size,
+		symbol:        args.Symbol,
+		side:          args.Side,
+		clientOrderId: args.ClientOrderId,
+		eip712Sig:     args.Eip712Sig,
+		eip712Msg:     &args.Eip712Msg,
 	}); err != nil {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return
@@ -76,18 +72,23 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	abiFragment, err := restutils.ConvertToAbiFragment(args.Eip712Msg)
+	if err != nil {
+		logctx.Warn(ctx, "failed to convert eip712Msg to abi fragment", logger.Error(err))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, fmt.Errorf("failed to parse eip712Msg: %w", err).Error())
+		return
+	}
+
 	logctx.Info(ctx, "user trying to create order", logger.String("userId", user.Id.String()), logger.String("price", parsedFields.roundedDecPrice.String()), logger.String("size", parsedFields.decSize.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
 	order, err := h.svc.CreateOrder(ctx, service.CreateOrderInput{
-		UserId:         user.Id,
-		Price:          parsedFields.roundedDecPrice,
-		Symbol:         parsedFields.symbol,
-		Size:           parsedFields.decSize,
-		Side:           parsedFields.side,
-		ClientOrderID:  parsedFields.clientOrderId,
-		Eip712Sig:      args.Eip712Sig,
-		Eip712Domain:   &args.Eip712Domain,
-		Eip712MsgTypes: &args.Eip712MsgTypes,
-		Eip712Msg:      &args.Eip712Msg,
+		UserId:        user.Id,
+		Price:         parsedFields.roundedDecPrice,
+		Symbol:        parsedFields.symbol,
+		Size:          parsedFields.decSize,
+		Side:          parsedFields.side,
+		ClientOrderID: parsedFields.clientOrderId,
+		Eip712Sig:     args.Eip712Sig,
+		AbiFragment:   abiFragment,
 	})
 
 	if err == models.ErrSignatureVerificationError {
@@ -140,15 +141,13 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 }
 
 type hVRFArgs struct {
-	price          string
-	size           string
-	symbol         string
-	side           string
-	clientOrderId  string
-	eip712Sig      string
-	eip712Msg      *map[string]interface{}
-	eip712MsgTypes *map[string]interface{}
-	eip712Domain   *map[string]interface{}
+	price         string
+	size          string
+	symbol        string
+	side          string
+	clientOrderId string
+	eip712Sig     string
+	eip712Msg     *map[string]interface{}
 }
 
 func handleValidateRequiredFields(args hVRFArgs) error {
@@ -173,12 +172,6 @@ func handleValidateRequiredFields(args hVRFArgs) error {
 
 	case args.eip712Msg == nil || *args.eip712Msg == nil:
 		return fmt.Errorf("missing required field 'eip712Msg'")
-
-	case args.eip712MsgTypes == nil || *args.eip712MsgTypes == nil:
-		return fmt.Errorf("missing required field 'eip712MsgTypes'")
-
-	case args.eip712Domain == nil || *args.eip712Domain == nil:
-		return fmt.Errorf("missing required field 'eip712Domain'")
 
 	default:
 		return nil

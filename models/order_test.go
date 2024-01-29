@@ -14,6 +14,8 @@ var id = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var userId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000003")
 
+var abiFragment = AbiFragment{}
+
 func TestOrder_OrderToMap(t *testing.T) {
 	timestamp, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
 	order := Order{
@@ -26,43 +28,26 @@ func TestOrder_OrderToMap(t *testing.T) {
 		SizeFilled:  decimal.NewFromInt(600),
 		SizePending: decimal.NewFromInt(400),
 		Signature: Signature{
-			Eip712Sig: "signature",
-			Eip712Msg: map[string]interface{}{
-				"message": "data",
-			},
-			Eip712Domain: map[string]interface{}{
-
-				"version": "1",
-			},
-			Eip712MsgTypes: map[string]interface{}{
-				"EIP712Domain": []map[string]interface{}{
-					{
-						"name": "version",
-					},
-				},
-			},
+			Eip712Sig:   "signature",
+			AbiFragment: abiFragment,
 		},
 		Side:      BUY,
 		Timestamp: timestamp,
 	}
 
-	eip712MsgStr := "{\"message\":\"data\"}"
-
 	expectedMap := map[string]string{
-		"id":             order.Id.String(),
-		"clientOId":      order.ClientOId.String(),
-		"userId":         order.UserId.String(),
-		"price":          order.Price.String(),
-		"symbol":         order.Symbol.String(),
-		"size":           order.Size.String(),
-		"sizePending":    order.SizePending.String(),
-		"sizeFilled":     order.SizeFilled.String(),
-		"side":           order.Side.String(),
-		"timestamp":      order.Timestamp.Format(time.RFC3339),
-		"eip712Sig":      order.Signature.Eip712Sig,
-		"eip712Msg":      eip712MsgStr,
-		"eip712Domain":   "{\"version\":\"1\"}",
-		"eip712MsgTypes": "{\"EIP712Domain\":[{\"name\":\"version\"}]}",
+		"id":          order.Id.String(),
+		"clientOId":   order.ClientOId.String(),
+		"userId":      order.UserId.String(),
+		"price":       order.Price.String(),
+		"symbol":      order.Symbol.String(),
+		"size":        order.Size.String(),
+		"sizePending": order.SizePending.String(),
+		"sizeFilled":  order.SizeFilled.String(),
+		"side":        order.Side.String(),
+		"timestamp":   order.Timestamp.Format(time.RFC3339),
+		"eip712Sig":   order.Signature.Eip712Sig,
+		"abiFragment": "{\"Info\":{\"Reactor\":\"0x0000000000000000000000000000000000000000\",\"Swapper\":\"0x0000000000000000000000000000000000000000\",\"Nonce\":null,\"Deadline\":null,\"AdditionalValidationContract\":\"0x0000000000000000000000000000000000000000\",\"AdditionalValidationData\":null},\"ExclusiveFiller\":\"0x0000000000000000000000000000000000000000\",\"ExclusivityOverrideBps\":null,\"Input\":{\"Token\":\"0x0000000000000000000000000000000000000000\",\"Amount\":null},\"Outputs\":null}",
 	}
 
 	actualMap := order.OrderToMap()
@@ -75,21 +60,19 @@ func TestOrder_MapToOrder(t *testing.T) {
 
 	t.Run("when all data is provided", func(t *testing.T) {
 		data := map[string]string{
-			"id":             id.String(),
-			"clientOId":      clientOId.String(),
-			"userId":         userId.String(),
-			"price":          "10.99",
-			"symbol":         "MATIC-USDC",
-			"size":           "1000",
-			"sizePending":    "0",
-			"sizeFilled":     "0",
-			"side":           "buy",
-			"timestamp":      "2021-01-01T00:00:00Z",
-			"clientOrderId":  id.String(),
-			"eip712Sig":      "signature",
-			"eip712Msg":      "{\"message\":\"data\"}",
-			"eip712Domain":   "{\"version\":\"1\"}",
-			"eip712MsgTypes": "{\"EIP712Domain\":[{\"name\":\"version\"}]}",
+			"id":            id.String(),
+			"clientOId":     clientOId.String(),
+			"userId":        userId.String(),
+			"price":         "10.99",
+			"symbol":        "MATIC-USDC",
+			"size":          "1000",
+			"sizePending":   "0",
+			"sizeFilled":    "0",
+			"side":          "buy",
+			"timestamp":     "2021-01-01T00:00:00Z",
+			"clientOrderId": id.String(),
+			"eip712Sig":     "signature",
+			"abiFragment":   "{\"Info\":{\"Reactor\":\"0x0000000000000000000000000000000000000000\",\"Swapper\":\"0x0000000000000000000000000000000000000000\",\"Nonce\":null,\"Deadline\":null,\"AdditionalValidationContract\":\"0x0000000000000000000000000000000000000000\",\"AdditionalValidationData\":null},\"ExclusiveFiller\":\"0x0000000000000000000000000000000000000000\",\"ExclusivityOverrideBps\":null,\"Input\":{\"Token\":\"0x0000000000000000000000000000000000000000\",\"Amount\":null},\"Outputs\":null}",
 		}
 
 		err := order.MapToOrder(data)
@@ -105,7 +88,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 		assert.Equal(t, priceDec, order.Price)
 		assert.Equal(t, "MATIC-USDC", order.Symbol.String())
 		assert.Equal(t, sizeDec, order.Size)
-		assert.Equal(t, Signature{Eip712Sig: "signature", Eip712Domain: map[string]interface{}{"version": "1"}, Eip712MsgTypes: map[string]interface{}{"EIP712Domain": []interface{}{map[string]interface{}{"name": "version"}}}, Eip712Msg: map[string]interface{}{"message": "data"}}, order.Signature)
+		assert.Equal(t, Signature{Eip712Sig: "signature", AbiFragment: abiFragment}, order.Signature)
 		assert.Equal(t, "buy", order.Side.String())
 		assert.Equal(t, "2021-01-01 00:00:00 +0000 UTC", order.Timestamp.String())
 	})

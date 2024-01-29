@@ -26,13 +26,15 @@ type QuoteRes struct {
 
 type OrderFrag struct {
 	OrderId uuid.UUID
-	Size    decimal.Decimal
+	OutSize decimal.Decimal
+	InSize  decimal.Decimal
 }
 
 func (f *OrderFrag) ToMap() map[string]string {
 	return map[string]string{
+		"inSize":  f.InSize.String(),
 		"orderId": f.OrderId.String(),
-		"size":    f.Size.String(),
+		"outSize": f.OutSize.String(),
 	}
 }
 

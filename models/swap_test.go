@@ -16,12 +16,14 @@ func Test_Swap(t *testing.T) {
 		sz := int32(1000 * (i + 1))
 		frags = append(frags, OrderFrag{
 			OrderId: orderId,
-			Size:    decimal.NewFromInt32(sz),
+			OutSize: decimal.NewFromInt32(sz),
+			InSize:  decimal.Zero,
 		})
 	}
 
 	t.Run("happy path", func(t *testing.T) {
-		var expected = `[{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"1000"},{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"2000"},{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"3000"},{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"4000"},{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"5000"},{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"6000"},{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"7000"},{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"8000"},{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"9000"},{"orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","size":"10000"}]`
+		var expected = `[{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"1000"},{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"2000"},{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"3000"},{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"4000"},{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"5000"},{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"6000"},{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"7000"},{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"8000"},{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"9000"},{"inSize":"0","orderId":"97522a1a-7648-4b4f-97b2-38d90a5e2bd0","outSize":"10000"}]`
+
 		res, err := MarshalOrderFrags(frags)
 		assert.NoError(t, err)
 		assert.Equal(t, string(res), expected)

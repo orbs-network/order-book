@@ -11,6 +11,7 @@ import (
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/transport/middleware"
+	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
@@ -19,16 +20,16 @@ type Handler struct {
 	pairMngr        *models.PairMngr
 	Router          *mux.Router
 	okJson          []byte
-	supportedTokens service.SupportedTokens
+	supportedTokens *service.SupportedTokens
 }
 type genRes struct {
 	StatusText string `json:"statusText"`
 	Status     int    `json:"status"`
 }
 
-var filePath = os.Getenv("SUPPORTED_TOKENS_JSON_FILE_PATH")
-
 func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
+	var supportedTokensPath = os.Getenv("SUPPORTED_TOKENS_JSON_FILE_PATH")
+
 	if svc == nil {
 		return nil, fmt.Errorf("svc cannot be nil")
 	}
@@ -49,14 +50,15 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		return nil, err
 	}
 
-	if filePath == "" {
+	if supportedTokensPath == "" {
 		logctx.Warn(context.Background(), "SUPPORTED_TOKENS_JSON_FILE_PATH env var not set, using default")
-		filePath = "supportedTokens.json"
+		supportedTokensPath = "supportedTokens.json"
 	}
 
 	// load supported tokens
-	tokens, err := svc.LoadSupportedTokens(context.Background(), filePath)
-	if err != nil {
+	st, err := service.NewSupportedTokens(context.Background(), supportedTokensPath)
+	if st == nil {
+		logctx.Error(context.Background(), "failed to load supported tokens", logger.Error(err))
 		return nil, err
 	}
 
@@ -65,7 +67,7 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		Router:          r,
 		pairMngr:        models.NewPairMngr(),
 		okJson:          okJson,
-		supportedTokens: tokens,
+		supportedTokens: st,
 	}, nil
 }
 
@@ -123,10 +125,10 @@ func (h *Handler) initTakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	//middlewareValidUser := middleware.ValidateUserMiddleware(getUserByApiKey)
 	//takerApi.Use(middlewareValidUser) disable for now
 
-	// IN: InAmount, InToken, OutToken
+	// IN: InAmount, InToken, OutToken or InTokenAddress, OutTokenAddress
 	// OUT: CURRENT potential outAmount
 	takerApi.HandleFunc("/quote", h.quote).Methods("POST")
-	// IN: InAmount, InToken, OutToken
+	// IN: InAmount, InToken, OutToken or InTokenAddress, OutTokenAddress
 	// OUT: Locked outAmount, SwapID
 	takerApi.HandleFunc("/swap", h.swap).Methods("POST")
 	// IN: SwapID given in /swap
