@@ -32,7 +32,7 @@ func TestSupportedTokens(t *testing.T) {
 		filePath := "valid-file.json"
 
 		inText := `{"0XBTC":{"address":"0x71b821aa52a49f32eed535fca6eb5aa130085978","decimals":8}}`
-		expectedOutText := `{"tokens":{"0XBTC":{"name":"0XBTC","address":"0x71b821aa52a49f32eed535fca6eb5aa130085978","decimals":8}}}`
+		expectedOutText := `{"tokens":{"0XBTC":{"address":"0x71b821aa52a49f32eed535fca6eb5aa130085978","decimals":8}}}`
 
 		createValidFile(filePath, []byte(inText))
 		defer deleteFile(filePath)

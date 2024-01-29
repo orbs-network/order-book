@@ -12,7 +12,7 @@ import (
 )
 
 type Token struct {
-	Name     string `json:"name"`
+	Name     string `json:"-"`
 	Address  string `json:"address"`
 	Decimals int    `json:"decimals"`
 }
