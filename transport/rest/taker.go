@@ -180,16 +180,6 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			http.Error(w, "BeginSwap filed", http.StatusBadRequest)
 			return
 		}
-		// inToken, ok := h.supportedTokens[req.InToken]
-		// if !ok {
-		// 	http.Error(w, "InToken address not found", http.StatusBadRequest)
-		// 	return
-		// }
-		// outToken, ok := h.supportedTokens[req.OutToken]
-		// if !ok {
-		// 	http.Error(w, "InToken address not found", http.StatusBadRequest)
-		// 	return
-		// }
 
 		for i := 0; i < len(swapData.Fragments); i++ {
 			// conver In/Out amount to token decimals
