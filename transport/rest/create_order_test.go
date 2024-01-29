@@ -33,7 +33,7 @@ func TestHandler_CreateOrder(t *testing.T) {
 		Side:          "sell",
 		ClientOrderId: "a677273e-12de-4acc-a4f8-de7fb5b86e37",
 		Eip712Sig:     "mock-sig",
-		Eip712Msg:     map[string]interface{}{},
+		Eip712Msg:     mocks.MsgData,
 	}
 
 	orderReqJSON, _ := json.Marshal(orderReq)

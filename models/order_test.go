@@ -2,11 +2,9 @@ package models
 
 import (
 	"context"
-	"math/big"
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
@@ -16,31 +14,7 @@ var id = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var userId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000003")
 
-var bigInt = big.Int{}
-
-var abiFragment = AbiFragment{
-	Info: OrderInfo{
-		Reactor:                      common.Address{},
-		Swapper:                      common.Address{},
-		Nonce:                        &bigInt,
-		Deadline:                     &bigInt,
-		AdditionalValidationContract: common.Address{},
-		AdditionalValidationData:     []byte{},
-	},
-	ExclusiveFiller:        common.Address{},
-	ExclusivityOverrideBps: &bigInt,
-	Input: PartialInput{
-		Token:  common.Address{},
-		Amount: &bigInt,
-	},
-	Outputs: []PartialOutput{
-		{
-			Token:     common.Address{},
-			Amount:    &bigInt,
-			Recipient: common.Address{},
-		},
-	},
-}
+var abiFragment = AbiFragment{}
 
 func TestOrder_OrderToMap(t *testing.T) {
 	timestamp, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")
@@ -61,8 +35,6 @@ func TestOrder_OrderToMap(t *testing.T) {
 		Timestamp: timestamp,
 	}
 
-	eip712MsgStr := "{\"message\":\"data\"}"
-
 	expectedMap := map[string]string{
 		"id":          order.Id.String(),
 		"clientOId":   order.ClientOId.String(),
@@ -75,7 +47,7 @@ func TestOrder_OrderToMap(t *testing.T) {
 		"side":        order.Side.String(),
 		"timestamp":   order.Timestamp.Format(time.RFC3339),
 		"eip712Sig":   order.Signature.Eip712Sig,
-		"eip712Msg":   eip712MsgStr,
+		"abiFragment": "{\"Info\":{\"Reactor\":\"0x0000000000000000000000000000000000000000\",\"Swapper\":\"0x0000000000000000000000000000000000000000\",\"Nonce\":null,\"Deadline\":null,\"AdditionalValidationContract\":\"0x0000000000000000000000000000000000000000\",\"AdditionalValidationData\":null},\"ExclusiveFiller\":\"0x0000000000000000000000000000000000000000\",\"ExclusivityOverrideBps\":null,\"Input\":{\"Token\":\"0x0000000000000000000000000000000000000000\",\"Amount\":null},\"Outputs\":null}",
 	}
 
 	actualMap := order.OrderToMap()
@@ -100,7 +72,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 			"timestamp":     "2021-01-01T00:00:00Z",
 			"clientOrderId": id.String(),
 			"eip712Sig":     "signature",
-			"eip712Msg":     "{\"message\":\"data\"}",
+			"abiFragment":   "{\"Info\":{\"Reactor\":\"0x0000000000000000000000000000000000000000\",\"Swapper\":\"0x0000000000000000000000000000000000000000\",\"Nonce\":null,\"Deadline\":null,\"AdditionalValidationContract\":\"0x0000000000000000000000000000000000000000\",\"AdditionalValidationData\":null},\"ExclusiveFiller\":\"0x0000000000000000000000000000000000000000\",\"ExclusivityOverrideBps\":null,\"Input\":{\"Token\":\"0x0000000000000000000000000000000000000000\",\"Amount\":null},\"Outputs\":null}",
 		}
 
 		err := order.MapToOrder(data)
@@ -116,7 +88,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 		assert.Equal(t, priceDec, order.Price)
 		assert.Equal(t, "MATIC-USDC", order.Symbol.String())
 		assert.Equal(t, sizeDec, order.Size)
-		// assert.Equal(t, Signature{Eip712Sig: "signature", Eip712Msg: map[string]interface{}{"message": "data"}}, order.Signature)
+		assert.Equal(t, Signature{Eip712Sig: "signature", AbiFragment: abiFragment}, order.Signature)
 		assert.Equal(t, "buy", order.Side.String())
 		assert.Equal(t, "2021-01-01 00:00:00 +0000 UTC", order.Timestamp.String())
 	})

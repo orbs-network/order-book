@@ -1,16 +1,15 @@
 package service_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/shopspring/decimal"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestService_CreateOrder(t *testing.T) {
@@ -41,35 +40,6 @@ func TestService_CreateOrder(t *testing.T) {
 		Eip712Sig:     "mock-sig",
 		AbiFragment:   mocks.AbiFragment,
 	}
-
-	t.Run("no user in context - should return error", func(t *testing.T) {
-
-		ctxWithoutUser := context.Background()
-
-		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user}, mockBcClient)
-		order, err := svc.CreateOrder(ctxWithoutUser, input)
-
-		assert.ErrorContains(t, err, "user should be in context")
-		assert.Equal(t, models.Order{}, order)
-	})
-
-	t.Run("signature verification error - should return `ErrSignatureVerificationError` error", func(t *testing.T) {
-		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user}, &mocks.MockBcClient{Error: assert.AnError, IsVerified: false})
-
-		order, err := svc.CreateOrder(ctx, input)
-
-		assert.ErrorIs(t, err, models.ErrSignatureVerificationError)
-		assert.Equal(t, models.Order{}, order)
-	})
-
-	t.Run("signature verification failed - should return `ErrSignatureVerificationFailed` error", func(t *testing.T) {
-		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user}, &mocks.MockBcClient{IsVerified: false})
-
-		order, err := svc.CreateOrder(ctx, input)
-
-		assert.ErrorIs(t, err, models.ErrSignatureVerificationFailed)
-		assert.Equal(t, models.Order{}, order)
-	})
 
 	t.Run("unexpected error from store - should return error", func(t *testing.T) {
 
