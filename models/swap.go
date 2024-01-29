@@ -32,9 +32,9 @@ type OrderFrag struct {
 
 func (f *OrderFrag) ToMap() map[string]string {
 	return map[string]string{
+		"inSize":  f.InSize.String(),
 		"orderId": f.OrderId.String(),
 		"outSize": f.OutSize.String(),
-		"inSize":  f.InSize.String(),
 	}
 }
 

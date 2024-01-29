@@ -49,10 +49,10 @@ func (s *SupportedTokens) AsJson() ([]byte, error) {
 	return json.Marshal(res)
 }
 
-func NewSupportedTokens(ctx context.Context, filePath string) *SupportedTokens {
+func NewSupportedTokens(ctx context.Context, filePath string) (*SupportedTokens, error) {
 	name2Token, err := loadSupportedTokens(ctx, filePath)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("failed to load supported tokens: %s", err)
 	}
 	adrs2Token := TokenMap{}
 	// set name fields in token, and assign to address map
@@ -66,7 +66,7 @@ func NewSupportedTokens(ctx context.Context, filePath string) *SupportedTokens {
 	return &SupportedTokens{
 		Name2Token: name2Token,
 		Adrs2Token: adrs2Token,
-	}
+	}, nil
 }
 func loadSupportedTokens(ctx context.Context, filePath string) (TokenMap, error) {
 	file, err := os.ReadFile(filePath)

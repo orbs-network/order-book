@@ -11,6 +11,7 @@ import (
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/transport/middleware"
+	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
@@ -26,9 +27,9 @@ type genRes struct {
 	Status     int    `json:"status"`
 }
 
-var filePath = os.Getenv("SUPPORTED_TOKENS_JSON_FILE_PATH")
-
 func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
+	var supportedTokensPath = os.Getenv("SUPPORTED_TOKENS_JSON_FILE_PATH")
+
 	if svc == nil {
 		return nil, fmt.Errorf("svc cannot be nil")
 	}
@@ -49,14 +50,15 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		return nil, err
 	}
 
-	if filePath == "" {
+	if supportedTokensPath == "" {
 		logctx.Warn(context.Background(), "SUPPORTED_TOKENS_JSON_FILE_PATH env var not set, using default")
-		filePath = "supportedTokens.json"
+		supportedTokensPath = "supportedTokens.json"
 	}
 
 	// load supported tokens
-	st := service.NewSupportedTokens(context.Background(), filePath)
+	st, err := service.NewSupportedTokens(context.Background(), supportedTokensPath)
 	if st == nil {
+		logctx.Error(context.Background(), "failed to load supported tokens", logger.Error(err))
 		return nil, err
 	}
 

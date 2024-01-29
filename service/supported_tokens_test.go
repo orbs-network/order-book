@@ -14,7 +14,7 @@ func TestSupportedTokens(t *testing.T) {
 
 	t.Run("ReadFileError", func(t *testing.T) {
 		filePath := "nonexistent-file.json"
-		tokens := service.NewSupportedTokens(ctx, filePath)
+		tokens, _ := service.NewSupportedTokens(ctx, filePath)
 		assert.Nil(t, tokens)
 
 	})
@@ -24,7 +24,7 @@ func TestSupportedTokens(t *testing.T) {
 		createInvalidFile(filePath)
 		defer deleteFile(filePath)
 
-		tokens := service.NewSupportedTokens(ctx, filePath)
+		tokens, _ := service.NewSupportedTokens(ctx, filePath)
 		assert.Nil(t, tokens)
 	})
 
@@ -37,7 +37,7 @@ func TestSupportedTokens(t *testing.T) {
 		createValidFile(filePath, []byte(inText))
 		defer deleteFile(filePath)
 
-		st := service.NewSupportedTokens(ctx, filePath)
+		st, _ := service.NewSupportedTokens(ctx, filePath)
 
 		assert.NotNil(t, st)
 		json, err := st.AsJson()

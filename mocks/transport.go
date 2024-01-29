@@ -11,16 +11,14 @@ import (
 
 // Mock service methods for transport layer testing
 type MockOrderBookService struct {
-	Error                    error
-	Order                    *models.Order
-	Orders                   []models.Order
-	MarketDepth              models.MarketDepth
-	QuoteRes                 models.QuoteRes
-	Symbols                  []models.Symbol
-	User                     *models.User
-	BeginSwapRes             models.BeginSwapRes
-	SupportedTokens          service.SupportedTokens
-	LoadSupportedTokensError error
+	Error        error
+	Order        *models.Order
+	Orders       []models.Order
+	MarketDepth  models.MarketDepth
+	QuoteRes     models.QuoteRes
+	Symbols      []models.Symbol
+	User         *models.User
+	BeginSwapRes models.BeginSwapRes
 }
 
 func (m *MockOrderBookService) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {

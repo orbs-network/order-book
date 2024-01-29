@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/google/uuid"
@@ -13,6 +14,22 @@ import (
 	"github.com/orbs-network/order-book/transport/rest"
 	"github.com/stretchr/testify/assert"
 )
+
+func TestMain(m *testing.M) {
+	err := os.Setenv("SUPPORTED_TOKENS_JSON_FILE_PATH", "../../supportedTokens.json")
+	if err != nil {
+		panic(err)
+	}
+
+	exitVal := m.Run()
+
+	err = os.Unsetenv("SUPPORTED_TOKENS_JSON_FILE_PATH")
+	if err != nil {
+		panic(err)
+	}
+
+	os.Exit(exitVal)
+}
 
 func TestHandler_CancelOrderByOrderId(t *testing.T) {
 	orderId := uuid.MustParse("00000000-0000-0000-0000-000000000001")

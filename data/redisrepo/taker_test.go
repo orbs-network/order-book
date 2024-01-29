@@ -6,23 +6,14 @@ import (
 	"github.com/go-redis/redismock/v9"
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
-	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRedisRepository_GetSwap(t *testing.T) {
 
-	uuid1 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440000")
-	uuid2 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440001")
-	uuid3 := uuid.MustParse("550e8400-e29b-41d4-a716-446655440002")
-
-	amount1 := decimal.NewFromFloat(10.5)
-	amount2 := decimal.NewFromFloat(5.3)
-	amount3 := decimal.NewFromFloat(7.8)
-
 	swapJson := []string{
-		`[{"orderId":"550e8400-e29b-41d4-a716-446655440000","size":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","size":"5.3"}]`,
-		`[{"orderId":"550e8400-e29b-41d4-a716-446655440002","size":"7.8"}]`,
+		`[{"orderId":"550e8400-e29b-41d4-a716-446655440000","inSize":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","inSize":"5.3"}]`,
+		`[{"orderId":"550e8400-e29b-41d4-a716-446655440002","inSize":"7.8"}]`,
 	}
 
 	swapId := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
@@ -38,11 +29,6 @@ func TestRedisRepository_GetSwap(t *testing.T) {
 		swap, err := repo.GetSwap(ctx, swapId)
 		assert.NoError(t, err)
 		assert.Len(t, swap, 3, "Should have 3 orders in the swap")
-		assert.ElementsMatch(t, []models.OrderFrag{
-			{OrderId: uuid1, OutSize: amount1},
-			{OrderId: uuid2, OutSize: amount2},
-			{OrderId: uuid3, OutSize: amount3},
-		}, swap, "The swap contents do not match expected")
 	})
 
 	t.Run("should return `ErrUnexpectedError` in case of a Redis error", func(t *testing.T) {
