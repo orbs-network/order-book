@@ -32,7 +32,7 @@ func (i *OrderIter) Next(ctx context.Context) *models.Order {
 	}
 	order, err := i.redis.FindOrderById(ctx, orderId, false)
 	if err != nil {
-		logctx.Error(ctx, "Error fetching order", logger.Error(err))
+		logctx.Error(ctx, "Error fetching order", logger.String("orderId", orderId.String()), logger.Error(err))
 		return nil
 	}
 
