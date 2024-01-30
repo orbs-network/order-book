@@ -93,19 +93,23 @@ func (h *Handler) nameFromAddress(name, address string) (string, error) {
 
 func (h *Handler) resolveQuoteTokenNames(req *QuoteReq) error {
 	// has address but no name
-	InName, err := h.nameFromAddress(req.InToken, req.InTokenAddress)
-	if err != nil {
-		return err
+	if req.InToken == "" {
+		InName, err := h.nameFromAddress(req.InToken, req.InTokenAddress)
+		if err != nil {
+			return err
+		}
+		if len(InName) > 0 {
+			req.InToken = InName
+		}
 	}
-	if len(InName) > 0 {
-		req.InToken = InName
-	}
-	OutName, err := h.nameFromAddress(req.OutToken, req.OutTokenAddress)
-	if err != nil {
-		return err
-	}
-	if len(OutName) > 0 {
-		req.OutToken = OutName
+	if req.OutToken == "" {
+		OutName, err := h.nameFromAddress(req.OutToken, req.OutTokenAddress)
+		if err != nil {
+			return err
+		}
+		if len(OutName) > 0 {
+			req.OutToken = OutName
+		}
 	}
 	return nil
 }

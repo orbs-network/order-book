@@ -39,6 +39,42 @@ type AbiFragment struct {
 	Outputs                []PartialOutput
 }
 
+// Custom JSON serialization for *big.Int fields
+// func (o *OrderInfo) MarshalJSON() ([]byte, error) {
+// 	type Alias OrderInfo
+// 	return json.Marshal(&struct {
+// 		Nonce    string `json:"nonce"`
+// 		Deadline string `json:"deadline"`
+// 		*Alias
+// 	}{
+// 		Nonce:    o.Nonce.String(),
+// 		Deadline: o.Deadline.String(),
+// 		Alias:    (*Alias)(o),
+// 	})
+// }
+
+// func (p *PartialInput) MarshalJSON() ([]byte, error) {
+// 	type Alias PartialInput
+// 	return json.Marshal(&struct {
+// 		Amount string `json:"Amount"`
+// 		*Alias
+// 	}{
+// 		Amount: p.Amount.String(),
+// 		Alias:  (*Alias)(p),
+// 	})
+// }
+
+// func (p *PartialOutput) MarshalJSON() ([]byte, error) {
+// 	type Alias PartialOutput
+// 	return json.Marshal(&struct {
+// 		Amount string `json:"Amount"`
+// 		*Alias
+// 	}{
+// 		Amount: p.Amount.String(),
+// 		Alias:  (*Alias)(p),
+// 	})
+// }
+
 func getAbiArguments() (abi.Arguments, error) {
 	abiFrag, err := abi.NewType("tuple", "AbiFragment", []abi.ArgumentMarshaling{
 		{Name: "Info", Type: "tuple", Components: []abi.ArgumentMarshaling{

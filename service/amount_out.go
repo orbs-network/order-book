@@ -57,6 +57,10 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 	var order *models.Order
 	for it.HasNext() && inAmountB.IsPositive() {
 		order = it.Next(ctx)
+		if order == nil {
+			logctx.Error(ctx, "order::it.Next() returned nil")
+			return models.QuoteRes{}, models.ErrUnexpectedError
+		}
 		// skip orders with locked funds
 		if order.GetAvailableSize().IsPositive() {
 			// max Spend in B token  for this order
@@ -95,6 +99,10 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 	var frags []models.OrderFrag
 	for it.HasNext() && inAmountA.IsPositive() {
 		order = it.Next(ctx)
+		if order == nil {
+			logctx.Error(ctx, "order::it.Next() returned nil")
+			return models.QuoteRes{}, models.ErrUnexpectedError
+		}
 
 		// Spend
 		spendA := decimal.Min(order.GetAvailableSize(), inAmountA)
