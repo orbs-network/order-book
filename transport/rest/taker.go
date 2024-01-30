@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
@@ -290,20 +291,16 @@ func (h *Handler) swapStarted(w http.ResponseWriter, r *http.Request) {
 	// Set the Content-Type header to application/json
 	w.Header().Set("Content-Type", "application/json")
 	if err := h.svc.SwapStarted(r.Context(), *swapId, txhash); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		// Create an empty JSON object
-		obj := genRes{
-			StatusText: err.Error(),
-			Status:     http.StatusBadRequest,
-		}
-
-		// Convert the emptyJSON object to JSON format
-		jRes, _ := json.Marshal(obj)
-		_, err = w.Write(jRes)
-		if err != nil {
-			logctx.Error(r.Context(), "abortSwap - failed to write resp", logger.Error(err))
-		}
+		restutils.WriteJSONError(r.Context(), w, http.StatusBadRequest, err.Error(), logger.String("swapId not found", swapId.String()))
+		return
 	}
+	// success
+	res := genRes{
+		StatusText: "OK",
+		Status:     http.StatusOK,
+	}
+	restutils.WriteJSONResponse(r.Context(), w, http.StatusBadRequest, res, logger.String("swapId started", swapId.String()))
+
 }
 
 // POST
@@ -315,26 +312,14 @@ func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 	// Set the Content-Type header to application/json
 	w.Header().Set("Content-Type", "application/json")
 	if err := h.svc.AbortSwap(r.Context(), *swapId); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		// Create an empty JSON object
-		obj := genRes{
-			StatusText: err.Error(),
-			Status:     http.StatusBadRequest,
-		}
-
-		// Convert the emptyJSON object to JSON format
-		jRes, _ := json.Marshal(obj)
-		_, err = w.Write(jRes)
-		if err != nil {
-			logctx.Error(r.Context(), "abortSwap - failed to write resp", logger.Error(err))
-		}
+		restutils.WriteJSONError(r.Context(), w, http.StatusBadRequest, err.Error(), logger.String("swapId not found", swapId.String()))
+		return
 	}
 
-	// Write the JSON response with a status code of 200
-	w.WriteHeader(http.StatusOK)
-	_, err := w.Write(h.okJson)
-	if err != nil {
-		logctx.Error(r.Context(), "abortSwap - failed to write resp", logger.Error(err))
+	res := genRes{
+		StatusText: "OK",
+		Status:     http.StatusOK,
 	}
+	restutils.WriteJSONResponse(r.Context(), w, http.StatusBadRequest, res, logger.String("swapId aborted", swapId.String()))
 
 }
