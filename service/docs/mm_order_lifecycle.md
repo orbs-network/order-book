@@ -15,7 +15,7 @@
 
 ### Future lifecycle
 
-1. Created, not filled at all, then cancelled -> update order `cancelled` true, order removed from `:prices`, order removed from `:openOrders`
-2. Created, locked, then (attempted) cancel -> denied due to pending fill
-3. Created, partial filled (so no longer locked), cancelled -> update order `cancelled` true, order removed from `:prices`, order removed from `:openOrders`, add to `:filledOrders`
-4. Created, filled, then (attempted) cancelled -> denied (on fill, update order `cancelled` true, order removed from `:prices`, order removed from `:openOrders`, added to `:filledOrders`)
+1. Created, not filled at all, then cancelled -> all keys are deleted **(same)**
+2. Created, locked, then (attempted) cancel -> denied due to pending fill **(same)**
+3. Created, partial filled (so no longer locked), cancelled -> update order `cancelled` true, order removed from `:prices`, order removed from `:openOrders`, add to `:filledOrders` **(updated)**
+4. Created, filled, then (attempted) cancelled -> denied (on fill, update order `cancelled` true, order removed from `:prices`, order removed from `:openOrders`, added to `:filledOrders`) **(updated)**
