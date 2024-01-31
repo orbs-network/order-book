@@ -326,9 +326,12 @@ func TestOrder_Unlock(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			err := test.order.Unlock(ctx, test.lockSize)
-			assert.NoError(t, err)
-			assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
-			assert.Equal(t, test.error, err, "error should be equal")
+			if test.error == nil {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
+			} else {
+				assert.Equal(t, test.error, err, "error should be equal")
+			}
 		})
 	}
 }
