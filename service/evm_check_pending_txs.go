@@ -135,8 +135,8 @@ func (e *EvmClient) processCompletedTransaction(ctx context.Context, p models.Sw
 				continue
 			}
 		} else {
-			if err := order.Kill(ctx, size); err != nil {
-				logctx.Error(ctx, "Failed to mark order as killed", logger.Error(err), logger.String("orderId", order.Id.String()))
+			if err := order.Unlock(ctx, size); err != nil {
+				logctx.Error(ctx, "Failed to Release order locked liq", logger.Error(err), logger.String("orderId", order.Id.String()))
 				continue
 			}
 		}

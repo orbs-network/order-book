@@ -235,9 +235,18 @@ func (o *Order) Fill(ctx context.Context, fillSize decimal.Decimal) (isFilled bo
 	return o.IsFilled(), nil
 }
 
-func (o *Order) Kill(ctx context.Context, size decimal.Decimal) error {
+func (o *Order) Lock(ctx context.Context, size decimal.Decimal) error {
+	if o.GetAvailableSize().LessThan(size) {
+		logctx.Error(ctx, "size to be locked greater than sizePending", logger.String("orderId", o.Id.String()), logger.String("pendingSize", o.SizePending.String()), logger.String("requestedLockSize", size.String()))
+		return ErrUnexpectedSizeFilled
+	}
+
+	o.SizePending = o.SizePending.Add(size)
+	return nil
+}
+func (o *Order) Unlock(ctx context.Context, size decimal.Decimal) error {
 	if o.SizePending.LessThan(size) {
-		logctx.Error(ctx, "size to be rolled back is greater than sizePending", logger.String("orderId", o.Id.String()), logger.String("pendingSize", o.SizePending.String()), logger.String("requestedKillSize", size.String()))
+		logctx.Error(ctx, "size to be unlocked is greater than sizePending", logger.String("orderId", o.Id.String()), logger.String("pendingSize", o.SizePending.String()), logger.String("requestedUnlockSize", size.String()))
 		return ErrUnexpectedSizeFilled
 	}
 

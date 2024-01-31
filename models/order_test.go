@@ -226,7 +226,7 @@ func TestOrder_Fill(t *testing.T) {
 	}
 }
 
-func TestOrder_Kill(t *testing.T) {
+func TestOrder_Unlock(t *testing.T) {
 
 	ctx := context.Background()
 
@@ -234,35 +234,35 @@ func TestOrder_Kill(t *testing.T) {
 		name     string
 		order    Order
 		expected Order
-		killSize decimal.Decimal
+		lockSize decimal.Decimal
 		error    error
 	}{
 		{
-			name: "sizePending 1000, killSize 1000",
+			name: "sizePending 1000, lockSize 1000",
 			order: Order{
 				SizePending: decimal.NewFromFloat(1000),
 			},
 			expected: Order{
 				SizePending: decimal.Zero,
 			},
-			killSize: decimal.NewFromInt(1000),
+			lockSize: decimal.NewFromInt(1000),
 		},
 		{
-			name: "sizePending 500, killSize 1000",
+			name: "sizePending 500, lockSize 1000",
 			order: Order{
 				SizePending: decimal.NewFromInt(500),
 			},
 			expected: Order{
 				SizePending: decimal.NewFromInt(500),
 			},
-			killSize: decimal.NewFromInt(1000),
+			lockSize: decimal.NewFromInt(1000),
 			error:    ErrUnexpectedSizeFilled,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.order.Kill(ctx, test.killSize)
+			err := test.order.Unlock(ctx, test.lockSize)
 			assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
 			assert.Equal(t, test.error, err, "error should be equal")
 		})
