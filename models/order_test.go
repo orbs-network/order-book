@@ -226,6 +226,69 @@ func TestOrder_Fill(t *testing.T) {
 	}
 }
 
+func TestOrder_Lock(t *testing.T) {
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name     string
+		order    Order
+		expected Order
+		lockSize decimal.Decimal
+		error    error
+	}{
+		{
+			name: "sizePending 1000, lockSize 1000",
+			order: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizePending: decimal.Zero,
+			},
+			expected: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizePending: decimal.NewFromFloat(1000),
+			},
+			lockSize: decimal.NewFromInt(1000),
+		},
+		{
+			name: "sizePending 500, lockSize 1000",
+			order: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizePending: decimal.NewFromInt(500),
+			},
+			expected: Order{
+
+				SizePending: decimal.NewFromInt(1000),
+			},
+			lockSize: decimal.NewFromInt(500),
+		},
+		{
+			name: "sizePending 500, lockSize 1000",
+			order: Order{
+				Size:        decimal.NewFromInt(1000),
+				SizePending: decimal.NewFromInt(500),
+			},
+			expected: Order{
+
+				SizePending: decimal.NewFromInt(1000),
+			},
+			lockSize: decimal.NewFromInt(1000),
+			error:    ErrUnexpectedSizeFilled,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.order.Lock(ctx, test.lockSize)
+			if test.error == nil {
+				assert.NoError(t, err)
+				assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
+			} else {
+				assert.Equal(t, test.error, err, "error should be equal")
+			}
+		})
+	}
+}
+
 func TestOrder_Unlock(t *testing.T) {
 
 	ctx := context.Background()
@@ -263,6 +326,7 @@ func TestOrder_Unlock(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			err := test.order.Unlock(ctx, test.lockSize)
+			assert.NoError(t, err)
 			assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
 			assert.Equal(t, test.error, err, "error should be equal")
 		})
