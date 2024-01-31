@@ -154,7 +154,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	side := pair.GetSide(req.InToken)
 	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount, minOutAmount)
 	if err != nil {
-		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "GetQuote() Failed!", logger.Error(err))
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -176,7 +176,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	if isSwap {
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
 		if err != nil {
-			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "BeginSwap() Failed!", logger.Error(err))
+			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "BeginSwap Failed!", logger.Error(err))
 			return
 		}
 
@@ -217,13 +217,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		res.SwapId = swapData.SwapId.String()
 	}
 
-	resp, err := json.Marshal(res)
-	if err != nil {
-		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Failed! to marshal QuoteRes")
-		return
-	}
-
-	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, resp)
+	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res)
 }
 
 // Quote METHOD POST
