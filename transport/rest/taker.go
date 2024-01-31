@@ -3,7 +3,6 @@ package rest
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"math"
 	"math/big"
 	"net/http"
@@ -119,23 +118,20 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	ctx := r.Context()
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		logctx.Error(ctx, "handleQuote - failed to decode body", logger.Error(err))
-		http.Error(w, "Quote invalid JSON body", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "req.body.Decode() Failed!", logger.Error(err))
 		return
 	}
 
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
 	if err != nil {
-		logctx.Error(ctx, "resolveQuoteTokenNames failed", logger.Error(err))
-		http.Error(w, "'Quote::inAmount' token names/address invalid", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "resolveQuoteTokenNames() Failed!", logger.String("InTokenAddress", req.InTokenAddress), logger.String("OutTokenAddress", req.OutTokenAddress), logger.Error(err))
 		return
 	}
 
 	inAmount, err := h.convertFromTokenDec(ctx, req.InToken, req.InAmount)
 	if err != nil {
-		logctx.Error(ctx, "'Quote::inAmount' is not a valid number format", logger.Error(err))
-		http.Error(w, "'Quote::inAmount' is not a valid number format", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "InToken not supprtoed", logger.String("InToken", req.InToken), logger.Error(models.ErrTokenNotsupported))
 		return
 	}
 
@@ -152,21 +148,19 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 
 	pair := h.pairMngr.Resolve(req.InToken, req.OutToken)
 	if pair == nil {
-		msg := fmt.Sprintf("no suppoerted pair with found with the following tokens %s, %s", req.InToken, req.OutToken)
-		logctx.Error(ctx, msg, logger.Error(err))
-		http.Error(w, msg, http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "no suppoerted pair was found for tokens", logger.String("InToken", req.InToken), logger.String("OutToken", req.OutToken))
 		return
 	}
 	side := pair.GetSide(req.InToken)
 	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount, minOutAmount)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "GetQuote() Failed!", logger.Error(err))
 		return
 	}
 
 	convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, svcQuoteRes.Size)
 	if convOutAmount == "" {
-		http.Error(w, models.ErrTokenNotsupported.Error(), http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "OutToken not supprtoed", logger.String("OutToken", req.OutToken), logger.Error(models.ErrTokenNotsupported))
 		return
 	}
 	// convert res
@@ -182,7 +176,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	if isSwap {
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
 		if err != nil {
-			http.Error(w, "BeginSwap filed", http.StatusBadRequest)
+			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "BeginSwap() Failed!", logger.Error(err))
 			return
 		}
 
@@ -202,16 +196,14 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			abiData.ExclusivityOverrideBps = big.NewInt(0)
 			abiData.Input.Amount = inputAmount
 			if len(abiData.Outputs) == 0 {
-				logctx.Error(r.Context(), "abiData.Outputs length is 0")
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "abiData.Outputs length is 0", logger.Error(err))
 				return
 			}
 			abiData.Outputs[0].Amount.SetString(convOutAmount, 10)
 			abiEncoded, err := models.EncodeFragData(ctx, abiData)
 
 			if err != nil {
-				logctx.Error(ctx, "args.Pack failed %s", logger.Error(err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "args.Pack Failed!", logger.Error(err))
 				return
 			}
 
@@ -227,19 +219,11 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 
 	resp, err := json.Marshal(res)
 	if err != nil {
-		logctx.Error(r.Context(), "failed to marshal QuoteRes", logger.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Failed! to marshal QuoteRes")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, err = w.Write(resp)
-	if err != nil {
-		logctx.Error(r.Context(), "failed to write QuoteRes response", logger.Error(err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, resp)
 }
 
 // Quote METHOD POST
@@ -258,14 +242,12 @@ func handleSwapId(w http.ResponseWriter, r *http.Request) *uuid.UUID {
 	swapId := vars["swapId"]
 	ctx := r.Context()
 	if swapId == "" {
-		logctx.Error(ctx, "swapID is empty")
-		http.Error(w, "swapId is empty", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "swapID is empty")
 		return nil
 	}
 	res, err := uuid.Parse(swapId)
 	if err != nil {
-		logctx.Error(ctx, fmt.Sprintf("invalid swapID: %s", swapId), logger.Error(err))
-		http.Error(w, "Error GetQuoteRes", http.StatusInternalServerError)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "invalid swapID", logger.String("swapId", swapId))
 		return nil
 	}
 	return &res
@@ -283,15 +265,14 @@ func (h *Handler) swapStarted(w http.ResponseWriter, r *http.Request) {
 	txhash := vars["txHash"]
 	ctx := r.Context()
 	if txhash == "" {
-		logctx.Error(ctx, "txhash is empty")
-		http.Error(w, "txhash is empty", http.StatusBadRequest)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "txHash is empty")
 		return
 	}
 
 	// Set the Content-Type header to application/json
 	w.Header().Set("Content-Type", "application/json")
-	if err := h.svc.SwapStarted(r.Context(), *swapId, txhash); err != nil {
-		restutils.WriteJSONError(r.Context(), w, http.StatusBadRequest, err.Error(), logger.String("swapId not found", swapId.String()))
+	if err := h.svc.SwapStarted(ctx, *swapId, txhash); err != nil {
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("swapId not found", swapId.String()))
 		return
 	}
 	// success
@@ -320,6 +301,6 @@ func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 		StatusText: "OK",
 		Status:     http.StatusOK,
 	}
-	restutils.WriteJSONResponse(r.Context(), w, http.StatusBadRequest, res, logger.String("swapId aborted", swapId.String()))
+	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res, logger.String("swapId aborted", swapId.String()))
 
 }
