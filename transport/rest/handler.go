@@ -142,4 +142,7 @@ func (h *Handler) initTakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	// IN: txHash, SwapID given in /swap
 	// Notifies order book to start tracking the state of the tx (discuss events or based on txHash)
 	// takerApi.HandleFunc("/txsent/{swapId}", h.txSent).Methods("POST")
+
+	// ------- DEBUG -------
+	takerApi.HandleFunc("/fake-fill", h.fakeFill).Methods("POST")
 }
