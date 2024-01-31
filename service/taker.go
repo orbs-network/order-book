@@ -63,7 +63,11 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 	// set order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
-		res.Orders[i].Lock(ctx, res.Fragments[i].OutSize)
+		err := res.Orders[i].Lock(ctx, res.Fragments[i].OutSize)
+		if err != nil {
+			logctx.Error(ctx, "Lock order Failed", logger.Error(err))
+			return models.BeginSwapRes{}, err
+		}
 	}
 
 	// save
@@ -114,7 +118,11 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
 		} else {
 			// success
-			order.Unlock(ctx, frag.OutSize)
+			err = order.Unlock(ctx, frag.OutSize)
+			if err != nil {
+				logctx.Error(ctx, "Unlock Failed", logger.Error(err))
+				return err
+			}
 			orders = append(orders, *order)
 		}
 	}
@@ -148,12 +156,13 @@ func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
 		} else if !validatePendingFrag(frag, order) {
 			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
 		} else {
-			// // release lock
-			// order.SizePending = order.SizePending.Sub(frag.OutSize)
-			// // mark filled
-			// order.SizeFilled = order.SizeFilled.Add(frag.OutSize)
-			order.Fill(ctx, frag.OutSize)
-			if order.IsFilled() {
+			// from pending to fill
+			filled, err := order.Fill(ctx, frag.OutSize)
+			if err != nil {
+				logctx.Error(ctx, "FillOrder Failed", logger.Error(err))
+				return err
+			}
+			if filled {
 				filledOrders = append(filledOrders, *order)
 			} else {
 				openOrders = append(openOrders, *order)
