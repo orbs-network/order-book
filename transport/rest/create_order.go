@@ -219,6 +219,10 @@ func parseFields(w http.ResponseWriter, input pFInput) (*pfParsed, error) {
 		return nil, fmt.Errorf("'size' must be positive")
 	}
 
+	if decSize.Exponent() < -4 {
+		return nil, fmt.Errorf("'size' must not exceed 4 decimal places")
+	}
+
 	symbol, err := models.StrToSymbol(input.symbol)
 	if err != nil {
 		return nil, fmt.Errorf("'symbol' is not valid")
