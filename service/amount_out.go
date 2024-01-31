@@ -25,13 +25,21 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			logctx.Error(ctx, "GetMinAsk failed")
 			return models.QuoteRes{}, models.ErrIterFail
 		}
+		if !it.HasNext() {
+			logctx.Warn(ctx, "GetMinAsk failed")
+			return models.QuoteRes{}, models.ErrInsufficientLiquity
+		}
 		res, err = getOutAmountInAToken(ctx, it, inAmount)
 
 	} else { // SELL
 		it = s.orderBookStore.GetMaxBid(ctx, symbol)
 		if it == nil {
-			logctx.Error(ctx, "GetMaxBid failed")
+			logctx.Error(ctx, "GetMaxBid failed no orders in iterator")
 			return models.QuoteRes{}, models.ErrIterFail
+		}
+		if !it.HasNext() {
+			logctx.Warn(ctx, "GetMaxBid failed no orders in iterator")
+			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
 		res, err = getOutAmountInBToken(ctx, it, inAmount)
 	}
