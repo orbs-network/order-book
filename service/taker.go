@@ -63,7 +63,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 	// set order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
-		res.Orders[i].SizePending = res.Orders[i].SizePending.Add(res.Fragments[i].OutSize)
+		res.Orders[i].Lock(ctx, res.Fragments[i].OutSize)
 	}
 
 	// save
@@ -114,14 +114,62 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
 		} else {
 			// success
-			order.SizePending = order.SizePending.Sub(frag.OutSize)
+			order.Unlock(ctx, frag.OutSize)
 			orders = append(orders, *order)
 		}
 	}
 	// store orders
-	err = s.orderBookStore.StoreOpenOrders(ctx, orders)
+	err = s.orderBookStore.StoreFilledOrders(ctx, orders)
 	if err != nil {
 		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		return err
+	}
+
+	return s.orderBookStore.RemoveSwap(ctx, swapId)
+}
+
+func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
+	// get swap from store
+	frags, err := s.orderBookStore.GetSwap(ctx, swapId)
+	if err != nil {
+		logctx.Warn(ctx, "GetSwap Failed", logger.Error(err))
+		return err
+	}
+
+	filledOrders := []models.Order{}
+	openOrders := []models.Order{}
+	// validate all pending orders fragments of auction
+	for _, frag := range frags {
+		// get order by ID
+		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
+		// no return during erros as what can be revert, should
+		if err != nil {
+			logctx.Error(ctx, "order not found while reverting a swap", logger.Error(err))
+		} else if !validatePendingFrag(frag, order) {
+			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
+		} else {
+			// // release lock
+			// order.SizePending = order.SizePending.Sub(frag.OutSize)
+			// // mark filled
+			// order.SizeFilled = order.SizeFilled.Add(frag.OutSize)
+			order.Fill(ctx, frag.OutSize)
+			if order.IsFilled() {
+				filledOrders = append(filledOrders, *order)
+			} else {
+				openOrders = append(openOrders, *order)
+			}
+		}
+	}
+	// store partial orders
+	err = s.orderBookStore.StoreOpenOrders(ctx, openOrders)
+	if err != nil {
+		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
+		return err
+	}
+	// store filled orders
+	err = s.orderBookStore.StoreFilledOrders(ctx, filledOrders)
+	if err != nil {
+		logctx.Warn(ctx, "StoreFilledOrders Failed", logger.Error(err))
 		return err
 	}
 

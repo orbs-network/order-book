@@ -89,3 +89,7 @@ func (m *MockOrderBookService) AbortSwap(ctx context.Context, swapId uuid.UUID) 
 func (m *MockOrderBookService) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error {
 	return m.Error
 }
+
+func (m *MockOrderBookService) FillSwap(ctx context.Context, swapId uuid.UUID) error {
+	return m.Error
+}
