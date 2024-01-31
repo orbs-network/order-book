@@ -118,20 +118,20 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	ctx := r.Context()
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "req.body.Decode() Failed!", logger.Error(err))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
 	if err != nil {
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "resolveQuoteTokenNames() Failed!", logger.String("InTokenAddress", req.InTokenAddress), logger.String("OutTokenAddress", req.OutTokenAddress), logger.Error(err))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InTokenAddress", req.InTokenAddress), logger.String("OutTokenAddress", req.OutTokenAddress))
 		return
 	}
 
 	inAmount, err := h.convertFromTokenDec(ctx, req.InToken, req.InAmount)
 	if err != nil {
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "InToken not supprtoed", logger.String("InToken", req.InToken), logger.Error(models.ErrTokenNotsupported))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InToken", req.InToken), logger.Error(models.ErrTokenNotsupported))
 		return
 	}
 
@@ -160,7 +160,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 
 	convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, svcQuoteRes.Size)
 	if convOutAmount == "" {
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "OutToken not supprtoed", logger.String("OutToken", req.OutToken), logger.Error(models.ErrTokenNotsupported))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("OutToken", req.OutToken))
 		return
 	}
 	// convert res
@@ -176,7 +176,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	if isSwap {
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
 		if err != nil {
-			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "BeginSwap Failed!", logger.Error(err))
+			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return
 		}
 
@@ -203,7 +203,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			abiEncoded, err := models.EncodeFragData(ctx, abiData)
 
 			if err != nil {
-				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "args.Pack Failed!", logger.Error(err))
+				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error(), logger.Error(err))
 				return
 			}
 
