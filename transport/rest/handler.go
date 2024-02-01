@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/orbs-network/order-book/featureflags"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/transport/middleware"
@@ -144,5 +145,7 @@ func (h *Handler) initTakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	// takerApi.HandleFunc("/txsent/{swapId}", h.txSent).Methods("POST")
 
 	// ------- DEBUG -------
-	takerApi.HandleFunc("/fake-fill", h.fakeFill).Methods("POST")
+	if featureflags.FlagEnableFakeFill != "" {
+		takerApi.HandleFunc("/fake-fill", h.fakeFill).Methods("POST")
+	}
 }
