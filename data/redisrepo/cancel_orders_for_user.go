@@ -44,7 +44,8 @@ func (r *redisRepository) CancelOrdersForUser(ctx context.Context, userId uuid.U
 			end = len(orderIds)
 		}
 
-		orders, err := r.FindOrdersByIds(ctx, orderIds[i:end])
+		// We only want to fetch open orders
+		orders, err := r.FindOrdersByIds(ctx, orderIds[i:end], true)
 		if err != nil {
 			logctx.Error(ctx, "failed to find orders by IDs", logger.String("userId", userId.String()), logger.Error(err))
 			return nil, fmt.Errorf("failed to find orders by IDs: %v", err)

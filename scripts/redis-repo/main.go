@@ -371,7 +371,7 @@ func getOrdersByIds(orderIds []string) {
 		ids[i] = uuid.MustParse(id)
 	}
 
-	orders, err := repository.FindOrdersByIds(ctx, ids)
+	orders, err := repository.FindOrdersByIds(ctx, ids, false)
 	if err != nil {
 		log.Fatalf("error getting users: %v", err)
 	}

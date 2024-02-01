@@ -62,7 +62,7 @@ func (r *redisRepository) GetMarketDepth(ctx context.Context, symbol models.Symb
 			end = len(allOrderIds)
 		}
 
-		orders, err = r.FindOrdersByIds(ctx, allOrderIds[i:end])
+		orders, err = r.FindOrdersByIds(ctx, allOrderIds[i:end], false)
 		if err != nil {
 			logctx.Error(ctx, "failed to find orders by IDs", logger.Error(err))
 			return marketDepth, fmt.Errorf("failed to find orders by IDs: %v", err)
