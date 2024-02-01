@@ -63,6 +63,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 	// set order fragments as Pending
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
+		logctx.Debug(ctx, "Lock Fragment", logger.String("orderID", res.Orders[i].Id.String()), logger.String("OutSize", res.Fragments[i].OutSize.String()))
 		err := res.Orders[i].Lock(ctx, res.Fragments[i].OutSize)
 		if err != nil {
 			logctx.Error(ctx, "Lock order Failed", logger.Error(err))
@@ -88,6 +89,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 }
 
 func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error {
+	logctx.Debug(ctx, "SwapStarted", logger.String("swapId", swapId.String()))
 	err := s.orderBookStore.StoreNewPendingSwap(ctx, models.SwapTx{
 		SwapId: swapId,
 		TxHash: txHash,
@@ -99,6 +101,7 @@ func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash stri
 }
 
 func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
+	logctx.Debug(ctx, "AbortSwap", logger.String("swapId", swapId.String()))
 	// get swap from store
 	frags, err := s.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
@@ -118,6 +121,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
 		} else {
 			// success
+			logctx.Debug(ctx, "Unlock Fragment", logger.String("orderID", frag.OrderId.String()), logger.String("OutSize", frag.OutSize.String()))
 			err = order.Unlock(ctx, frag.OutSize)
 			if err != nil {
 				logctx.Error(ctx, "Unlock Failed", logger.Error(err))
@@ -137,6 +141,8 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 }
 
 func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
+	logctx.Debug(ctx, "FillSwap", logger.String("swapId", swapId.String()))
+
 	// get swap from store
 	frags, err := s.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
@@ -157,6 +163,7 @@ func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
 			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
 		} else {
 			// from pending to fill
+			logctx.Debug(ctx, "FillOrder", logger.String("orderID", order.Id.String()), logger.String("OutSize", frag.OutSize.String()))
 			filled, err := order.Fill(ctx, frag.OutSize)
 			if err != nil {
 				logctx.Error(ctx, "FillOrder Failed", logger.Error(err))

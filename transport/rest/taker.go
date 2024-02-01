@@ -174,7 +174,10 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 
 	if isSwap {
+
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
+		res.SwapId = swapData.SwapId.String()
+		logctx.Debug(ctx, "BeginSwap", logger.String("swapId", res.SwapId))
 		if err != nil {
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return nil
@@ -214,7 +217,6 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			}
 			res.Fragments = append(res.Fragments, frag)
 		}
-		res.SwapId = swapData.SwapId.String()
 	}
 
 	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res)
