@@ -28,6 +28,7 @@ type OrderBookService interface {
 	BeginSwap(ctx context.Context, data models.QuoteRes) (models.BeginSwapRes, error)
 	SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error
 	AbortSwap(ctx context.Context, swapId uuid.UUID) error
+	FillSwap(ctx context.Context, swapId uuid.UUID) error
 }
 
 type BlockChainService interface {

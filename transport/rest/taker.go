@@ -113,26 +113,26 @@ func (h *Handler) resolveQuoteTokenNames(req *QuoteReq) error {
 	}
 	return nil
 }
-func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) {
+func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) *QuoteRes {
 	var req QuoteReq
 	ctx := r.Context()
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
-		return
+		return nil
 	}
 
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
 	if err != nil {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InTokenAddress", req.InTokenAddress), logger.String("OutTokenAddress", req.OutTokenAddress))
-		return
+		return nil
 	}
 
 	inAmount, err := h.convertFromTokenDec(ctx, req.InToken, req.InAmount)
 	if err != nil {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InToken", req.InToken), logger.Error(models.ErrTokenNotsupported))
-		return
+		return nil
 	}
 
 	// a threshold for min amount out expect, return error if
@@ -149,19 +149,19 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	pair := h.pairMngr.Resolve(req.InToken, req.OutToken)
 	if pair == nil {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "no suppoerted pair was found for tokens", logger.String("InToken", req.InToken), logger.String("OutToken", req.OutToken))
-		return
+		return nil
 	}
 	side := pair.GetSide(req.InToken)
 	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount, minOutAmount)
 	if err != nil {
 		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
-		return
+		return nil
 	}
 
 	convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, svcQuoteRes.Size)
 	if convOutAmount == "" {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("OutToken", req.OutToken))
-		return
+		return nil
 	}
 	// convert res
 	res := QuoteRes{
@@ -174,10 +174,13 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 
 	if isSwap {
+
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
+		res.SwapId = swapData.SwapId.String()
+		logctx.Debug(ctx, "BeginSwap", logger.String("swapId", res.SwapId))
 		if err != nil {
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
-			return
+			return nil
 		}
 
 		for i := 0; i < len(swapData.Fragments); i++ {
@@ -197,14 +200,14 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			abiData.Input.Amount = inputAmount
 			if len(abiData.Outputs) == 0 {
 				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "abiData.Outputs length is 0", logger.Error(err))
-				return
+				return nil
 			}
 			abiData.Outputs[0].Amount.SetString(convOutAmount, 10)
 			abiEncoded, err := models.EncodeFragData(ctx, abiData)
 
 			if err != nil {
 				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error(), logger.Error(err))
-				return
+				return nil
 			}
 
 			frag := Fragment{
@@ -214,10 +217,10 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			}
 			res.Fragments = append(res.Fragments, frag)
 		}
-		res.SwapId = swapData.SwapId.String()
 	}
 
 	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res)
+	return &res
 }
 
 // Quote METHOD POST
