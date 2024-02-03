@@ -62,12 +62,18 @@ func (r *redisRepository) CancelOrdersForUser(ctx context.Context, userId uuid.U
 	for _, order := range ordersToCancel {
 
 		if order.IsUnfilled() {
-			r.CancelUnfilledOrder(ctx, order)
+			if err := r.CancelUnfilledOrder(ctx, order); err != nil {
+				logctx.Error(ctx, "failed to cancel unfilled order during cancel all orders", logger.String("orderId", order.Id.String()), logger.Error(err))
+				return nil, fmt.Errorf("failed to cancel unfilled order: %v", err)
+			}
 			continue
 		}
 
 		if order.IsPartialFilled() {
-			r.CancelPartialFilledOrder(ctx, order)
+			if err := r.CancelPartialFilledOrder(ctx, order); err != nil {
+				logctx.Error(ctx, "failed to cancel partially filled order during cancel all orders", logger.String("orderId", order.Id.String()), logger.Error(err))
+				return nil, fmt.Errorf("failed to cancel partially filled order: %v", err)
+			}
 			continue
 		}
 

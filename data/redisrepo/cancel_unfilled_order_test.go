@@ -104,12 +104,13 @@ func TestRedisRepository_CancelUnfilledOrder(t *testing.T) {
 		buyPricesKey := CreateBuySidePricesKey(order.Symbol)
 		userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
 		clientOIdKey := CreateClientOIDKey(order.ClientOId)
+		orderIdKey := CreateOrderIDKey(order.Id)
 
 		mock.ExpectTxPipeline()
 		mock.ExpectZRem(buyPricesKey, order.Id.String()).SetVal(1)
 		mock.ExpectZRem(userOrdersKey, order.Id.String()).SetVal(1)
-		mock.ExpectDel(clientOIdKey, order.ClientOId.String()).SetVal(1)
-		mock.ExpectDel(CreateOrderIDKey(order.Id)).SetVal(1)
+		mock.ExpectDel(clientOIdKey).SetVal(1)
+		mock.ExpectDel(orderIdKey).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
 		err := repo.CancelUnfilledOrder(ctx, order)

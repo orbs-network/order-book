@@ -37,7 +37,7 @@ func (r *redisRepository) CancelUnfilledOrder(ctx context.Context, order models.
 	transaction.ZRem(ctx, userOrdersKey, order.Id.String())
 
 	clientOIdKey := CreateClientOIDKey(order.ClientOId)
-	transaction.Del(ctx, clientOIdKey, order.ClientOId.String())
+	transaction.Del(ctx, clientOIdKey)
 
 	// remove order hash
 	orderIDKey := CreateOrderIDKey(order.Id)
