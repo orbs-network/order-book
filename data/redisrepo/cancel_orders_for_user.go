@@ -10,6 +10,11 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
+// TODO: Refactor this.
+//
+// TODO 1 - Introduce transaction support in service layer.
+//
+// TODO 2 -. Do this logic in the service layer. Too much business logic here.
 func (r *redisRepository) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
 	userOrdersKey := CreateUserOpenOrdersKey(userId)
 
@@ -54,41 +59,20 @@ func (r *redisRepository) CancelOrdersForUser(ctx context.Context, userId uuid.U
 		ordersToCancel = append(ordersToCancel, orders...)
 	}
 
-	// --- START TRANSACTION ---
-	transaction := r.client.TxPipeline()
-
-	// Iterate through each order and remove associated data
 	for _, order := range ordersToCancel {
 
-		// Remove client order ID
-		clientOIDKey := CreateClientOIDKey(order.ClientOId)
-		transaction.Del(ctx, clientOIDKey)
-
-		if order.Side == models.BUY {
-			buyPricesKey := CreateBuySidePricesKey(order.Symbol)
-			transaction.ZRem(ctx, buyPricesKey, order.Id.String())
-		} else {
-			sellPricesKey := CreateSellSidePricesKey(order.Symbol)
-			transaction.ZRem(ctx, sellPricesKey, order.Id.String())
+		if order.IsUnfilled() {
+			r.CancelUnfilledOrder(ctx, order)
+			continue
 		}
 
-		// Remove order details by order ID
-		orderIDKey := CreateOrderIDKey(order.Id)
-		transaction.Del(ctx, orderIDKey)
+		if order.IsPartialFilled() {
+			r.CancelPartialFilledOrder(ctx, order)
+			continue
+		}
 
-		logctx.Info(ctx, "removed order", logger.String("orderId", order.Id.String()), logger.String("symbol", order.Symbol.String()), logger.String("side", order.Side.String()), logger.String("userId", userId.String()))
+		logctx.Error(ctx, "encountered order in an unexpected state when cancelling all orders for user", logger.String("orderId", order.Id.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
 	}
-
-	// Remove the user's orders key
-	transaction.Del(ctx, userOrdersKey)
-
-	// Execute the transaction
-	_, err = transaction.Exec(ctx)
-	if err != nil {
-		logctx.Error(ctx, "failed to remove user's orders in Redis", logger.String("userId", userId.String()), logger.Error(err))
-		return nil, fmt.Errorf("failed to remove user's orders in Redis. Reason: %v", err)
-	}
-	// --- END TRANSACTION ---
 
 	logctx.Info(ctx, "removed all orders for user", logger.String("userId", userId.String()), logger.Int("numOrders", len(ordersToCancel)))
 	return orderIds, nil

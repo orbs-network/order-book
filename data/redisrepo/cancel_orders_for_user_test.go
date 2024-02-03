@@ -7,6 +7,7 @@ import (
 	"github.com/go-redis/redismock/v9"
 	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/models"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +17,10 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 	orderTwo := mocks.Order
 	orderTwo.Side = models.SELL
 
-	t.Run("should remove single order for user", func(t *testing.T) {
+	partialFilledOrder := mocks.Order
+	partialFilledOrder.SizeFilled = decimal.NewFromInt(50)
+
+	t.Run("should remove single unfilled order for user", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
@@ -38,7 +42,7 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("should remove multiple orders for user", func(t *testing.T) {
+	t.Run("should remove multiple unfilled orders for user", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
@@ -62,6 +66,26 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		assert.Equal(t, mocks.OrderId, orderIds[0])
 		assert.Equal(t, orderTwo.Id, orderIds[1])
 		assert.Len(t, orderIds, 2)
+		assert.NoError(t, err)
+	})
+
+	t.Run("should handle partial filled orders for user", func(t *testing.T) {
+		db, mock := redismock.NewClientMock()
+
+		repo := &redisRepository{
+			client: db,
+		}
+
+		mock.ExpectZRange(CreateUserOpenOrdersKey(mocks.UserId), 0, -1).SetVal([]string{partialFilledOrder.Id.String()})
+		mock.ExpectHGetAll(CreateOrderIDKey(partialFilledOrder.Id)).SetVal(partialFilledOrder.OrderToMap())
+		mock.ExpectTxPipeline()
+		mock.ExpectHSet(CreateOrderIDKey(partialFilledOrder.Id), "cancelled", "true").SetVal(1)
+		mock.ExpectDel(CreateUserOpenOrdersKey(mocks.UserId)).SetVal(1)
+		mock.ExpectTxPipelineExec()
+
+		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
+		assert.Equal(t, partialFilledOrder.Id, orderIds[0])
+		assert.Len(t, orderIds, 1)
 		assert.NoError(t, err)
 	})
 
@@ -118,27 +142,6 @@ func TestRedisRepository_CancelAllOrdersForUser(t *testing.T) {
 		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
 		assert.Empty(t, orderIds)
 		assert.ErrorContains(t, err, "failed to find orders by IDs")
-	})
-
-	t.Run("an error should be returned if transaction failed", func(t *testing.T) {
-		db, mock := redismock.NewClientMock()
-
-		repo := &redisRepository{
-			client: db,
-		}
-
-		mock.ExpectZRange(CreateUserOpenOrdersKey(mocks.UserId), 0, -1).SetVal([]string{mocks.OrderId.String()})
-		mock.ExpectHGetAll(CreateOrderIDKey(mocks.OrderId)).SetVal(mocks.Order.OrderToMap())
-		mock.ExpectTxPipeline()
-		mock.ExpectDel(CreateClientOIDKey(mocks.ClientOId)).SetVal(1)
-		mock.ExpectZRem(CreateBuySidePricesKey(mocks.Symbol), mocks.OrderId.String()).SetVal(1)
-		mock.ExpectDel(CreateOrderIDKey(mocks.OrderId)).SetVal(1)
-		mock.ExpectDel(CreateUserOpenOrdersKey(mocks.UserId)).SetErr(assert.AnError)
-		mock.ExpectTxPipelineExec().SetErr(assert.AnError)
-
-		orderIds, err := repo.CancelOrdersForUser(ctx, mocks.UserId)
-		assert.Empty(t, orderIds)
-		assert.ErrorContains(t, err, "failed to remove user's orders in Redis. Reason: assert.AnError")
 	})
 
 }
