@@ -113,7 +113,7 @@ func (e *EvmClient) processCompletedTransaction(ctx context.Context, p models.Sw
 		orderSizes[frag.OrderId] = frag.OutSize
 	}
 
-	orders, err := e.orderBookStore.FindOrdersByIds(ctx, orderIds)
+	orders, err := e.orderBookStore.FindOrdersByIds(ctx, orderIds, false)
 	if err != nil {
 		logctx.Error(ctx, "Failed to get orders", logger.Error(err), logger.String("swapId", p.SwapId.String()))
 		return []models.Order{}, fmt.Errorf("failed to get orders: %w", err)

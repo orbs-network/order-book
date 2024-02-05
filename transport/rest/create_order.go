@@ -111,7 +111,7 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	if err == models.ErrClashingClientOrderId {
 		logctx.Warn(ctx, "clashing client order ID", logger.String("userId", user.Id.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
-		restutils.WriteJSONError(ctx, w, http.StatusConflict, fmt.Sprintf("Order with clientOrderId %s already exists. You must first cancel this order", args.ClientOrderId))
+		restutils.WriteJSONError(ctx, w, http.StatusConflict, fmt.Sprintf("Order with clientOrderId %s already exists", args.ClientOrderId))
 		return
 	}
 

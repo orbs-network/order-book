@@ -33,6 +33,7 @@ func TestOrder_OrderToMap(t *testing.T) {
 		},
 		Side:      BUY,
 		Timestamp: timestamp,
+		Cancelled: false,
 	}
 
 	expectedMap := map[string]string{
@@ -48,6 +49,7 @@ func TestOrder_OrderToMap(t *testing.T) {
 		"timestamp":   order.Timestamp.Format(time.RFC3339),
 		"eip712Sig":   order.Signature.Eip712Sig,
 		"abiFragment": "{\"Info\":{\"Reactor\":\"0x0000000000000000000000000000000000000000\",\"Swapper\":\"0x0000000000000000000000000000000000000000\",\"Nonce\":null,\"Deadline\":null,\"AdditionalValidationContract\":\"0x0000000000000000000000000000000000000000\",\"AdditionalValidationData\":null},\"ExclusiveFiller\":\"0x0000000000000000000000000000000000000000\",\"ExclusivityOverrideBps\":null,\"Input\":{\"Token\":\"0x0000000000000000000000000000000000000000\",\"Amount\":null},\"Outputs\":null}",
+		"cancelled":   "false",
 	}
 
 	actualMap := order.OrderToMap()
@@ -73,6 +75,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 			"clientOrderId": id.String(),
 			"eip712Sig":     "signature",
 			"abiFragment":   "{\"Info\":{\"Reactor\":\"0x0000000000000000000000000000000000000000\",\"Swapper\":\"0x0000000000000000000000000000000000000000\",\"Nonce\":null,\"Deadline\":null,\"AdditionalValidationContract\":\"0x0000000000000000000000000000000000000000\",\"AdditionalValidationData\":null},\"ExclusiveFiller\":\"0x0000000000000000000000000000000000000000\",\"ExclusivityOverrideBps\":null,\"Input\":{\"Token\":\"0x0000000000000000000000000000000000000000\",\"Amount\":null},\"Outputs\":null}",
+			"cancelled":     "false",
 		}
 
 		err := order.MapToOrder(data)
@@ -91,6 +94,7 @@ func TestOrder_MapToOrder(t *testing.T) {
 		assert.Equal(t, Signature{Eip712Sig: "signature", AbiFragment: abiFragment}, order.Signature)
 		assert.Equal(t, "buy", order.Side.String())
 		assert.Equal(t, "2021-01-01 00:00:00 +0000 UTC", order.Timestamp.String())
+		assert.Equal(t, false, order.Cancelled)
 	})
 
 	t.Run("when some data is missing", func(t *testing.T) {
@@ -332,6 +336,54 @@ func TestOrder_Unlock(t *testing.T) {
 			} else {
 				assert.Equal(t, test.error, err, "error should be equal")
 			}
+		})
+	}
+}
+
+func TestOrder_IsUnfilled(t *testing.T) {
+	tests := []struct {
+		name     string
+		order    Order
+		expected bool
+	}{
+		{
+			name: "sizeFilled 0, sizePending 0",
+			order: Order{
+				SizeFilled:  decimal.Zero,
+				SizePending: decimal.Zero,
+			},
+			expected: true,
+		},
+		{
+			name: "sizeFilled 1000, sizePending 0",
+			order: Order{
+				SizeFilled:  decimal.NewFromInt(1000),
+				SizePending: decimal.Zero,
+			},
+			expected: false,
+		},
+		{
+			name: "sizeFilled 0, sizePending 1000",
+			order: Order{
+				SizeFilled:  decimal.Zero,
+				SizePending: decimal.NewFromInt(1000),
+			},
+			expected: false,
+		},
+		{
+			name: "sizeFilled 1000, sizePending 1000",
+			order: Order{
+				SizeFilled:  decimal.NewFromInt(1000),
+				SizePending: decimal.NewFromInt(1000),
+			},
+			expected: false,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			actual := test.order.IsUnfilled()
+			assert.Equal(t, test.expected, actual, "isUnfilled should be equal")
 		})
 	}
 }

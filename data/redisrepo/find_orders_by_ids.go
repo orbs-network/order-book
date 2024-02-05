@@ -17,7 +17,9 @@ const MAX_ORDER_IDS = 500
 // FindOrdersByIds finds orders by their IDs. If an order is not found for any of the provided IDs, an error is returned.
 //
 // Only finding orders by their IDs is supported, not by their clientOIds.
-func (r *redisRepository) FindOrdersByIds(ctx context.Context, ids []uuid.UUID) ([]models.Order, error) {
+
+// Passing onlyOpen=true will only return orders that are open (not pending and not filled).
+func (r *redisRepository) FindOrdersByIds(ctx context.Context, ids []uuid.UUID, onlyOpen bool) ([]models.Order, error) {
 
 	if len(ids) > MAX_ORDER_IDS {
 		return nil, fmt.Errorf("exceeded maximum number of IDs: %d", MAX_ORDER_IDS)
@@ -56,7 +58,13 @@ func (r *redisRepository) FindOrdersByIds(ctx context.Context, ids []uuid.UUID) 
 			return nil, fmt.Errorf("could not map order: %v", err)
 		}
 
-		orders = append(orders, order)
+		if onlyOpen {
+			if !order.IsPending() && !order.IsFilled() {
+				orders = append(orders, order)
+			}
+		} else {
+			orders = append(orders, order)
+		}
 	}
 
 	logctx.Info(ctx, "found orders by IDs", logger.Int("numIdsProvided", len(ids)), logger.Int("numOrders", len(orders)))

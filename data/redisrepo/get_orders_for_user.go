@@ -62,7 +62,7 @@ func (r *redisRepository) GetOrdersForUser(ctx context.Context, userId uuid.UUID
 			end = len(orderIds)
 		}
 
-		o, err := r.FindOrdersByIds(ctx, orderIds[i:end])
+		o, err := r.FindOrdersByIds(ctx, orderIds[i:end], false)
 		if err != nil {
 			logctx.Error(ctx, "failed to find orders by IDs", logger.String("userId", userId.String()), logger.Error(err))
 			return []models.Order{}, 0, fmt.Errorf("failed to find orders by IDs: %v", err)
