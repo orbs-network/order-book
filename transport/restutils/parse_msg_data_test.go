@@ -45,7 +45,7 @@ func TestConvertToAbiFragment(t *testing.T) {
 	assert.Equal(t, big.NewInt(1000), result.Info.Nonce)
 	assert.Equal(t, big.NewInt(1709071200), result.Info.Deadline)
 	assert.Equal(t, common.HexToAddress("0x0000000000000000000000000000000000000000"), result.Info.AdditionalValidationContract)
-	assert.Equal(t, []byte("0x"), result.Info.AdditionalValidationData)
+	assert.Equal(t, []byte{}, result.Info.AdditionalValidationData)
 
 	// ExclusiveFiller
 	assert.Equal(t, common.HexToAddress("0x1a08D64Fb4a7D0b6DA5606A1e4619c147C3fB95e"), result.ExclusiveFiller)
