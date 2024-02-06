@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,18 +21,18 @@ type Signature struct {
 }
 
 type Order struct {
-	Id        uuid.UUID       `json:"orderId"`
-	ClientOId uuid.UUID       `json:"clientOrderId"`
-	UserId    uuid.UUID       `json:"userId"`
-	Price     decimal.Decimal `json:"price"`
-	Symbol    Symbol          `json:"symbol"`
-	Size      decimal.Decimal `json:"size"`
-	// TODO: do we want to expose pending and filled sizes?
+	Id          uuid.UUID       `json:"orderId"`
+	ClientOId   uuid.UUID       `json:"clientOrderId"`
+	UserId      uuid.UUID       `json:"userId"`
+	Price       decimal.Decimal `json:"price"`
+	Symbol      Symbol          `json:"symbol"`
+	Size        decimal.Decimal `json:"size"`
 	SizePending decimal.Decimal `json:"pendingSize"`
 	SizeFilled  decimal.Decimal `json:"filledSize"`
 	Side        Side            `json:"side"`
 	Timestamp   time.Time       `json:"timestamp"`
 	Signature   Signature       `json:"-" `
+	Cancelled   bool            `json:"cancelled"`
 }
 
 func (o *Order) OrderToMap() map[string]string {
@@ -52,6 +53,7 @@ func (o *Order) OrderToMap() map[string]string {
 		"timestamp":   o.Timestamp.Format(time.RFC3339),
 		"eip712Sig":   o.Signature.Eip712Sig,
 		"abiFragment": abiFragmentStr,
+		"cancelled":   fmt.Sprintf("%t", o.Cancelled),
 	}
 }
 
@@ -120,6 +122,11 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("no timestamp provided")
 	}
 
+	cancelledStr, exists := data["cancelled"]
+	if !exists {
+		return fmt.Errorf("no cancelled provided")
+	}
+
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		return fmt.Errorf("invalid id: %v", err)
@@ -173,7 +180,12 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	var abiFragment abi.Order
 
 	if err := json.Unmarshal([]byte(abiFragmentJSON), &abiFragment); err != nil {
-		return fmt.Errorf("invalid abiFragmen: %v", err)
+		return fmt.Errorf("invalid abiFragment: %v", err)
+	}
+
+	cancelled, err := strconv.ParseBool(cancelledStr)
+	if err != nil {
+		return fmt.Errorf("invalid cancelled value: %v", err)
 	}
 
 	o.Id = id
@@ -190,6 +202,7 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	}
 	o.Side = side
 	o.Timestamp = timestamp
+	o.Cancelled = cancelled
 
 	return nil
 }
@@ -203,6 +216,14 @@ func (o *Order) GetAvailableSize() decimal.Decimal {
 // IsFilled returns true if the order has been filled
 func (o *Order) IsFilled() bool {
 	return o.SizeFilled.Equal(o.Size)
+}
+
+func (o *Order) IsUnfilled() bool {
+	return o.SizeFilled.IsZero() && o.SizePending.IsZero()
+}
+
+func (o *Order) IsPartialFilled() bool {
+	return o.SizeFilled.GreaterThan(decimal.Zero) && o.SizeFilled.LessThan(o.Size)
 }
 
 // IsPending returns true has a pending fill in progress

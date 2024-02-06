@@ -121,7 +121,8 @@ func parseOrderInfo(data map[string]interface{}) (abi.Info, error) {
 	if !ok {
 		return oi, fmt.Errorf("additionalValidationData is not a valid string")
 	}
-	oi.AdditionalValidationData = []byte(additionalValidationData)
+
+	oi.AdditionalValidationData = common.FromHex(additionalValidationData)
 
 	return oi, nil
 }

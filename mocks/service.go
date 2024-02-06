@@ -42,11 +42,15 @@ func (m *MockOrderBookStore) StoreFilledOrders(ctx context.Context, orders []mod
 	return m.Error
 }
 
-func (m *MockOrderBookStore) RemoveOrder(ctx context.Context, order models.Order) error {
+func (m *MockOrderBookStore) CancelUnfilledOrder(ctx context.Context, order models.Order) error {
 	return m.Error
 }
 
-func (m *MockOrderBookStore) FindOrdersByIds(ctx context.Context, ids []uuid.UUID) ([]models.Order, error) {
+func (m *MockOrderBookStore) CancelPartialFilledOrder(ctx context.Context, order models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) FindOrdersByIds(ctx context.Context, ids []uuid.UUID, onlyOpen bool) ([]models.Order, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}

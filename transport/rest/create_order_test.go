@@ -340,11 +340,11 @@ func TestHandler_CreateOrder(t *testing.T) {
 			"{\"status\":409,\"msg\":\"Clashing order ID. Please retry\"}\n",
 		},
 		{
-			"clashing client order id - should return `Order with clientOrderId ___ already exists. You must first cancel this order` error",
+			"clashing client order id - should return `Order with clientOrderId ___ already exists",
 			&mocks.MockOrderBookService{Order: &models.Order{}, Error: models.ErrClashingClientOrderId},
 			createBody(t, orderReq),
 			http.StatusConflict,
-			"{\"status\":409,\"msg\":\"Order with clientOrderId a677273e-12de-4acc-a4f8-de7fb5b86e37 already exists. You must first cancel this order\"}\n",
+			"{\"status\":409,\"msg\":\"Order with clientOrderId a677273e-12de-4acc-a4f8-de7fb5b86e37 already exists\"}\n",
 		},
 		{
 			"unexpected error - should return `Error creating order. Try again later` error",

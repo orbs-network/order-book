@@ -9,13 +9,18 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-// Removes an order from the order book.
+// Cancels an unfilled order.
 // Order is removed from the prices sorted set, user's order set and order hash is removed
-// May only be called if order is not pending
-func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) error {
+// May only be called if order is not pending and completely unfilled
+func (r *redisRepository) CancelUnfilledOrder(ctx context.Context, order models.Order) error {
 	if order.IsPending() {
 		logctx.Error(ctx, "trying to remove order that is currently pending", logger.String("orderId", order.Id.String()), logger.String("sizePending", order.SizePending.String()))
 		return models.ErrOrderPending
+	}
+
+	if !order.IsUnfilled() {
+		logctx.Error(ctx, "trying to remove order that is not unfilled", logger.String("orderId", order.Id.String()), logger.String("sizeFilled", order.SizeFilled.String()))
+		return models.ErrOrderNotUnfilled
 	}
 
 	// --- START TRANSACTION ---
@@ -32,7 +37,7 @@ func (r *redisRepository) RemoveOrder(ctx context.Context, order models.Order) e
 	transaction.ZRem(ctx, userOrdersKey, order.Id.String())
 
 	clientOIdKey := CreateClientOIDKey(order.ClientOId)
-	transaction.Del(ctx, clientOIdKey, order.ClientOId.String())
+	transaction.Del(ctx, clientOIdKey)
 
 	// remove order hash
 	orderIDKey := CreateOrderIDKey(order.Id)

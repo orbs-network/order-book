@@ -18,23 +18,9 @@ type CancelOrderInput struct {
 // CancelOrder cancels an order by its ID or clientOId. If `isClientOId` is true, the `id` is treated as a clientOinput.Id, otherwise it is treated as an orderId.
 func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (cancelledOrderId *uuid.UUID, err error) {
 
-	var order *models.Order
-
-	if input.IsClientOId {
-		logctx.Info(ctx, "finding order by clientOId", logger.String("clientOId", input.Id.String()))
-
-		order, err = s.orderBookStore.FindOrderById(ctx, input.Id, true)
-		if err != nil {
-			logctx.Error(ctx, "could not get order ID by clientOId", logger.Error(err))
-			return nil, err
-		}
-	} else {
-		logctx.Info(ctx, "finding order by orderId", logger.String("orderId", input.Id.String()))
-		order, err = s.orderBookStore.FindOrderById(ctx, input.Id, false)
-		if err != nil {
-			logctx.Error(ctx, "could not get order by orderId", logger.Error(err))
-			return nil, err
-		}
+	order, err := s.getOrder(ctx, input.IsClientOId, input.Id)
+	if err != nil {
+		return nil, err
 	}
 
 	if order == nil {
@@ -52,12 +38,46 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (canc
 		return nil, models.ErrOrderFilled
 	}
 
-	err = s.orderBookStore.RemoveOrder(ctx, *order)
-	if err != nil {
-		logctx.Error(ctx, "error occured when removing order", logger.Error(err))
-		return nil, err
+	if order.IsUnfilled() {
+		err = s.orderBookStore.CancelUnfilledOrder(ctx, *order)
+		if err != nil {
+			logctx.Error(ctx, "error occured when removing order", logger.Error(err))
+			return nil, err
+		}
+
+		logctx.Info(ctx, "unfilled order removed", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+
+		return &order.Id, nil
+	} else {
+		err = s.orderBookStore.CancelPartialFilledOrder(ctx, *order)
+		if err != nil {
+			logctx.Error(ctx, "error occured when cancelling partial order", logger.Error(err))
+			return nil, err
+		}
+
+		logctx.Info(ctx, "partial filled order cancelled", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+
+		return &order.Id, nil
+	}
+}
+
+func (s *Service) getOrder(ctx context.Context, isClientOId bool, orderId uuid.UUID) (order *models.Order, err error) {
+	if isClientOId {
+		logctx.Info(ctx, "finding order by clientOId", logger.String("clientOId", orderId.String()))
+
+		order, err = s.orderBookStore.FindOrderById(ctx, orderId, true)
+		if err != nil {
+			logctx.Error(ctx, "could not get order ID by clientOId", logger.Error(err))
+			return nil, err
+		}
+	} else {
+		logctx.Info(ctx, "finding order by orderId", logger.String("orderId", orderId.String()))
+		order, err = s.orderBookStore.FindOrderById(ctx, orderId, false)
+		if err != nil {
+			logctx.Error(ctx, "could not get order by orderId", logger.Error(err))
+			return nil, err
+		}
 	}
 
-	logctx.Info(ctx, "order removed", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
-	return &order.Id, nil
+	return order, nil
 }

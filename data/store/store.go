@@ -13,9 +13,10 @@ type OrderBookStore interface {
 	StoreOpenOrder(ctx context.Context, order models.Order) error
 	StoreOpenOrders(ctx context.Context, orders []models.Order) error
 	StoreFilledOrders(ctx context.Context, orders []models.Order) error
-	RemoveOrder(ctx context.Context, order models.Order) error
+	CancelUnfilledOrder(ctx context.Context, order models.Order) error
+	CancelPartialFilledOrder(ctx context.Context, order models.Order) error
 	FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error)
-	FindOrdersByIds(ctx context.Context, ids []uuid.UUID) ([]models.Order, error)
+	FindOrdersByIds(ctx context.Context, ids []uuid.UUID, onlyOpen bool) ([]models.Order, error)
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	GetOrdersForUser(ctx context.Context, userId uuid.UUID, isFilledOrders bool) (orders []models.Order, totalOrders int, err error)
