@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/orbs-network/order-book/abi"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +15,7 @@ var id = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var userId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000003")
 
-var abiFragment = AbiFragment{}
+var abiFragment = abi.Order{}
 
 func TestOrder_OrderToMap(t *testing.T) {
 	timestamp, _ := time.Parse(time.RFC3339, "2021-01-01T00:00:00Z")

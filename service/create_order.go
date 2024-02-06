@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/orbs-network/order-book/abi"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -20,7 +21,7 @@ type CreateOrderInput struct {
 	Side          models.Side
 	ClientOrderID uuid.UUID
 	Eip712Sig     string
-	AbiFragment   models.AbiFragment
+	AbiFragment   abi.Order
 }
 
 func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (models.Order, error) {

@@ -4,13 +4,13 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/abi"
 )
 
 var BigInt = big.Int{}
 
-var AbiFragment = models.AbiFragment{
-	Info: models.OrderInfo{
+var AbiFragment = abi.Order{
+	Info: abi.Info{
 		Reactor:                      common.Address{},
 		Swapper:                      common.Address{},
 		Nonce:                        &BigInt,
@@ -19,11 +19,11 @@ var AbiFragment = models.AbiFragment{
 	},
 	ExclusiveFiller:        common.Address{},
 	ExclusivityOverrideBps: &BigInt,
-	Input: models.PartialInput{
+	Input: abi.Input{
 		Token:  common.Address{},
 		Amount: &BigInt,
 	},
-	Outputs: []models.PartialOutput{
+	Outputs: []abi.Output{
 		{
 			Token:     common.Address{},
 			Amount:    &BigInt,
