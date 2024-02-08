@@ -3,12 +3,14 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math"
 	"math/big"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/orbs-network/order-book/abi"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils/logger"
@@ -22,14 +24,10 @@ type BeginSwapRes struct {
 }
 
 type Fragment struct {
-	Signature string             `json:"signature"`
-	Abi       string             `json:"abi"`
-	AbiData   models.AbiFragment `json:"abiData"`
-}
-type ConfirmSwapRes struct {
-	SwapId        string     `json:"swapId"`
-	Fragments     []Fragment `json:"fragments"`
-	BookSignature string     `json:"bookSignature"`
+	Signature string    `json:"signature"`
+	AbiOrder  abi.Order `json:"abiOrder"`
+	InAmount  string    `json:"inAmount"`
+	OutAmount string    `json:"outAmount"`
 }
 
 type QuoteReq struct {
@@ -47,8 +45,9 @@ type QuoteRes struct {
 	InAmount  string     `json:"inAmount"`
 	InToken   string     `json:"inToken"`
 	SwapId    string     `json:"swapId"`
+	AbiCall   string     `json:"abiCall"`
+	Contract  string     `json:"contract"`
 	Fragments []Fragment `json:"fragments"`
-	//BookSignature? string     `json:"bookSignature"`
 }
 
 func (h *Handler) convertToTokenDec(ctx context.Context, tokenName string, amount decimal.Decimal) string {
@@ -169,12 +168,14 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		OutToken:  req.OutToken,
 		InAmount:  req.InAmount,
 		InToken:   req.InToken,
-		SwapId:    "",
+		//SwapId:    "",
 		Fragments: []Fragment{},
 	}
 
-	if isSwap {
+	// debug
+	//AbiElements
 
+	if isSwap {
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
 		res.SwapId = swapData.SwapId.String()
 		logctx.Debug(ctx, "BeginSwap", logger.String("swapId", res.SwapId))
@@ -182,6 +183,8 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return nil
 		}
+
+		signedOrders := []abi.SignedOrder{}
 
 		for i := 0; i < len(swapData.Fragments); i++ {
 			// conver In/Out amount to token decimals
@@ -195,28 +198,48 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			outputAmount := big.NewInt(0)
 			outputAmount.SetString(convOutAmount, 10)
 
-			abiData := swapData.Orders[i].Signature.AbiFragment
-			abiData.ExclusivityOverrideBps = big.NewInt(0)
-			abiData.Input.Amount = inputAmount
-			if len(abiData.Outputs) == 0 {
-				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "abiData.Outputs length is 0", logger.Error(err))
-				return nil
-			}
-			abiData.Outputs[0].Amount.SetString(convOutAmount, 10)
-			abiEncoded, err := models.EncodeFragData(ctx, abiData)
+			abiOrder := swapData.Orders[i].Signature.AbiFragment
+			abiOrder.ExclusivityOverrideBps = big.NewInt(0)
 
-			if err != nil {
-				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error(), logger.Error(err))
+			if len(abiOrder.Outputs) == 0 {
+				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "abiOrder.Outputs length is 0", logger.Error(err))
 				return nil
 			}
+
+			// create signed order with amount
+
+			// abiOrder.Outputs[0].Amount.SetString(convOutAmount, 10)
+			// abiEncoded, err := models.EncodeFragData(ctx, abiOrder)
+
+			// if err != nil {
+			// 	restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error(), logger.Error(err))
+			// 	return nil
+			// }
 
 			frag := Fragment{
 				Signature: swapData.Orders[i].Signature.Eip712Sig,
-				Abi:       abiEncoded,
-				AbiData:   abiData,
+				AbiOrder:  abiOrder,
+				OutAmount: convOutAmount,
+				InAmount:  convInAmount,
 			}
 			res.Fragments = append(res.Fragments, frag)
+			signedOrder := abi.SignedOrder{
+				OrderWithAmount: abi.OrderWithAmount{
+					Order:  abiOrder,
+					Amount: outputAmount,
+				},
+				Signature: []byte(swapData.Orders[i].Signature.Eip712Sig),
+			}
+			signedOrders = append(signedOrders, signedOrder)
 		}
+		// abi encode
+		abiCall, err := abi.PackSignedOrders(ctx, signedOrders)
+		if err != nil {
+			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
+			return nil
+		}
+		res.AbiCall = fmt.Sprintf("%x", abiCall)
+		res.Contract = h.contractAddress
 	}
 
 	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res)

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/orbs-network/order-book/abi"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/shopspring/decimal"
@@ -15,8 +16,8 @@ import (
 
 // EIP712 signature components
 type Signature struct {
-	Eip712Sig   string      `json:"sig"`
-	AbiFragment AbiFragment `json:"abiFragment"`
+	Eip712Sig   string    `json:"sig"`
+	AbiFragment abi.Order `json:"abiFragment"`
 }
 
 type Order struct {
@@ -176,7 +177,7 @@ func (o *Order) MapToOrder(data map[string]string) error {
 		return fmt.Errorf("invalid timestamp: %v", err)
 	}
 
-	var abiFragment AbiFragment
+	var abiFragment abi.Order
 
 	if err := json.Unmarshal([]byte(abiFragmentJSON), &abiFragment); err != nil {
 		return fmt.Errorf("invalid abiFragment: %v", err)

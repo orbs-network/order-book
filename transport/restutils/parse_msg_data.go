@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/abi"
 )
 
-func ConvertToAbiFragment(data map[string]interface{}) (models.AbiFragment, error) {
-	var af models.AbiFragment
+func ConvertToAbiFragment(data map[string]interface{}) (abi.Order, error) {
+	var af abi.Order
 
 	witness, ok := data["witness"].(map[string]interface{})
 	if !ok {
@@ -74,8 +74,8 @@ func ConvertToAbiFragment(data map[string]interface{}) (models.AbiFragment, erro
 	return af, nil
 }
 
-func parseOrderInfo(data map[string]interface{}) (models.OrderInfo, error) {
-	var oi models.OrderInfo
+func parseOrderInfo(data map[string]interface{}) (abi.Info, error) {
+	var oi abi.Info
 	// Similar validation and parsing for OrderInfo fields...
 	// Example:
 	reactor, ok := data["reactor"].(string)
@@ -127,8 +127,8 @@ func parseOrderInfo(data map[string]interface{}) (models.OrderInfo, error) {
 	return oi, nil
 }
 
-func parsePartialInput(data map[string]interface{}) (models.PartialInput, error) {
-	var pi models.PartialInput
+func parsePartialInput(data map[string]interface{}) (abi.Input, error) {
+	var pi abi.Input
 
 	token, ok := data["token"].(string)
 	if !ok {
@@ -151,8 +151,8 @@ func parsePartialInput(data map[string]interface{}) (models.PartialInput, error)
 	return pi, nil
 }
 
-func parsePartialOutput(data map[string]interface{}) (models.PartialOutput, error) {
-	var po models.PartialOutput
+func parsePartialOutput(data map[string]interface{}) (abi.Output, error) {
+	var po abi.Output
 
 	token, ok := data["token"].(string)
 	if !ok {
