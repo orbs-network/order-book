@@ -48,7 +48,6 @@ type QuoteRes struct {
 	AbiCall   string     `json:"abiCall"`
 	Contract  string     `json:"contract"`
 	Fragments []Fragment `json:"fragments"`
-	//BookSignature? string     `json:"bookSignature"`
 }
 
 func (h *Handler) convertToTokenDec(ctx context.Context, tokenName string, amount decimal.Decimal) string {

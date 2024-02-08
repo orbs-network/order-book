@@ -12,6 +12,7 @@ import (
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/transport/middleware"
+	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
@@ -27,14 +28,6 @@ type Handler struct {
 type genRes struct {
 	StatusText string `json:"statusText"`
 	Status     int    `json:"status"`
-}
-
-// read os env var with default
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
 }
 
 func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
@@ -78,7 +71,7 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		pairMngr:        models.NewPairMngr(),
 		okJson:          okJson,
 		supportedTokens: st,
-		contractAddress: getEnv("SWAP_CONTRACT_ADDRESS", "0x0B94c1A3E11F8aaA25D27cAf8DD05818e6f2Ad97"),
+		contractAddress: restutils.GetEnv("SWAP_CONTRACT_ADDRESS", "0x0B94c1A3E11F8aaA25D27cAf8DD05818e6f2Ad97"),
 	}, nil
 }
 

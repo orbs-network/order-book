@@ -66,10 +66,7 @@ func TestOrder_EncodeFragData(t *testing.T) {
 	}
 
 	packedData, err := PackSignedOrders(context.Background(), signedOrders)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
+	assert.NoError(t, err)
 	abi := fmt.Sprintf("%x", packedData)
 	assert.Equal(t, expectedAbi, abi)
 

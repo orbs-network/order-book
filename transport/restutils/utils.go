@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -49,4 +50,12 @@ func WriteJSONError(ctx context.Context, w http.ResponseWriter, status int, mess
 		logFields = append(logFields, logger.Error(err))
 		logctx.Error(ctx, "failed to write error response", logFields...)
 	}
+}
+
+// read os env var with default
+func GetEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
