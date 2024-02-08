@@ -1,6 +1,7 @@
 package abi
 
 import (
+	"context"
 	"fmt"
 	"math/big"
 	"testing"
@@ -64,7 +65,7 @@ func TestOrder_EncodeFragData(t *testing.T) {
 		//signedOrder,
 	}
 
-	packedData, err := PackSignedOrders(signedOrders)
+	packedData, err := PackSignedOrders(context.Background(), signedOrders)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return

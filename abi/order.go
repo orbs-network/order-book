@@ -1,14 +1,17 @@
 package abi
 
 import (
-	"fmt"
+	"context"
 	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/orbs-network/order-book/utils/logger"
+	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
+// function call ABI
 const executeBatchJson = `[{
 	"inputs": [
 		{
@@ -76,7 +79,7 @@ type ExecuteBatchTuple struct {
 	Sig   []byte
 }
 
-func PackSignedOrders(signedOrders []SignedOrder) ([]byte, error) {
+func PackSignedOrders(ctx context.Context, signedOrders []SignedOrder) ([]byte, error) {
 	orderType, err := abi.NewType(
 		"tuple", "OrderWithAmount", []abi.ArgumentMarshaling{
 			{Name: "Order", Type: "tuple", Components: []abi.ArgumentMarshaling{
@@ -104,9 +107,10 @@ func PackSignedOrders(signedOrders []SignedOrder) ([]byte, error) {
 		})
 
 	if err != nil {
+		logctx.Error(ctx, "failed to create new type", logger.Error(err))
 		return nil, err
 	}
-
+	// create args to pack with
 	orderArgs := abi.Arguments{
 		{
 			Type: orderType,
@@ -114,11 +118,12 @@ func PackSignedOrders(signedOrders []SignedOrder) ([]byte, error) {
 		},
 	}
 
+	// tuple for function call
 	tuples := []ExecuteBatchTuple{}
 	for _, order := range signedOrders {
-
 		bytesOrderWithAmount, err := orderArgs.Pack(order.OrderWithAmount)
 		if err != nil {
+			logctx.Error(ctx, "orderArgs.Pack failed", logger.Error(err))
 			return nil, err
 		}
 
@@ -130,13 +135,14 @@ func PackSignedOrders(signedOrders []SignedOrder) ([]byte, error) {
 
 	execBatchAbi, err := abi.JSON(strings.NewReader(executeBatchJson))
 	if err != nil {
+		logctx.Error(ctx, "abi.JSON failed", logger.Error(err))
 		return nil, err
 	}
 
 	data, err := execBatchAbi.Pack("executeBatch", tuples)
 
 	if err != nil {
-		fmt.Println("Error packing data for executeBatch function:", err)
+		logctx.Error(ctx, "abi.JSON failed", logger.Error(err))
 		return nil, err
 	}
 
