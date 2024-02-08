@@ -234,7 +234,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			signedOrders = append(signedOrders, signedOrder)
 		}
 		// abi encode
-		abiCall, err := abi.PackSignedOrders(signedOrders)
+		abiCall, err := abi.PackSignedOrders(ctx, signedOrders)
 		if err != nil {
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return nil
