@@ -289,18 +289,18 @@ func (h *Handler) swapStarted(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set the Content-Type header to application/json
-	w.Header().Set("Content-Type", "application/json")
+	// execute
 	if err := h.svc.SwapStarted(ctx, *swapId, txhash); err != nil {
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("swapId not found", swapId.String()))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("swapId", swapId.String()))
 		return
 	}
+
 	// success
 	res := genRes{
 		StatusText: "OK",
 		Status:     http.StatusOK,
 	}
-	restutils.WriteJSONResponse(r.Context(), w, http.StatusBadRequest, res, logger.String("swapId started", swapId.String()))
+	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res, logger.String("swapId started", swapId.String()))
 
 }
 
