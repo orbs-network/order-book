@@ -17,8 +17,12 @@ func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Swap
 	// confirm swapID is valid
 	_, err := r.GetSwap(ctx, p.SwapId)
 	if err != nil {
-		logctx.Error(ctx, "getSwap failed, swapID invalid", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
-		return fmt.Errorf("getSwap failed, swapID invalid: %s", err)
+		if err == models.ErrNotFound {
+			logctx.Warn(ctx, "no swap found by that ID", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
+			return err
+		}
+		logctx.Error(ctx, "failed to get swap", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
+		return fmt.Errorf("failed to get swap unexpectedly: %s", err)
 	}
 
 	// protect re-entry
@@ -28,6 +32,8 @@ func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Swap
 			logctx.Warn(ctx, "pendingSwap already in tracker", logger.String("startedSwapId", p.SwapId.String()))
 			return err
 		}
+		logctx.Error(ctx, "failed to add pendingSwap to tracker", logger.Error(err), logger.String("startedSwapId", p.SwapId.String()))
+		return fmt.Errorf("failed to add pendingSwap to tracker: %s", err)
 	}
 
 	jsonData, err := json.Marshal(p)
