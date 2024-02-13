@@ -111,14 +111,20 @@ func (r *Reporter) tick() {
 			logctx.Error(r.ctx, "GetMinAsk failed")
 			return
 		}
-		r.sumOrderSide(true, itAsk)
+		err := r.sumOrderSide(true, itAsk)
+		if err != nil {
+			logctx.Error(r.ctx, "sumOrderSide failed", logger.Error(err))
+		}
 		// bid
-		itBid := r.svc.orderBookStore.GetMinAsk(r.ctx, sym)
+		itBid := r.svc.orderBookStore.GetMaxBid(r.ctx, sym)
 		if itBid == nil {
 			logctx.Error(r.ctx, "GetMinAsk failed")
 			return
 		}
-		r.sumOrderSide(false, itBid)
+		err = r.sumOrderSide(false, itBid)
+		if err != nil {
+			logctx.Error(r.ctx, "sumOrderSide failed", logger.Error(err))
+		}
 		// report
 		logctx.Info(r.ctx, "report", r.fields...)
 	}
