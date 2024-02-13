@@ -40,6 +40,7 @@ type BlockChainService interface {
 type Service struct {
 	orderBookStore   store.OrderBookStore
 	blockchainClient BlockChainService
+	reporter         *Reporter
 }
 
 // New creates a new Service with injected dependencies.
@@ -52,5 +53,8 @@ func New(store store.OrderBookStore, bcClient BlockChainService) (*Service, erro
 		return nil, errors.New("bcClient cannot be nil")
 	}
 
-	return &Service{orderBookStore: store, blockchainClient: bcClient}, nil
+	svc := Service{orderBookStore: store, blockchainClient: bcClient}
+	svc.reporter = NewReporter(&svc)
+	svc.reporter.Start()
+	return &svc, nil
 }
