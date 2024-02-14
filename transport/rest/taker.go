@@ -238,7 +238,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return nil
 		}
-		res.AbiCall = fmt.Sprintf("%x", abiCall)
+		res.AbiCall = fmt.Sprintf("0x%x", abiCall)
 		res.Contract = h.contractAddress
 	}
 
