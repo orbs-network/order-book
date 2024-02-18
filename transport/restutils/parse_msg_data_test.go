@@ -28,8 +28,9 @@ func TestConvertToAbiFragment(t *testing.T) {
 			},
 			"outputs": []interface{}{
 				map[string]interface{}{
-					"token":  "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
-					"amount": "34600000",
+					"token":     "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+					"amount":    "34600000",
+					"recipient": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
 				},
 			},
 		},
