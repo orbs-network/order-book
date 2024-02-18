@@ -172,6 +172,13 @@ func parsePartialOutput(data map[string]interface{}) (abi.Output, error) {
 
 	po.Amount = amountBI
 
+	recipient, ok := data["recipient"].(string)
+	if !ok {
+		return po, fmt.Errorf("recipient is not a valid string")
+	}
+
+	po.Recipient = common.HexToAddress(recipient)
+
 	return po, nil
 }
 
