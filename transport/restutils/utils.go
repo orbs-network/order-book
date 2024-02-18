@@ -50,6 +50,18 @@ func WriteJSONError(ctx context.Context, w http.ResponseWriter, status int, mess
 		logFields = append(logFields, logger.Error(err))
 		logctx.Error(ctx, "failed to write error response", logFields...)
 	}
+
+	// log details about why the request failed or was rejected
+	logFields = append(logFields, logger.String("status", http.StatusText(status)), logger.String("message", message))
+	logctx.Warn(ctx, "api request not successful", logFields...)
+}
+
+// read os env var with default
+func GetEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
 
 // read os env var with default

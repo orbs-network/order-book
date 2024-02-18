@@ -6,13 +6,19 @@ import (
 
 	"github.com/go-redis/redismock/v9"
 	"github.com/orbs-network/order-book/mocks"
+	"github.com/orbs-network/order-book/models"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 	ctx := context.Background()
 
-	t.Run("should add new pending swap to list", func(t *testing.T) {
+	swapJson := []string{
+		`[{"orderId":"550e8400-e29b-41d4-a716-446655440000","inSize":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","inSize":"5.3"}]`,
+		`[{"orderId":"550e8400-e29b-41d4-a716-446655440002","inSize":"7.8"}]`,
+	}
+
+	t.Run("success - should add new pending swap to list given an existing swap is found and pending swap is not already tracked", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
@@ -21,6 +27,8 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 
 		pendingJson, _ := mocks.SwapTx.ToJson()
 
+		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
+		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetVal(1)
 		mock.ExpectRPush(CreatePendingSwapTxsKey(), pendingJson).SetVal(1)
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
@@ -28,13 +36,73 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 		assert.NoError(t, err)
 	})
 
-	t.Run("should return error if redis fails", func(t *testing.T) {
+	t.Run("should return `ErrNotFound` error if existing swap not found", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
 			client: db,
 		}
 
+		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(nil)
+
+		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
+
+		assert.ErrorIs(t, err, models.ErrNotFound)
+	})
+
+	t.Run("should return error if redis fails to get swap", func(t *testing.T) {
+		db, mock := redismock.NewClientMock()
+
+		repo := &redisRepository{
+			client: db,
+		}
+
+		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetErr(assert.AnError)
+
+		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
+
+		assert.ErrorContains(t, err, "failed to get swap unexpectedly")
+	})
+
+	t.Run("should return `ErrValAlreadyInSet` error if swap already in tracker", func(t *testing.T) {
+		db, mock := redismock.NewClientMock()
+
+		repo := &redisRepository{
+			client: db,
+		}
+
+		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
+		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetErr(models.ErrValAlreadyInSet)
+
+		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
+
+		assert.ErrorIs(t, err, models.ErrValAlreadyInSet)
+	})
+
+	t.Run("should return error if redis fails to add pending swap to tracker", func(t *testing.T) {
+		db, mock := redismock.NewClientMock()
+
+		repo := &redisRepository{
+			client: db,
+		}
+
+		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
+		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetErr(assert.AnError)
+
+		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
+
+		assert.ErrorContains(t, err, "failed to add pendingSwap to tracker")
+	})
+
+	t.Run("should return error if redis fails to store pending swap", func(t *testing.T) {
+		db, mock := redismock.NewClientMock()
+
+		repo := &redisRepository{
+			client: db,
+		}
+
+		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
+		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetVal(1)
 		mock.ExpectRPush(CreatePendingSwapTxsKey(), mocks.SwapTx.ToMap()).SetErr(assert.AnError)
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)

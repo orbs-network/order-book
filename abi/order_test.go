@@ -76,8 +76,6 @@ func TestOrder_EncodeFragData(t *testing.T) {
 	packedData, err := PackSignedOrders(context.Background(), signedOrders)
 	assert.NoError(t, err)
 	abi := fmt.Sprintf("0x%x", packedData)
-	fmt.Println(abi)
-	t.Log(abi)
 	assert.Equal(t, expectedAbi, abi)
 
 }
