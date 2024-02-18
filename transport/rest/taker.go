@@ -215,15 +215,6 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			}
 
 			// create signed order with amount
-
-			// abiOrder.Outputs[0].Amount.SetString(convOutAmount, 10)
-			// abiEncoded, err := models.EncodeFragData(ctx, abiOrder)
-
-			// if err != nil {
-			// 	restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error(), logger.Error(err))
-			// 	return nil
-			// }
-
 			frag := Fragment{
 				Signature: swapData.Orders[i].Signature.Eip712Sig,
 				AbiOrder:  abiOrder,
@@ -246,7 +237,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return nil
 		}
-		res.AbiCall = fmt.Sprintf("%x", abiCall)
+		res.AbiCall = fmt.Sprintf("0x%x", abiCall)
 		res.Contract = h.reactorAddress
 	}
 
@@ -330,5 +321,4 @@ func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
 		Status:     http.StatusOK,
 	}
 	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res, logger.String("swapId aborted", swapId.String()))
-
 }
