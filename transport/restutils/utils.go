@@ -63,11 +63,3 @@ func GetEnv(key, fallback string) string {
 	}
 	return fallback
 }
-
-// read os env var with default
-func GetEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
-}
