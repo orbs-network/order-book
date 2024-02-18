@@ -7,7 +7,9 @@ import (
 	"math"
 	"math/big"
 	"net/http"
+	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/orbs-network/order-book/abi"
@@ -112,6 +114,12 @@ func (h *Handler) resolveQuoteTokenNames(req *QuoteReq) error {
 	}
 	return nil
 }
+func Signature2Bytes(sig string) []byte {
+	// remove leading 0x if exists
+	sig = strings.TrimPrefix(sig, "0x")
+	return common.Hex2Bytes(sig)
+}
+
 func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) *QuoteRes {
 	var req QuoteReq
 	ctx := r.Context()
@@ -228,7 +236,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 					Order:  abiOrder,
 					Amount: outputAmount,
 				},
-				Signature: []byte(swapData.Orders[i].Signature.Eip712Sig),
+				Signature: Signature2Bytes(swapData.Orders[i].Signature.Eip712Sig),
 			}
 			signedOrders = append(signedOrders, signedOrder)
 		}
@@ -238,8 +246,8 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return nil
 		}
-		res.AbiCall = fmt.Sprintf("0x%x", abiCall)
-		res.Contract = h.contractAddress
+		res.AbiCall = fmt.Sprintf("%x", abiCall)
+		res.Contract = h.reactorAddress
 	}
 
 	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res)

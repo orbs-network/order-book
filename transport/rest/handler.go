@@ -23,7 +23,7 @@ type Handler struct {
 	Router          *mux.Router
 	okJson          []byte
 	supportedTokens *service.SupportedTokens
-	contractAddress string
+	reactorAddress  string
 }
 type genRes struct {
 	StatusText string `json:"statusText"`
@@ -71,7 +71,7 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		pairMngr:        models.NewPairMngr(),
 		okJson:          okJson,
 		supportedTokens: st,
-		contractAddress: restutils.GetEnv("SWAP_CONTRACT_ADDRESS", "0x0B94c1A3E11F8aaA25D27cAf8DD05818e6f2Ad97"),
+		reactorAddress:  restutils.GetEnv("SWAP_CONTRACT_ADDRESS", "0x2ee46d8d20020520d5266f3cacc7c41e1aadd4c6"),
 	}, nil
 }
 

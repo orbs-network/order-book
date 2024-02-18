@@ -69,14 +69,15 @@ type OrderWithAmount struct {
 	Amount *big.Int
 }
 
-type SignedOrder struct {
-	OrderWithAmount OrderWithAmount
-	Signature       []byte
-}
-
 type ExecuteBatchTuple struct {
 	Order []byte
 	Sig   []byte
+}
+
+// non abi struct, just to pass the array
+type SignedOrder struct {
+	OrderWithAmount OrderWithAmount
+	Signature       []byte
 }
 
 func PackSignedOrders(ctx context.Context, signedOrders []SignedOrder) ([]byte, error) {
