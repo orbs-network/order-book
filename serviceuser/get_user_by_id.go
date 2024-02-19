@@ -18,6 +18,6 @@ func (s *Service) GetUserById(ctx context.Context, userId uuid.UUID) (*models.Us
 		return nil, fmt.Errorf("failed to get user by id: %w", err)
 	}
 
-	logctx.Info(ctx, "user retrieved by ID", logger.String("userId", userId.String()), logger.String("pubKey", user.PubKey))
+	logctx.Debug(ctx, "user retrieved by ID", logger.String("userId", userId.String()), logger.String("pubKey", user.PubKey))
 	return user, nil
 }

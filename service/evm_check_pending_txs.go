@@ -14,7 +14,7 @@ import (
 
 // CheckPendingTxs checks all pending transactions and updates the order book accordingly
 func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
-	logctx.Info(ctx, "Checking pending transactions...")
+	logctx.Debug(ctx, "Checking pending transactions...")
 	pendingSwaps, err := e.orderBookStore.GetPendingSwaps(ctx)
 	if err != nil {
 		logctx.Error(ctx, "Failed to get pending swaps", logger.Error(err))

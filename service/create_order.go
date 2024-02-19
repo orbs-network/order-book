@@ -78,6 +78,6 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 		return models.Order{}, err
 	}
 
-	logctx.Info(ctx, "new order created", logger.String("ID", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()))
+	logctx.Debug(ctx, "new order created", logger.String("ID", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()))
 	return order, nil
 }
