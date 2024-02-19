@@ -16,7 +16,7 @@ func (r *redisRepository) FindOrderById(ctx context.Context, id uuid.UUID, isCli
 	var orderId uuid.UUID
 
 	if isClientOId {
-		logctx.Info(ctx, "finding order by clientOId", logger.String("clientOId", id.String()))
+		logctx.Debug(ctx, "finding order by clientOId", logger.String("clientOId", id.String()))
 
 		orderIdStr, err := r.client.Get(ctx, CreateClientOIDKey(id)).Result()
 		if err != nil {
@@ -33,7 +33,7 @@ func (r *redisRepository) FindOrderById(ctx context.Context, id uuid.UUID, isCli
 			return nil, fmt.Errorf("invalid order ID format retrieved by clientOId: %s", err)
 		}
 	} else {
-		logctx.Info(ctx, "finding order by orderId", logger.String("orderId", id.String()))
+		logctx.Debug(ctx, "finding order by orderId", logger.String("orderId", id.String()))
 		orderId = id
 	}
 
@@ -54,6 +54,6 @@ func (r *redisRepository) FindOrderById(ctx context.Context, id uuid.UUID, isCli
 		return nil, err
 	}
 
-	logctx.Info(ctx, "found order", logger.String("orderId", order.Id.String()))
+	logctx.Debug(ctx, "found order", logger.String("orderId", order.Id.String()))
 	return order, nil
 }

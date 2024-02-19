@@ -30,7 +30,7 @@ func (r *redisRepository) StoreOpenOrder(ctx context.Context, order models.Order
 		logctx.Error(ctx, "failed to store open order in Redis", logger.Error(err), logger.String("orderId", order.Id.String()))
 		return fmt.Errorf("failed to stores open order in Redis: %v", err)
 	}
-	logctx.Info(ctx, "stored order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
+	logctx.Debug(ctx, "stored open order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
 	return nil
 }
 
@@ -44,7 +44,7 @@ func (r *redisRepository) StoreOpenOrders(ctx context.Context, orders []models.O
 			return err
 		}
 
-		logctx.Info(ctx, "stored order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
+		logctx.Debug(ctx, "stored order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
 
 	}
 	_, err := transaction.Exec(ctx)

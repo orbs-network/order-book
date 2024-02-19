@@ -51,6 +51,6 @@ func (r *redisRepository) CancelUnfilledOrder(ctx context.Context, order models.
 	}
 	// --- END TRANSACTION ---
 
-	logctx.Info(ctx, "removed order", logger.String("userId", order.UserId.String()), logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
+	logctx.Debug(ctx, "removed unfilled order", logger.String("userId", order.UserId.String()), logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
 	return nil
 }

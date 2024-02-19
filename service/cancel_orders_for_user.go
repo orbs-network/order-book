@@ -24,6 +24,6 @@ func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) (or
 		return []uuid.UUID{}, fmt.Errorf("could not cancel orders for user: %w", err)
 	}
 
-	logctx.Info(ctx, "cancelled all orders for user", logger.String("userId", userId.String()), logger.Int("numOrders", len(orderIds)))
+	logctx.Debug(ctx, "cancelled all orders for user", logger.String("userId", userId.String()), logger.Int("numOrders", len(orderIds)))
 	return orderIds, nil
 }
