@@ -53,8 +53,13 @@ func New(store store.OrderBookStore, bcClient BlockChainService) (*Service, erro
 		return nil, errors.New("bcClient cannot be nil")
 	}
 
+	// start report routine
 	svc := Service{orderBookStore: store, blockchainClient: bcClient}
 	svc.reporter = NewReporter(&svc)
 	svc.reporter.Start()
+
+	// start periodic check routine
+	svc.startPeriodicChecks()
+
 	return &svc, nil
 }
