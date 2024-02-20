@@ -14,9 +14,11 @@ import (
 )
 
 func (s *Service) startPeriodicChecks() {
+	secSwapStarted := restutils.GetEnv("SEC_PERIODIC_INTERVAL", "10")
+	sec, _ := strconv.Atoi(secSwapStarted)
 	go func() {
 		ctx := context.Background()
-		interval := time.Tick(10 * time.Second)
+		interval := time.Tick(time.Second * time.Duration(sec))
 		for range interval {
 			s.periodicCheck(ctx)
 		}
@@ -59,17 +61,23 @@ func (s *Service) checkNonStartedSwaps(ctx context.Context, secPeriod int64) err
 				if err != nil {
 					logctx.Error(ctx, "Error swap not found", logger.String("swapid", swapId), logger.Error(err))
 				} else {
-
 					// check if not started
 					sec, err := secondsSinceTimestamp(swap.Created)
 					if err == nil {
 						if sec > secPeriod {
 							fmt.Println(swap.Created)
 							fmt.Println("swap was not started- removing")
-							s.AbortSwap(ctx, uid)
+							err = s.AbortSwap(ctx, uid)
+							if err != nil {
+								logctx.Error(ctx, "failed to AutoabortSwap", logger.String("created", swap.Created.String()), logger.Error(err))
+							} else {
+								// SUCCESS
+								logctx.Info(ctx, "Auto abortSwap adter interval", logger.String("swapId", swapId), logger.Int("secPerios", int(secPeriod)))
+							}
+
 						}
 					} else {
-						logctx.Error(ctx, "secondsSinceTimestamp failed", logger.String("created", swap.Created.String()), logger.Error(err))
+						logctx.Error(ctx, "AbortSwap failed", logger.String("swapId", swapId), logger.Error(err))
 					}
 				}
 			} else {
