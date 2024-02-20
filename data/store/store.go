@@ -26,7 +26,7 @@ type OrderBookStore interface {
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
 	// taker side
 	UpdateSwapTracker(ctx context.Context, swapStatus models.SwapStatus, swapId uuid.UUID) error
-	GetSwap(ctx context.Context, swapId uuid.UUID) ([]models.OrderFrag, error)
+	GetSwap(ctx context.Context, swapId uuid.UUID) (*models.Swap, error)
 	StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error
 	RemoveSwap(ctx context.Context, swapId uuid.UUID) error
 	// Pending transactions (TODO: rename)
@@ -34,4 +34,6 @@ type OrderBookStore interface {
 	GetPendingSwaps(ctx context.Context) ([]models.SwapTx, error)
 	StorePendingSwaps(ctx context.Context, pendingSwaps []models.SwapTx) error
 	ProcessCompletedSwapOrders(ctx context.Context, orders []*models.Order, swapId uuid.UUID, isSuccessful bool) error
+	// utils
+	EnumSubKeysOf(ctx context.Context, key string) ([]string, error)
 }

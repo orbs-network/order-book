@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -45,4 +46,16 @@ func MarshalOrderFrags(orderFrags []OrderFrag) ([]byte, error) {
 	}
 
 	return json.Marshal(swapMap)
+}
+
+type Swap struct {
+	Frags   []OrderFrag `json:"frags"`
+	Created time.Time   `json:"created"`
+}
+
+func NewSwap(frags []OrderFrag) *Swap {
+	return &Swap{
+		Frags:   frags,
+		Created: time.Now(),
+	}
 }

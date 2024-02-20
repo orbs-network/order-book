@@ -28,7 +28,7 @@ func TestRedisRepository_GetSwap(t *testing.T) {
 
 		swap, err := repo.GetSwap(ctx, swapId)
 		assert.NoError(t, err)
-		assert.Len(t, swap, 3, "Should have 3 orders in the swap")
+		assert.Len(t, swap.Frags, 3, "Should have 3 orders in the swap")
 	})
 
 	t.Run("should return `ErrUnexpectedError` in case of a Redis error", func(t *testing.T) {

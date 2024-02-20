@@ -261,8 +261,8 @@ func createSwaps() {
 	}
 	log.Print("--------------------------")
 	log.Printf("swap: %v", swap)
-	log.Print(swap[0].OrderId)
-	log.Print(swap[0].OutSize)
+	log.Print(swap.Frags[0].OrderId)
+	log.Print(swap.Frags[0].OutSize)
 }
 
 func createOrders() {

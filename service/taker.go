@@ -103,7 +103,7 @@ func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash stri
 func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 	logctx.Debug(ctx, "AbortSwap", logger.String("swapId", swapId.String()))
 	// get swap from store
-	frags, err := s.orderBookStore.GetSwap(ctx, swapId)
+	swap, err := s.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
 		logctx.Warn(ctx, "GetSwap Failed", logger.Error(err))
 		return err
@@ -111,7 +111,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 
 	orders := []models.Order{}
 	// validate all pending orders fragments of auction
-	for _, frag := range frags {
+	for _, frag := range swap.Frags {
 		// get order by ID
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		// no return during erros as what can be revert, should
@@ -144,7 +144,7 @@ func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
 	logctx.Debug(ctx, "FillSwap", logger.String("swapId", swapId.String()))
 
 	// get swap from store
-	frags, err := s.orderBookStore.GetSwap(ctx, swapId)
+	swap, err := s.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
 		logctx.Warn(ctx, "GetSwap Failed", logger.Error(err))
 		return err
@@ -153,7 +153,7 @@ func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
 	filledOrders := []models.Order{}
 	openOrders := []models.Order{}
 	// validate all pending orders fragments of auction
-	for _, frag := range frags {
+	for _, frag := range swap.Frags {
 		// get order by ID
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		// no return during erros as what can be revert, should

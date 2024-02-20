@@ -113,11 +113,11 @@ func (m *MockOrderBookStore) StoreUserByPublicKey(ctx context.Context, user mode
 	return m.Error
 }
 
-func (m *MockOrderBookStore) GetSwap(ctx context.Context, swapId uuid.UUID) ([]models.OrderFrag, error) {
+func (m *MockOrderBookStore) GetSwap(ctx context.Context, swapId uuid.UUID) (*models.Swap, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
-	return m.Frags, nil
+	return models.NewSwap(m.Frags), nil
 }
 
 func (m *MockOrderBookStore) RemoveSwap(ctx context.Context, swapId uuid.UUID) error {
@@ -151,4 +151,8 @@ func (m *MockOrderBookStore) StorePendingSwaps(ctx context.Context, pendingSwaps
 
 func (m *MockOrderBookStore) ProcessCompletedSwapOrders(ctx context.Context, orders []*models.Order, swapId uuid.UUID, isSuccessful bool) error {
 	return m.Error
+}
+
+func (m *MockOrderBookStore) EnumSubKeysOf(tx context.Context, key string) ([]string, error) {
+	return []string{key + "111", key + "222"}, m.Error
 }
