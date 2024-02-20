@@ -20,22 +20,12 @@ func (r *redisRepository) StoreSwap(ctx context.Context, swapId uuid.UUID, frags
 	}
 
 	swapKey := CreateSwapKey(swapId)
-
-	//_, err = r.client.RPush(ctx, swapKey, swapJson).Result()
 	_, err = r.client.Set(ctx, swapKey, swapJson, 0).Result()
 
 	if err != nil {
 		logctx.Error(ctx, "failed to store swap", logger.String("swapId", swapId.String()), logger.Error(err))
 		return fmt.Errorf("failed to store swap: %v", err)
 	}
-
-	// Set the TTL to 24 hours (24 hours * 60 minutes * 60 seconds)
-	// TODO:
-	// err = r.client.Expire(ctx, swapKey, 24*time.Hour).Err()
-	// if err != nil {
-	// 	fmt.Println("Error setting key:", err)
-	// 	return models.ErrUnexpectedError
-	// }
 
 	logctx.Info(ctx, "stored swap", logger.String("swapId", swapId.String()))
 	return nil
