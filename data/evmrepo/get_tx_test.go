@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -44,8 +45,10 @@ func TestEvmRepo_GetTx(t *testing.T) {
 		pendingTx, _ := mockBcBackend.CreateTx(transaction, false)
 		tx, err := client.GetTx(context.Background(), pendingTx.Hash().Hex())
 		assert.Equal(t, models.Tx{
-			Status: models.TX_PENDING,
-			TxHash: pendingTx.Hash().Hex(),
+			Status:    models.TX_PENDING,
+			TxHash:    pendingTx.Hash().Hex(),
+			Block:     nil,
+			Timestamp: nil,
 		}, *tx)
 		assert.NoError(t, err)
 	})
@@ -54,9 +57,15 @@ func TestEvmRepo_GetTx(t *testing.T) {
 		client, mockBcBackend := setup()
 		successfulTx, _ := mockBcBackend.CreateTx(transaction, true)
 		tx, err := client.GetTx(context.Background(), successfulTx.Hash().Hex())
+
+		expectedBlockNumber := int64(1)
+		expectedBlockTs := time.Unix(10, 0)
+
 		assert.Equal(t, models.Tx{
-			Status: models.TX_SUCCESS,
-			TxHash: successfulTx.Hash().Hex(),
+			Status:    models.TX_SUCCESS,
+			TxHash:    successfulTx.Hash().Hex(),
+			Block:     &expectedBlockNumber,
+			Timestamp: &expectedBlockTs,
 		}, *tx)
 		assert.NoError(t, err)
 	})
