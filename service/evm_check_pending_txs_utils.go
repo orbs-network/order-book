@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/orbs-network/order-book/data/store"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -36,7 +37,7 @@ func (e *EvmClient) ProcessCompletedTransaction(ctx context.Context, tx *models.
 		return []models.Order{}, fmt.Errorf("failed to get orders: %w", err)
 	}
 
-	var swapOrders []*models.Order
+	var swapOrdersWithSize []store.OrderWithSize
 
 	for _, order := range orders {
 
@@ -57,10 +58,13 @@ func (e *EvmClient) ProcessCompletedTransaction(ctx context.Context, tx *models.
 				continue
 			}
 		}
-		swapOrders = append(swapOrders, &order)
+		swapOrdersWithSize = append(swapOrdersWithSize, store.OrderWithSize{
+			Order: &order,
+			Size:  size,
+		})
 	}
 
-	err = e.orderBookStore.ProcessCompletedSwapOrders(ctx, swapOrders, swapId, tx, isSuccessful)
+	err = e.orderBookStore.ProcessCompletedSwapOrders(ctx, swapOrdersWithSize, swapId, tx, isSuccessful)
 	if err != nil {
 		logctx.Error(ctx, "Failed to process completed swap orders", logger.Error(err), logger.String("swapId", swapId.String()))
 		return []models.Order{}, fmt.Errorf("failed to process completed swap orders: %w", err)

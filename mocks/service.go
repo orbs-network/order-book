@@ -150,7 +150,7 @@ func (m *MockOrderBookStore) StorePendingSwaps(ctx context.Context, pendingSwaps
 	return m.Error
 }
 
-func (m *MockOrderBookStore) ProcessCompletedSwapOrders(ctx context.Context, orders []*models.Order, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error {
+func (m *MockOrderBookStore) ProcessCompletedSwapOrders(ctx context.Context, ordersWithSize []store.OrderWithSize, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error {
 	return m.Error
 }
 

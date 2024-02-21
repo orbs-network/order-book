@@ -10,13 +10,19 @@ import (
 )
 
 type StoreCompletedSwapInput struct {
-	UserId  uuid.UUID `json:"-" `
-	SwapId  uuid.UUID `json:"swapId"`
-	OrderId uuid.UUID `json:"orderId"`
+	UserId  uuid.UUID       `json:"-" `
+	SwapId  uuid.UUID       `json:"swapId"`
+	OrderId uuid.UUID       `json:"orderId"`
+	Size    decimal.Decimal `json:"size"`
 	// blockchain transaction ID
 	TxId      string    `json:"txId"`
 	Timestamp time.Time `json:"timestamp"`
 	Block     int64     `json:"block"`
+}
+
+type OrderWithSize struct {
+	Order *models.Order
+	Size  decimal.Decimal
 }
 
 type OrderBookStore interface {
@@ -44,7 +50,7 @@ type OrderBookStore interface {
 	StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) error
 	GetPendingSwaps(ctx context.Context) ([]models.SwapTx, error)
 	StorePendingSwaps(ctx context.Context, pendingSwaps []models.SwapTx) error
-	ProcessCompletedSwapOrders(ctx context.Context, orders []*models.Order, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error
+	ProcessCompletedSwapOrders(ctx context.Context, ordersWithSize []OrderWithSize, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error
 	// Use to store the details of any resolved swap (successful or failed blockchain transaction, NOT pending) for a particular user
 	StoreCompletedSwap(ctx context.Context, input StoreCompletedSwapInput) error
 }
