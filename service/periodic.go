@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -50,7 +49,6 @@ func (s *Service) checkNonStartedSwaps(ctx context.Context, secPeriod int64) err
 	if err != nil {
 		return err
 	}
-	fmt.Println(swapKeys)
 	for _, swapKey := range swapKeys {
 		splt := strings.Split(swapKey, ":")
 		if len(splt) > 0 {
@@ -59,14 +57,13 @@ func (s *Service) checkNonStartedSwaps(ctx context.Context, secPeriod int64) err
 			if err == nil {
 				swap, err := s.orderBookStore.GetSwap(ctx, uid)
 				if err != nil {
-					logctx.Error(ctx, "Error swap not found", logger.String("swapid", swapId), logger.Error(err))
+					logctx.Error(ctx, "Error swap not found", logger.String("swapId", swapId), logger.Error(err))
 				} else {
 					// check if not started
 					sec, err := secondsSinceTimestamp(swap.Created)
 					if err == nil {
 						if sec > secPeriod {
-							fmt.Println(swap.Created)
-							fmt.Println("swap was not started- removing")
+							logctx.Info(ctx, "swap was not started after allowed period", logger.String("swapId", swapId))
 							err = s.AbortSwap(ctx, uid)
 							if err != nil {
 								logctx.Error(ctx, "failed to AutoabortSwap", logger.String("created", swap.Created.String()), logger.Error(err))
