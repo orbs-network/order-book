@@ -49,8 +49,11 @@ func MarshalOrderFrags(orderFrags []OrderFrag) ([]byte, error) {
 }
 
 type Swap struct {
-	Frags   []OrderFrag `json:"frags"`
-	Created time.Time   `json:"created"`
+	Created   time.Time   `json:"created"`
+	Started   time.Time   `json:"started"`
+	Completed time.Time   `json:"completed"`
+	Succeeded bool        `json:"succeeded"`
+	Frags     []OrderFrag `json:"frags"`
 }
 
 func NewSwap(frags []OrderFrag) *Swap {
@@ -58,4 +61,12 @@ func NewSwap(frags []OrderFrag) *Swap {
 		Frags:   frags,
 		Created: time.Now(),
 	}
+}
+
+func (s *Swap) IsStarted() bool {
+	return !s.Started.IsZero()
+}
+
+func (s *Swap) IsCompleted() bool {
+	return !s.Completed.IsZero()
 }
