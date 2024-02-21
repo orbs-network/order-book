@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
@@ -15,7 +16,7 @@ func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Swap
 	key := CreatePendingSwapTxsKey()
 
 	// confirm swapID is valid
-	_, err := r.GetSwap(ctx, p.SwapId)
+	swap, err := r.GetSwap(ctx, p.SwapId)
 	if err != nil {
 		if err == models.ErrNotFound {
 			logctx.Warn(ctx, "no swap found by that ID", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
@@ -26,14 +27,17 @@ func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Swap
 	}
 
 	// protect re-entry
-	keySwapStarted := CreateSwapStartedKey()
-	if err := AddVal2Set(ctx, r.client, keySwapStarted, p.SwapId.String()); err != nil {
-		if err == models.ErrValAlreadyInSet {
-			logctx.Warn(ctx, "pendingSwap already in tracker", logger.String("startedSwapId", p.SwapId.String()))
-			return err
-		}
-		logctx.Error(ctx, "failed to add pendingSwap to tracker", logger.Error(err), logger.String("startedSwapId", p.SwapId.String()))
-		return fmt.Errorf("failed to add pendingSwap to tracker: %s", err)
+	if swap.IsStarted() {
+		logctx.Error(ctx, "swap is already started", logger.Error(err), logger.String("startedSwapId", p.SwapId.String()))
+		return fmt.Errorf("swap is already started: %s", err)
+	}
+
+	// update swapId:started field
+	swap.Started = time.Now()
+	err = r.saveSwap(ctx, p.SwapId, *swap)
+	if err != nil {
+		logctx.Error(ctx, "failed to update swap started time", logger.Error(err), logger.String("swapId", p.SwapId.String()))
+		return fmt.Errorf("failed to update swap started time: %s", err)
 	}
 
 	jsonData, err := json.Marshal(p)

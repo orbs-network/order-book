@@ -11,22 +11,26 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func (r *redisRepository) StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error {
-	swap := models.NewSwap(frags)
+func (r *redisRepository) saveSwap(ctx context.Context, swapId uuid.UUID, swap models.Swap) error {
 	swapJson, err := json.Marshal(swap)
 	if err != nil {
 		logctx.Error(ctx, "failed to marshal swap", logger.String("swapId", swapId.String()), logger.Error(err))
 		return fmt.Errorf("failed to marshal swap: %v", err)
 	}
-
 	swapKey := CreateSwapKey(swapId)
 	_, err = r.client.Set(ctx, swapKey, swapJson, 0).Result()
 
+	return err
+}
+
+func (r *redisRepository) StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error {
+	swap := models.NewSwap(frags)
+
+	err := r.saveSwap(ctx, swapId, *swap)
 	if err != nil {
 		logctx.Error(ctx, "failed to store swap", logger.String("swapId", swapId.String()), logger.Error(err))
 		return fmt.Errorf("failed to store swap: %v", err)
 	}
-
 	logctx.Info(ctx, "stored swap", logger.String("swapId", swapId.String()))
 	return nil
 }

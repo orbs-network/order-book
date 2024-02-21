@@ -30,7 +30,7 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetVal(swapJson[0])
 		//mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
 
-		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetVal(1)
+		//mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetVal(1)
 		mock.ExpectRPush(CreatePendingSwapTxsKey(), pendingJson).SetVal(1)
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
@@ -75,7 +75,7 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 
 		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetVal(swapJson[0])
 		//mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
-		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetErr(models.ErrValAlreadyInSet)
+		//mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetErr(models.ErrValAlreadyInSet)
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
 
@@ -91,7 +91,7 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 
 		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetVal(swapJson[0])
 		//mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
-		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetErr(assert.AnError)
+		//mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetErr(assert.AnError)
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
 
@@ -107,7 +107,7 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 
 		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetVal(swapJson[0])
 		//mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
-		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetVal(1)
+		//mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetVal(1)
 		mock.ExpectRPush(CreatePendingSwapTxsKey(), mocks.SwapTx.ToMap()).SetErr(assert.AnError)
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
