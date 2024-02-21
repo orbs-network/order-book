@@ -68,6 +68,11 @@ func CreatePendingSwapTxsKey() string {
 	return "pendingSwapTxs"
 }
 
+// CreateCompletedSwapsKey creates a Redis key for storing completed swaps
+func CreateCompletedSwapsKey(userId uuid.UUID) string {
+	return fmt.Sprintf("userId:%s:completedSwaps", userId)
+}
+
 // GENERIC store funcs
 func AddVal2Set(ctx context.Context, client redis.Cmdable, key, val string) error {
 	added, err := client.SAdd(ctx, key, val).Result()

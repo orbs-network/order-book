@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-redis/redismock/v9"
 	"github.com/google/uuid"
+	"github.com/orbs-network/order-book/data/store"
 	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/models"
 	"github.com/redis/go-redis/v9"
@@ -25,6 +26,14 @@ func TestRedisRepo_ProcessCompletedSwapOrders(t *testing.T) {
 
 	swapId := uuid.MustParse("00000000-0000-0000-0000-000000000007")
 	timestamp := time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)
+	block := int64(1234567)
+
+	mockTx := models.Tx{
+		Status:    models.TX_SUCCESS,
+		TxHash:    "0x123",
+		Block:     &block,
+		Timestamp: &timestamp,
+	}
 
 	t.Run("should process successful swap with completely filled order and partially filled order", func(t *testing.T) {
 
@@ -73,7 +82,18 @@ func TestRedisRepo_ProcessCompletedSwapOrders(t *testing.T) {
 
 		mock.ExpectTxPipelineExec()
 
-		err := repo.ProcessCompletedSwapOrders(ctx, []*models.Order{&filledOrder, &partiallyFilledOrder}, swapId, true)
+		o := []store.OrderWithSize{
+			{
+				Order: &filledOrder,
+				Size:  decimal.NewFromFloat(50),
+			},
+			{
+				Order: &partiallyFilledOrder,
+				Size:  decimal.NewFromFloat(50),
+			},
+		}
+
+		err := repo.ProcessCompletedSwapOrders(ctx, o, swapId, &mockTx, true)
 		assert.NoError(t, err)
 	})
 
@@ -108,7 +128,10 @@ func TestRedisRepo_ProcessCompletedSwapOrders(t *testing.T) {
 
 		mock.ExpectTxPipelineExec()
 
-		err := repo.ProcessCompletedSwapOrders(ctx, []*models.Order{&orderToBeRolledback}, swapId, false)
+		err := repo.ProcessCompletedSwapOrders(ctx, []store.OrderWithSize{{
+			Order: &orderToBeRolledback,
+			Size:  decimal.NewFromFloat(20),
+		}}, swapId, &mockTx, false)
 		assert.NoError(t, err)
 	})
 
@@ -120,7 +143,12 @@ func TestRedisRepo_ProcessCompletedSwapOrders(t *testing.T) {
 			Member: mocks.Order.Id.String(),
 		}).SetErr(assert.AnError)
 
-		err := repo.ProcessCompletedSwapOrders(ctx, []*models.Order{&mocks.Order}, swapId, true)
+		err := repo.ProcessCompletedSwapOrders(ctx, []store.OrderWithSize{
+			{
+				Order: &mocks.Order,
+				Size:  decimal.NewFromFloat(20),
+			},
+		}, swapId, &mockTx, true)
 		assert.ErrorContains(t, err, "failed to execute ProcessCompletedSwapOrders transaction")
 	})
 
