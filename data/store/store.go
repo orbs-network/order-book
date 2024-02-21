@@ -2,11 +2,22 @@ package store
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/shopspring/decimal"
 )
+
+type StoreCompletedSwapInput struct {
+	UserId  uuid.UUID `json:"-" `
+	SwapId  uuid.UUID `json:"swapId"`
+	OrderId uuid.UUID `json:"orderId"`
+	// blockchain transaction ID
+	TxId      string    `json:"txId"`
+	Timestamp time.Time `json:"timestamp"`
+	Block     int64     `json:"block"`
+}
 
 type OrderBookStore interface {
 	// MM side
@@ -33,5 +44,7 @@ type OrderBookStore interface {
 	StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) error
 	GetPendingSwaps(ctx context.Context) ([]models.SwapTx, error)
 	StorePendingSwaps(ctx context.Context, pendingSwaps []models.SwapTx) error
-	ProcessCompletedSwapOrders(ctx context.Context, orders []*models.Order, swapId uuid.UUID, isSuccessful bool) error
+	ProcessCompletedSwapOrders(ctx context.Context, orders []*models.Order, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error
+	// Use to store the details of any resolved swap (successful or failed blockchain transaction, NOT pending) for a particular user
+	StoreCompletedSwap(ctx context.Context, input StoreCompletedSwapInput) error
 }

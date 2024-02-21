@@ -12,13 +12,13 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (e *EvmClient) ProcessCompletedTransaction(ctx context.Context, p models.SwapTx, isSuccessful bool, mu *sync.Mutex) ([]models.Order, error) {
+func (e *EvmClient) ProcessCompletedTransaction(ctx context.Context, tx *models.Tx, swapId uuid.UUID, isSuccessful bool, mu *sync.Mutex) ([]models.Order, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	orderFrags, err := e.orderBookStore.GetSwap(ctx, p.SwapId)
+	orderFrags, err := e.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
-		logctx.Error(ctx, "Failed to get swap", logger.Error(err), logger.String("swapId", p.SwapId.String()))
+		logctx.Error(ctx, "Failed to get swap", logger.Error(err), logger.String("swapId", swapId.String()))
 		return []models.Order{}, fmt.Errorf("failed to get swap: %w", err)
 	}
 
@@ -32,7 +32,7 @@ func (e *EvmClient) ProcessCompletedTransaction(ctx context.Context, p models.Sw
 
 	orders, err := e.orderBookStore.FindOrdersByIds(ctx, orderIds, false)
 	if err != nil {
-		logctx.Error(ctx, "Failed to get orders", logger.Error(err), logger.String("swapId", p.SwapId.String()))
+		logctx.Error(ctx, "Failed to get orders", logger.Error(err), logger.String("swapId", swapId.String()))
 		return []models.Order{}, fmt.Errorf("failed to get orders: %w", err)
 	}
 
@@ -60,9 +60,9 @@ func (e *EvmClient) ProcessCompletedTransaction(ctx context.Context, p models.Sw
 		swapOrders = append(swapOrders, &order)
 	}
 
-	err = e.orderBookStore.ProcessCompletedSwapOrders(ctx, swapOrders, p.SwapId, isSuccessful)
+	err = e.orderBookStore.ProcessCompletedSwapOrders(ctx, swapOrders, swapId, tx, isSuccessful)
 	if err != nil {
-		logctx.Error(ctx, "Failed to process completed swap orders", logger.Error(err), logger.String("swapId", p.SwapId.String()))
+		logctx.Error(ctx, "Failed to process completed swap orders", logger.Error(err), logger.String("swapId", swapId.String()))
 		return []models.Order{}, fmt.Errorf("failed to process completed swap orders: %w", err)
 	}
 

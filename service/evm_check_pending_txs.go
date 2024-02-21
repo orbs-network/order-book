@@ -57,14 +57,14 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 			switch tx.Status {
 			case models.TX_SUCCESS:
 				logctx.Info(ctx, "Transaction successful", logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
-				_, err = e.ProcessCompletedTransaction(ctx, p, true, &mu)
+				_, err = e.ProcessCompletedTransaction(ctx, tx, p.SwapId, true, &mu)
 				if err != nil {
 					logctx.Error(ctx, "Failed to process successful transaction", logger.Error(err), logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
 					return
 				}
 			case models.TX_FAILURE:
 				logctx.Info(ctx, "Transaction failed", logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
-				_, err = e.ProcessCompletedTransaction(ctx, p, false, &mu)
+				_, err = e.ProcessCompletedTransaction(ctx, tx, p.SwapId, false, &mu)
 				if err != nil {
 					logctx.Error(ctx, "Failed to process failed transaction", logger.Error(err), logger.String("txHash", p.TxHash), logger.String("swapId", p.SwapId.String()))
 					return
