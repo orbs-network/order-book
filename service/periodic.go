@@ -44,45 +44,52 @@ func secondsSinceTimestamp(t time.Time) (int64, error) {
 	return seconds, nil
 }
 
+func (s *Service) checkSwapStarted(ctx context.Context, swapKey string, secPeriod int64) {
+	splt := strings.Split(swapKey, ":")
+	// key invalid
+	if len(splt) == 0 {
+		logctx.Error(ctx, "swapKey couldnt split on colone", logger.String("swapKey", swapKey))
+		return
+	}
+	swapId := splt[1]
+	uid, err := uuid.Parse(swapId)
+	if err != nil {
+		logctx.Error(ctx, "uuid failed to parse swapId", logger.String("swapid", swapId), logger.Error(err))
+		return
+	}
+	swap, err := s.orderBookStore.GetSwap(ctx, uid)
+	if err != nil {
+		logctx.Error(ctx, "Error swap not found", logger.String("swapId", swapId), logger.Error(err))
+		return
+	}
+
+	// check if not started
+	sec, err := secondsSinceTimestamp(swap.Created)
+	if err != nil {
+		logctx.Error(ctx, "secondsSinceTimestamp failed", logger.String("created", swap.Created.String()), logger.Error(err))
+		return
+	}
+	if sec < secPeriod {
+		// no need to abort
+		return
+	}
+	logctx.Info(ctx, "swap was not started after allowed period", logger.String("swapId", swapId))
+	err = s.AbortSwap(ctx, uid)
+	if err != nil {
+		logctx.Error(ctx, "failed to AutoabortSwap", logger.String("created", swap.Created.String()), logger.Error(err))
+		return
+	}
+	// SUCCESS
+	logctx.Info(ctx, "Auto abortSwap after interval", logger.String("swapId", swapId), logger.Int("secPerios", int(secPeriod)))
+}
+
 func (s *Service) checkNonStartedSwaps(ctx context.Context, secPeriod int64) error {
 	swapKeys, err := s.orderBookStore.EnumSubKeysOf(ctx, "swapId")
 	if err != nil {
 		return err
 	}
 	for _, swapKey := range swapKeys {
-		splt := strings.Split(swapKey, ":")
-		if len(splt) > 0 {
-			swapId := splt[1]
-			uid, err := uuid.Parse(swapId)
-			if err == nil {
-				swap, err := s.orderBookStore.GetSwap(ctx, uid)
-				if err != nil {
-					logctx.Error(ctx, "Error swap not found", logger.String("swapId", swapId), logger.Error(err))
-				} else {
-					// check if not started
-					sec, err := secondsSinceTimestamp(swap.Created)
-					if err == nil {
-						if sec > secPeriod {
-							logctx.Info(ctx, "swap was not started after allowed period", logger.String("swapId", swapId))
-							err = s.AbortSwap(ctx, uid)
-							if err != nil {
-								logctx.Error(ctx, "failed to AutoabortSwap", logger.String("created", swap.Created.String()), logger.Error(err))
-							} else {
-								// SUCCESS
-								logctx.Info(ctx, "Auto abortSwap adter interval", logger.String("swapId", swapId), logger.Int("secPerios", int(secPeriod)))
-							}
-
-						}
-					} else {
-						logctx.Error(ctx, "AbortSwap failed", logger.String("swapId", swapId), logger.Error(err))
-					}
-				}
-			} else {
-				logctx.Error(ctx, "failed to parse swapId", logger.String("swapid", swapId), logger.Error(err))
-			}
-		} else {
-			logctx.Error(ctx, "swapKey couldnt split on colone", logger.String("swapKey", swapKey))
-		}
+		s.checkSwapStarted(ctx, swapKey, secPeriod)
 	}
 	return nil
 }
