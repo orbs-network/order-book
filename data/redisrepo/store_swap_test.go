@@ -1,7 +1,9 @@
 package redisrepo
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/go-redis/redismock/v9"
 	"github.com/google/uuid"
@@ -23,9 +25,12 @@ func TestRedisRepository_StoreSwap(t *testing.T) {
 	}
 
 	swapID := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
-	frags := []models.OrderFrag{matchOne, matchTwo}
+	swap := models.Swap{
+		Frags:   []models.OrderFrag{matchOne, matchTwo},
+		Created: time.Now(),
+	}
 
-	swapJson, _ := models.MarshalOrderFrags(frags)
+	swapJson, _ := json.Marshal(swap)
 
 	t.Run("should store swap", func(t *testing.T) {
 		db, mock := redismock.NewClientMock()
@@ -34,9 +39,9 @@ func TestRedisRepository_StoreSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectRPush(CreateSwapKey(swapID), swapJson).SetVal(1)
+		mock.ExpectSet(CreateSwapKey(swapID), swapJson, 0) //.SetVal(1)
 
-		err := repo.StoreSwap(ctx, swapID, frags)
+		err := repo.StoreSwap(ctx, swapID, swap.Frags)
 		assert.NoError(t, err)
 	})
 
@@ -49,7 +54,7 @@ func TestRedisRepository_StoreSwap(t *testing.T) {
 
 		mock.ExpectRPush(CreateSwapKey(swapID), swapJson).SetErr(assert.AnError)
 
-		err := repo.StoreSwap(ctx, swapID, frags)
+		err := repo.StoreSwap(ctx, swapID, swap.Frags)
 		assert.ErrorContains(t, err, "failed to store swap")
 	})
 

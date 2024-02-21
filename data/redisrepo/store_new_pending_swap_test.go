@@ -14,8 +14,8 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 	ctx := context.Background()
 
 	swapJson := []string{
-		`[{"orderId":"550e8400-e29b-41d4-a716-446655440000","inSize":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","inSize":"5.3"}]`,
-		`[{"orderId":"550e8400-e29b-41d4-a716-446655440002","inSize":"7.8"}]`,
+		`{"frags":[{"orderId":"550e8400-e29b-41d4-a716-446655440000","inSize":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","inSize":"5.3"}],"created":"2024-02-20T15:36:57.316643+02:00"}`,
+		`{"frags":[{"orderId":"550e8400-e29b-41d4-a716-446655440002","inSize":"7.8"}],"created":"2024-02-20T15:36:57.316643+02:00"}`,
 	}
 
 	t.Run("success - should add new pending swap to list given an existing swap is found and pending swap is not already tracked", func(t *testing.T) {
@@ -27,7 +27,9 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 
 		pendingJson, _ := mocks.SwapTx.ToJson()
 
-		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
+		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetVal(swapJson[0])
+		//mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
+
 		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetVal(1)
 		mock.ExpectRPush(CreatePendingSwapTxsKey(), pendingJson).SetVal(1)
 
@@ -43,7 +45,7 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(nil)
+		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetVal("")
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
 
@@ -57,7 +59,7 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetErr(assert.AnError)
+		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetErr(assert.AnError)
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
 
@@ -71,7 +73,8 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
+		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetVal(swapJson[0])
+		//mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
 		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetErr(models.ErrValAlreadyInSet)
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
@@ -86,7 +89,8 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
+		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetVal(swapJson[0])
+		//mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
 		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetErr(assert.AnError)
 
 		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
@@ -101,7 +105,8 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
+		mock.ExpectGet(CreateSwapKey(mocks.SwapTx.SwapId)).SetVal(swapJson[0])
+		//mock.ExpectLRange(CreateSwapKey(mocks.SwapTx.SwapId), 0, -1).SetVal(swapJson)
 		mock.ExpectSAdd(CreateSwapStartedKey(), mocks.SwapTx.SwapId.String()).SetVal(1)
 		mock.ExpectRPush(CreatePendingSwapTxsKey(), mocks.SwapTx.ToMap()).SetErr(assert.AnError)
 
