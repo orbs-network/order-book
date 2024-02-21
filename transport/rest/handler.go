@@ -84,9 +84,13 @@ func (h *Handler) Init(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc) {
 	mmApi := h.Router.PathPrefix("/api/v1").Subrouter()
 
+	disableUserAuth := restutils.GetEnv("DISABLE_USER_AUTH", "")
+
 	// Middleware to validate user by API key
 	middlewareValidUser := middleware.ValidateUserMiddleware(getUserByApiKey)
-	mmApi.Use(middlewareValidUser)
+	if disableUserAuth != "true" {
+		mmApi.Use(middlewareValidUser)
+	}
 
 	// ------- CREATE -------
 	// Place multiple orders
