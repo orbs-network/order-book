@@ -131,7 +131,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 		}
 	}
 	// store orders
-	err = s.orderBookStore.StoreFilledOrders(ctx, orders)
+	err = s.orderBookStore.StoreOpenOrders(ctx, orders)
 	if err != nil {
 		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
 		return err
