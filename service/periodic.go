@@ -15,8 +15,9 @@ import (
 func (s *Service) startPeriodicChecks() {
 	secSwapStarted := restutils.GetEnv("SEC_PERIODIC_INTERVAL", "10")
 	sec, _ := strconv.Atoi(secSwapStarted)
+	ctx := context.Background()
+	logctx.Info(ctx, "startPeriodicChecks", logger.Int("sec_interval", sec))
 	go func() {
-		ctx := context.Background()
 		interval := time.Tick(time.Second * time.Duration(sec))
 		for range interval {
 			s.periodicCheck(ctx)
