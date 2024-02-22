@@ -28,6 +28,7 @@ func (s *Service) periodicCheck(ctx context.Context) {
 	// cleanup dangeling swaps which did not start
 	secSwapStarted := restutils.GetEnv("SEC_SWAP_STARTED", "60")
 	sec, _ := strconv.Atoi(secSwapStarted)
+	logctx.Info(ctx, "SEC_SWAP_STARTED", logger.Int("sec_interval", sec))
 	err := s.checkNonStartedSwaps(ctx, int64(sec))
 	if err != nil {
 		logctx.Error(ctx, "Error in peridic checks", logger.Error(err))

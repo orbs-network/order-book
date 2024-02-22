@@ -101,7 +101,7 @@ func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash stri
 }
 
 func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
-	logctx.Debug(ctx, "AbortSwap", logger.String("swapId", swapId.String()))
+	logctx.Info(ctx, "AbortSwap", logger.String("swapId", swapId.String()))
 	// get swap from store
 	swap, err := s.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
