@@ -42,6 +42,11 @@ type OrderBookStore interface {
 	// Order is removed from the prices sorted set, user's order set and order hash is updated to cancelled
 	// May only be called if order is not pending and partially filled
 	CancelPartialFilledOrder(ctx context.Context, order models.Order) error
+	// Order remains in DB, but is marked as cancelled
+	// Order is removed from the prices sorted set, user's order set and order hash is updated to cancelled
+	// Upon swap resolve false -> should be removed
+	CancelPendingOrder(ctx context.Context, order models.Order) error
+
 	FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error)
 	FindOrdersByIds(ctx context.Context, ids []uuid.UUID, onlyOpen bool) ([]models.Order, error)
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)

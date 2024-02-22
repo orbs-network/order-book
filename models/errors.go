@@ -15,6 +15,7 @@ var ErrInsufficientLiquity = errors.New("not enough liquidity in book to satisfy
 var ErrInAmount = errors.New("inAmount should be positive")
 var ErrSwapInvalid = errors.New("orders in the swap can not fill any longer")
 var ErrOrderPending = errors.New("order is pending")
+var ErrOrderNotPending = errors.New("order is not pending")
 var ErrOrderFilled = errors.New("order is filled")
 var ErrOrderNotUnfilled = errors.New("order should be completely unfilled")
 var ErrOrderNotPartialFilled = errors.New("order should be partially filled")

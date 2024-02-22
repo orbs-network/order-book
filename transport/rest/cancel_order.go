@@ -107,8 +107,8 @@ func (h *Handler) handleCancelOrder(input hInput) {
 	}
 
 	if err == models.ErrOrderPending {
-		logctx.Warn(input.ctx, "cancelling order not possible when order is pending", logger.String("id", input.id.String()))
-		restutils.WriteJSONError(input.ctx, input.w, http.StatusConflict, "Cannot cancel order due to pending fill")
+		logctx.Warn(input.ctx, "order is cancelled but part of it is pending (locked)", logger.String("id", input.id.String()))
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusConflict, "order is cancelled but some of it's size is pending")
 		return
 	}
 

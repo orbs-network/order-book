@@ -29,7 +29,12 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (canc
 	}
 
 	if order.IsPending() {
-		logctx.Warn(ctx, "cancelling order not possible when order is pending", logger.String("orderId", order.Id.String()), logger.String("sizePending", order.SizePending.String()))
+		logctx.Info(ctx, "cancelling a pending order", logger.String("orderId", order.Id.String()), logger.String("sizePending", order.SizePending.String()))
+		err = s.orderBookStore.CancelPendingOrder(ctx, *order)
+		if err != nil {
+			logctx.Error(ctx, "error CancelPendingOrder", logger.Error(err))
+			return nil, err
+		}
 		return nil, models.ErrOrderPending
 	}
 
@@ -41,7 +46,7 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (canc
 	if order.IsUnfilled() {
 		err = s.orderBookStore.CancelUnfilledOrder(ctx, *order)
 		if err != nil {
-			logctx.Error(ctx, "error occured when removing order", logger.Error(err))
+			logctx.Error(ctx, "error CancelUnfilledOrder", logger.Error(err))
 			return nil, err
 		}
 

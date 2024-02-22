@@ -91,11 +91,11 @@ func TestHandler_CancelOrderByOrderId(t *testing.T) {
 			"{\"status\":500,\"msg\":\"Error cancelling order. Try again later\"}\n",
 		},
 		{
-			"cannot currently cancel due to pending fill",
+			"order is cancelled but some of it's size is pending",
 			&mocks.MockOrderBookService{Error: models.ErrOrderPending},
 			fmt.Sprintf("/order/%s", orderId.String()),
 			http.StatusConflict,
-			"{\"status\":409,\"msg\":\"Cannot cancel order due to pending fill\"}\n",
+			"{\"status\":409,\"msg\":\"order is cancelled but some of it's size is pending\"}\n",
 		},
 		{
 			"successful cancel",

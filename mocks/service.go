@@ -161,3 +161,7 @@ func (m *MockOrderBookStore) StoreCompletedSwap(ctx context.Context, input store
 func (m *MockOrderBookStore) EnumSubKeysOf(tx context.Context, key string) ([]string, error) {
 	return []string{key + "111", key + "222"}, m.Error
 }
+
+func (m *MockOrderBookStore) CancelPendingOrder(ctx context.Context, order models.Order) error {
+	return m.Error
+}
