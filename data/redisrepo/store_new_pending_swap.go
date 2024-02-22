@@ -34,6 +34,7 @@ func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Swap
 
 	// update swapId:started field
 	swap.Started = time.Now()
+	swap.TxHash = p.TxHash
 	err = r.saveSwap(ctx, p.SwapId, *swap)
 	if err != nil {
 		logctx.Error(ctx, "failed to update swap started time", logger.Error(err), logger.String("swapId", p.SwapId.String()))
