@@ -59,10 +59,6 @@ func CreateSwapTrackerKey(status models.SwapStatus) string {
 	return fmt.Sprintf("swapTracker:%s", status)
 }
 
-func CreateSwapStartedKey() string {
-	return "swapStarted"
-}
-
 // CreatePendingSwapTxsKey creates a Redis key for storing pending swap transactions
 func CreatePendingSwapTxsKey() string {
 	return "pendingSwapTxs"
