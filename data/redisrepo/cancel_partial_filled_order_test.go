@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-redis/redismock/v9"
 	"github.com/orbs-network/order-book/models"
+	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
@@ -115,6 +116,10 @@ func TestRedisRepository_CancelPartialFilledOrder(t *testing.T) {
 		mock.ExpectHSet(CreateOrderIDKey(partialFilledOrder.Id), "cancelled", "true").SetVal(1)
 		mock.ExpectZRem(CreateBuySidePricesKey(partialFilledOrder.Symbol), partialFilledOrder.Id.String()).SetVal(1)
 		mock.ExpectZRem(CreateUserOpenOrdersKey(partialFilledOrder.UserId), partialFilledOrder.Id.String()).SetVal(1)
+		mock.ExpectZAdd(CreateUserFilledOrdersKey(partialFilledOrder.UserId), redis.Z{
+			Score:  float64(partialFilledOrder.Timestamp.UTC().UnixNano()),
+			Member: partialFilledOrder.Id.String(),
+		}).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
 		err := repo.CancelPartialFilledOrder(ctx, partialFilledOrder)
