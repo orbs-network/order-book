@@ -51,7 +51,7 @@ func MarshalOrderFrags(orderFrags []OrderFrag) ([]byte, error) {
 type Swap struct {
 	Created   time.Time   `json:"created"`
 	Started   time.Time   `json:"started"`
-	Completed time.Time   `json:"completed"`
+	Resolved  time.Time   `json:"resolved"`
 	Succeeded bool        `json:"succeeded"`
 	TxHash    string      `json:"txHash"`
 	Frags     []OrderFrag `json:"frags"`
@@ -68,6 +68,6 @@ func (s *Swap) IsStarted() bool {
 	return !s.Started.IsZero()
 }
 
-func (s *Swap) IsCompleted() bool {
-	return !s.Completed.IsZero()
+func (s *Swap) IsResolved() bool {
+	return !s.Resolved.IsZero()
 }
