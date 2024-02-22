@@ -51,19 +51,26 @@ func (s *Service) checkSwapStarted(ctx context.Context, swapKey string, secPerio
 		logctx.Error(ctx, "swapKey couldnt split on colone", logger.String("swapKey", swapKey))
 		return
 	}
+	// parse swapID
 	swapId := splt[1]
 	uid, err := uuid.Parse(swapId)
 	if err != nil {
 		logctx.Error(ctx, "uuid failed to parse swapId", logger.String("swapid", swapId), logger.Error(err))
 		return
 	}
+	// not found
 	swap, err := s.orderBookStore.GetSwap(ctx, uid)
 	if err != nil {
 		logctx.Error(ctx, "Error swap not found", logger.String("swapId", swapId), logger.Error(err))
 		return
 	}
 
-	// check if not started
+	// already started
+	if swap.IsStarted() {
+		return
+	}
+
+	// check if not started during a period of x sec
 	sec, err := secondsSinceTimestamp(swap.Created)
 	if err != nil {
 		logctx.Error(ctx, "secondsSinceTimestamp failed", logger.String("created", swap.Created.String()), logger.Error(err))
