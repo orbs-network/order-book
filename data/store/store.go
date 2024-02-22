@@ -28,9 +28,19 @@ type OrderWithSize struct {
 type OrderBookStore interface {
 	// MM side
 	StoreOpenOrder(ctx context.Context, order models.Order) error
+	// store multiple orders in a single redis tx in every state unfilled/pending/partial
 	StoreOpenOrders(ctx context.Context, orders []models.Order) error
+	// store multiple FILLED orders in a single redis tx
+	// adds to user's filled orders USERID:filledOrders
+	// removes orders from price list, removes from user's open orders and
 	StoreFilledOrders(ctx context.Context, orders []models.Order) error
+	// Order is completely removed from DB
+	// Order is removed from the prices sorted set, user's open order set and order hash is removed
+	// May only be called if order is not pending and completely unfilled
 	CancelUnfilledOrder(ctx context.Context, order models.Order) error
+	// Order remains in DB, but is marked as cancelled
+	// Order is removed from the prices sorted set, user's order set and order hash is updated to cancelled
+	// May only be called if order is not pending and partially filled
 	CancelPartialFilledOrder(ctx context.Context, order models.Order) error
 	FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error)
 	FindOrdersByIds(ctx context.Context, ids []uuid.UUID, onlyOpen bool) ([]models.Order, error)
@@ -50,7 +60,7 @@ type OrderBookStore interface {
 	StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) error
 	GetPendingSwaps(ctx context.Context) ([]models.SwapTx, error)
 	StorePendingSwaps(ctx context.Context, pendingSwaps []models.SwapTx) error
-	ProcessCompletedSwapOrders(ctx context.Context, orders []*models.Order, swapId uuid.UUID, isSuccessful bool) error
+	ProcessCompletedSwapOrders(ctx context.Context, ordersWithSize []OrderWithSize, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error
 	// utils
 	EnumSubKeysOf(ctx context.Context, key string) ([]string, error)
 	// Use to store the details of any resolved swap (successful or failed blockchain transaction, NOT pending) for a particular user
