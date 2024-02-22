@@ -12,8 +12,8 @@ import (
 func TestRedisRepository_GetSwap(t *testing.T) {
 
 	swapJson := []string{
-		`[{"orderId":"550e8400-e29b-41d4-a716-446655440000","inSize":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","inSize":"5.3"}]`,
-		`[{"orderId":"550e8400-e29b-41d4-a716-446655440002","inSize":"7.8"}]`,
+		`{"frags":[{"orderId":"550e8400-e29b-41d4-a716-446655440000","inSize":"10.5"},{"orderId":"550e8400-e29b-41d4-a716-446655440001","inSize":"5.3"}],"created":"2024-02-20T15:36:57.316643+02:00"}`,
+		`{"frags":[{"orderId":"550e8400-e29b-41d4-a716-446655440002","inSize":"7.8"}],"created":"2024-02-20T15:36:57.316643+02:00"}`,
 	}
 
 	swapId := uuid.MustParse("a777273e-12de-4acc-a4f8-de7fb5b86e37")
@@ -24,11 +24,11 @@ func TestRedisRepository_GetSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectLRange(CreateSwapKey(swapId), 0, -1).SetVal(swapJson)
+		mock.ExpectGet(CreateSwapKey(swapId)).SetVal(swapJson[0])
 
 		swap, err := repo.GetSwap(ctx, swapId)
 		assert.NoError(t, err)
-		assert.Len(t, swap, 3, "Should have 3 orders in the swap")
+		assert.Len(t, swap.Frags, 2, "Should have 2 orders in the swap")
 	})
 
 	t.Run("should return `ErrUnexpectedError` in case of a Redis error", func(t *testing.T) {

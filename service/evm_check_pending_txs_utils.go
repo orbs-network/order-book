@@ -17,7 +17,7 @@ func (e *EvmClient) ProcessCompletedTransaction(ctx context.Context, tx *models.
 	mu.Lock()
 	defer mu.Unlock()
 
-	orderFrags, err := e.orderBookStore.GetSwap(ctx, swapId)
+	swap, err := e.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
 		logctx.Error(ctx, "Failed to get swap", logger.Error(err), logger.String("swapId", swapId.String()))
 		return []models.Order{}, fmt.Errorf("failed to get swap: %w", err)
@@ -26,7 +26,7 @@ func (e *EvmClient) ProcessCompletedTransaction(ctx context.Context, tx *models.
 	var orderIds []uuid.UUID
 	orderSizes := make(map[uuid.UUID]decimal.Decimal)
 
-	for _, frag := range orderFrags {
+	for _, frag := range swap.Frags {
 		orderIds = append(orderIds, frag.OrderId)
 		orderSizes[frag.OrderId] = frag.OutSize
 	}
