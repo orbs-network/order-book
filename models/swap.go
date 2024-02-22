@@ -59,8 +59,8 @@ type Swap struct {
 
 func NewSwap(frags []OrderFrag) *Swap {
 	return &Swap{
-		Frags:   frags,
 		Created: time.Now(),
+		Frags:   frags,
 	}
 }
 
