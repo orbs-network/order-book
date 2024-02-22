@@ -53,6 +53,7 @@ type Swap struct {
 	Started   time.Time   `json:"started"`
 	Completed time.Time   `json:"completed"`
 	Succeeded bool        `json:"succeeded"`
+	TxHash    string      `json:"txHash"`
 	Frags     []OrderFrag `json:"frags"`
 }
 
