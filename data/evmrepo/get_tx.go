@@ -3,8 +3,11 @@ package evmrepo
 import (
 	"context"
 	"fmt"
+	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -41,23 +44,49 @@ func (e *evmRepository) GetTx(ctx context.Context, id string) (*models.Tx, error
 		if pending {
 			logctx.Info(ctx, "Transaction %q is pending", logger.String("txHash", txHash.String()))
 			return &models.Tx{
-				Status: models.TX_PENDING,
-				TxHash: tx.Hash().Hex(),
+				Status:    models.TX_PENDING,
+				TxHash:    tx.Hash().Hex(),
+				Block:     nil,
+				Timestamp: nil,
 			}, nil
 		}
 	} else {
 		// If receipt is found, check the status
 		if receipt.Status == 1 {
 			logctx.Info(ctx, "Transaction succeeded", logger.String("txHash", txHash.String()))
+
+			block, err := e.getBlock(ctx, receipt.BlockNumber)
+			if err != nil {
+				logctx.Error(ctx, "Error fetching block by number for successful transaction", logger.Error(err), logger.String("blockNumber", receipt.BlockNumber.String()), logger.String("txHash", txHash.String()))
+				return nil, fmt.Errorf("error fetching block by number: %v", err)
+			}
+
+			blockNumber := receipt.BlockNumber.Int64()
+			timestamp := time.Unix(int64(block.Time()), 0)
+
 			return &models.Tx{
-				Status: models.TX_SUCCESS,
-				TxHash: receipt.TxHash.Hex(),
+				Status:    models.TX_SUCCESS,
+				TxHash:    receipt.TxHash.Hex(),
+				Block:     &blockNumber,
+				Timestamp: &timestamp,
 			}, nil
 		} else {
 			logctx.Info(ctx, "Transaction failed", logger.String("txHash", txHash.String()))
+
+			block, err := e.getBlock(ctx, receipt.BlockNumber)
+			if err != nil {
+				logctx.Error(ctx, "Error fetching block by number for failed transaction", logger.Error(err), logger.String("blockNumber", receipt.BlockNumber.String()), logger.String("txHash", txHash.String()))
+				return nil, fmt.Errorf("error fetching block by number: %v", err)
+			}
+
+			blockNumber := receipt.BlockNumber.Int64()
+			timestamp := time.Unix(int64(block.Time()), 0)
+
 			return &models.Tx{
-				Status: models.TX_FAILURE,
-				TxHash: receipt.TxHash.Hex(),
+				Status:    models.TX_FAILURE,
+				TxHash:    receipt.TxHash.Hex(),
+				Block:     &blockNumber,
+				Timestamp: &timestamp,
 			}, nil
 		}
 	}
@@ -65,4 +94,14 @@ func (e *evmRepository) GetTx(ctx context.Context, id string) (*models.Tx, error
 	// Unexpected case
 	logctx.Error(ctx, "Unexpected case for transaction %q", logger.String("txHash", txHash.String()))
 	return nil, fmt.Errorf("unexpected case for transaction %q", txHash.String())
+}
+
+func (e *evmRepository) getBlock(ctx context.Context, blockNumber *big.Int) (*types.Block, error) {
+	block, err := e.client.BlockByNumber(ctx, blockNumber)
+	if err != nil {
+		logctx.Error(ctx, "Error fetching block by number", logger.Error(err), logger.String("blockNumber", blockNumber.String()))
+		return nil, fmt.Errorf("error fetching block by number: %v", err)
+	}
+
+	return block, nil
 }

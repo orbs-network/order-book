@@ -1,5 +1,9 @@
 package models
 
+import (
+	"time"
+)
+
 type Status string
 
 const (
@@ -11,4 +15,7 @@ const (
 type Tx struct {
 	Status Status
 	TxHash string
+	// When tx still pending, nil block and timestamp
+	Block     *int64
+	Timestamp *time.Time
 }
