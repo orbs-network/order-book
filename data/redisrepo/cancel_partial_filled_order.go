@@ -7,6 +7,7 @@ import (
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
+	"github.com/redis/go-redis/v9"
 )
 
 // Cancels a partial filled order.
@@ -44,13 +45,13 @@ func (r *redisRepository) CancelPartialFilledOrder(ctx context.Context, order mo
 	userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
 	transaction.ZRem(ctx, userOrdersKey, order.Id.String())
 
-	// TODO: add to filled orders set
-	// userFilledOrdersKey := CreateUserFilledOrdersKey(order.UserId)
-	// userFilledOrdersScore := float64(order.Timestamp.UTC().UnixNano())
-	// transaction.ZAdd(ctx, userFilledOrdersKey, redis.Z{
-	// 	Score:  userFilledOrdersScore,
-	// 	Member: order.Id.String(),
-	// })
+	// add to filled orders set
+	userFilledOrdersKey := CreateUserFilledOrdersKey(order.UserId)
+	userFilledOrdersScore := float64(order.Timestamp.UTC().UnixNano())
+	transaction.ZAdd(ctx, userFilledOrdersKey, redis.Z{
+		Score:  userFilledOrdersScore,
+		Member: order.Id.String(),
+	})
 
 	_, err := transaction.Exec(ctx)
 
