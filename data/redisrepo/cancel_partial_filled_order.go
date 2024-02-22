@@ -32,7 +32,7 @@ func (r *redisRepository) CancelPartialFilledOrder(ctx context.Context, order mo
 	orderIDKey := CreateOrderIDKey(order.Id)
 	transaction.HSet(ctx, orderIDKey, "cancelled", "true")
 
-	// remove from user order set
+	// remove from price set
 	if order.Side == models.BUY {
 		buyPricesKey := CreateBuySidePricesKey(order.Symbol)
 		transaction.ZRem(ctx, buyPricesKey, order.Id.String())

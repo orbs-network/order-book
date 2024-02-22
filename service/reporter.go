@@ -27,8 +27,10 @@ func NewReporter(svc *Service) *Reporter {
 		fmt.Println("Error:", err)
 		num = 10
 	}
+	ctx := context.Background()
+	logctx.Info(ctx, "NewReporter()", logger.String("SecInterval", strSec))
 
-	return &Reporter{svc: svc, stop: make(chan struct{}), ctx: context.Background(), secInterval: num}
+	return &Reporter{svc: svc, stop: make(chan struct{}), ctx: ctx, secInterval: num}
 }
 
 func (r *Reporter) logRoutine() {
