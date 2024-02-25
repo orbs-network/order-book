@@ -26,10 +26,10 @@ type BeginSwapRes struct {
 }
 
 type Fragment struct {
-	Signature string    `json:"signature"`
-	AbiOrder  abi.Order `json:"abiOrder"`
-	InAmount  string    `json:"inAmount"`
-	OutAmount string    `json:"outAmount"`
+	Signature      string    `json:"signature"`
+	AbiOrder       abi.Order `json:"abiOrder"`
+	TakerInAmount  string    `json:"takerInAmount"`
+	TakerOutAmount string    `json:"takerOutAmount"`
 }
 
 type QuoteReq struct {
@@ -195,16 +195,16 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		signedOrders := []abi.SignedOrder{}
 
 		for i := 0; i < len(swapData.Fragments); i++ {
+
+			// taker's IN == order/fragment OUT
+			// the in/out is mirrored here
+
 			// conver In/Out amount to token decimals
-			convInAmount := h.convertToTokenDec(r.Context(), req.InToken, swapData.Fragments[i].InSize)
-			convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].OutSize)
+			takerInAmount := h.convertToTokenDec(r.Context(), req.InToken, swapData.Fragments[i].OutSize)
+			takerOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].InSize)
 
-			// convert to uint256 for abi encode
-			inputAmount := big.NewInt(0)
-			inputAmount.SetString(convInAmount, 10)
-
-			outputAmount := big.NewInt(0)
-			outputAmount.SetString(convOutAmount, 10)
+			MakerOutAmount := big.NewInt(0)
+			MakerOutAmount.SetString(takerInAmount, 10)
 
 			abiOrder := swapData.Orders[i].Signature.AbiFragment
 			abiOrder.ExclusivityOverrideBps = big.NewInt(0)
@@ -216,16 +216,17 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 
 			// create signed order with amount
 			frag := Fragment{
-				Signature: swapData.Orders[i].Signature.Eip712Sig,
-				AbiOrder:  abiOrder,
-				OutAmount: convOutAmount,
-				InAmount:  convInAmount,
+				Signature:      swapData.Orders[i].Signature.Eip712Sig,
+				AbiOrder:       abiOrder,
+				TakerInAmount:  takerInAmount,
+				TakerOutAmount: takerOutAmount,
 			}
 			res.Fragments = append(res.Fragments, frag)
+			// signed order + out amount from the maker's/order side
 			signedOrder := abi.SignedOrder{
 				OrderWithAmount: abi.OrderWithAmount{
 					Order:  abiOrder,
-					Amount: outputAmount,
+					Amount: MakerOutAmount,
 				},
 				Signature: Signature2Bytes(swapData.Orders[i].Signature.Eip712Sig),
 			}
