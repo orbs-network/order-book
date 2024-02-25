@@ -230,6 +230,8 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 				Signature: Signature2Bytes(swapData.Orders[i].Signature.Eip712Sig),
 			}
 			signedOrders = append(signedOrders, signedOrder)
+			// MakerInAmount == takerOutAmount
+			logctx.Info(ctx, "append swap fragment", logger.String("swapId", res.SwapId), logger.Int("fragIndex", i), logger.String("TakerInAmount", frag.TakerInAmount), logger.String("MakerInAmount", takerOutAmount))
 		}
 		// abi encode
 		abiCall, err := abi.PackSignedOrders(ctx, signedOrders)
