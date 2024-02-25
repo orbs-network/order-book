@@ -203,8 +203,8 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			takerInAmount := h.convertToTokenDec(r.Context(), req.InToken, swapData.Fragments[i].OutSize)
 			takerOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].InSize)
 
-			MakerOutAmount := big.NewInt(0)
-			MakerOutAmount.SetString(takerInAmount, 10)
+			MakerInAmount := big.NewInt(0)
+			MakerInAmount.SetString(takerOutAmount, 10)
 
 			abiOrder := swapData.Orders[i].Signature.AbiFragment
 			abiOrder.ExclusivityOverrideBps = big.NewInt(0)
@@ -226,7 +226,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			signedOrder := abi.SignedOrder{
 				OrderWithAmount: abi.OrderWithAmount{
 					Order:  abiOrder,
-					Amount: MakerOutAmount,
+					Amount: MakerInAmount,
 				},
 				Signature: Signature2Bytes(swapData.Orders[i].Signature.Eip712Sig),
 			}
