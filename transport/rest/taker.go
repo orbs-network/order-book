@@ -128,6 +128,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return nil
 	}
+	logctx.Debug(ctx, "QuoteReq", logger.String("InToken", req.InToken), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("MinOutAmount", req.MinOutAmount))
 
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
@@ -179,9 +180,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		//SwapId:    "",
 		Fragments: []Fragment{},
 	}
-
-	// debug
-	//AbiElements
+	logctx.Debug(ctx, "QuoteRes", logger.String("OutAmount", res.OutAmount))
 
 	if isSwap {
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
@@ -199,8 +198,8 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			// Maker In Amount is Taker's OutAmount!
 
 			// conver In/Out amount to token decimals
-			takerInAmount := h.convertToTokenDec(r.Context(), req.InToken, swapData.Fragments[i].OutSize)
-			takerOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].InSize)
+			takerInAmount := h.convertToTokenDec(r.Context(), req.InToken, swapData.Fragments[i].InSize)
+			takerOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].OutSize)
 
 			MakerInAmount := big.NewInt(0)
 			MakerInAmount.SetString(takerOutAmount, 10)
@@ -225,7 +224,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			signedOrder := abi.SignedOrder{
 				OrderWithAmount: abi.OrderWithAmount{
 					Order:  abiOrder,
-					Amount: MakerInAmount,
+					Amount: MakerInAmount, // is taker's out amount
 				},
 				Signature: Signature2Bytes(swapData.Orders[i].Signature.Eip712Sig),
 			}
