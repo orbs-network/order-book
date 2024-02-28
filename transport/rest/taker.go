@@ -128,6 +128,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return nil
 	}
+
 	logctx.Info(ctx, "QuoteReq", logger.String("InToken", req.InToken), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("MinOutAmount", req.MinOutAmount))
 
 	// ensure token names if only addresses were sent
@@ -180,6 +181,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		//SwapId:    "",
 		Fragments: []Fragment{},
 	}
+
 	logctx.Info(ctx, "QuoteRes", logger.String("OutAmount", res.OutAmount))
 
 	if isSwap {
