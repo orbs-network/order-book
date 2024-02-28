@@ -128,7 +128,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return nil
 	}
-	logctx.Debug(ctx, "QuoteReq", logger.String("InToken", req.InToken), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("MinOutAmount", req.MinOutAmount))
+	logctx.Info(ctx, "QuoteReq", logger.String("InToken", req.InToken), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("MinOutAmount", req.MinOutAmount))
 
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
@@ -180,12 +180,12 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		//SwapId:    "",
 		Fragments: []Fragment{},
 	}
-	logctx.Debug(ctx, "QuoteRes", logger.String("OutAmount", res.OutAmount))
+	logctx.Info(ctx, "QuoteRes", logger.String("OutAmount", res.OutAmount))
 
 	if isSwap {
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
 		res.SwapId = swapData.SwapId.String()
-		logctx.Debug(ctx, "BeginSwap", logger.String("swapId", res.SwapId))
+		logctx.Info(ctx, "BeginSwap", logger.String("swapId", res.SwapId))
 		if err != nil {
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return nil
