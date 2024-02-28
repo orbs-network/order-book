@@ -158,9 +158,9 @@ func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
 		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
 		// no return during erros as what can be revert, should
 		if err != nil {
-			logctx.Error(ctx, "order not found while reverting a swap", logger.Error(err))
+			logctx.Error(ctx, "order not found Fill Swap", logger.Error(err))
 		} else if !validatePendingFrag(frag, order) {
-			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
+			logctx.Error(ctx, "Swap pending fragments should be valid", logger.Error(err))
 		} else {
 			// from pending to fill
 			logctx.Debug(ctx, "FillOrder", logger.String("orderID", order.Id.String()), logger.String("OutSize", frag.OutSize.String()))
