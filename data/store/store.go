@@ -63,9 +63,14 @@ type OrderBookStore interface {
 	RemoveSwap(ctx context.Context, swapId uuid.UUID) error
 	// Pending transactions (TODO: rename)
 	StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) error
-	GetPendingSwaps(ctx context.Context) ([]models.SwapTx, error)
-	StorePendingSwaps(ctx context.Context, pendingSwaps []models.SwapTx) error
+	// GetPendingSwaps(ctx context.Context) ([]models.SwapTx, error)
+	// StorePendingSwaps(ctx context.Context, pendingSwaps []models.SwapTx) error
 	ProcessCompletedSwapOrders(ctx context.Context, ordersWithSize []OrderWithSize, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error
+	// removes from "swapid" key
+	// adds to "swapResolve" key
+	ResolveSwap(ctx context.Context, swap models.Swap) error
+	// save swapId in a set of the userId:resolvedSwap key
+	StoreUserResolvedSwap(ctx context.Context, userId uuid.UUID, swap models.Swap) error
 	// utils
 	EnumSubKeysOf(ctx context.Context, key string) ([]string, error)
 	// Use to store the details of any resolved swap (successful or failed blockchain transaction, NOT pending) for a particular user
