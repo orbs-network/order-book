@@ -2,7 +2,6 @@ package redisrepo
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 
 // StoreNewPendingSwap stores a new pending swap in order for its status (pending/complete) to be checked later
 func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.SwapTx) error {
-	key := CreatePendingSwapTxsKey()
+	//key := CreatePendingSwapTxsKey()
 
 	// confirm swapID is valid
 	swap, err := r.GetSwap(ctx, p.SwapId)
@@ -35,25 +34,27 @@ func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Swap
 	// update swapId:started field
 	swap.Started = time.Now()
 	swap.TxHash = p.TxHash
-	err = r.saveSwap(ctx, p.SwapId, *swap)
+	swap.Id = p.SwapId
+	err = r.saveSwap(ctx, p.SwapId, *swap, false)
 	if err != nil {
 		logctx.Error(ctx, "failed to update swap started time", logger.Error(err), logger.String("swapId", p.SwapId.String()))
 		return fmt.Errorf("failed to update swap started time: %s", err)
 	}
 
-	jsonData, err := json.Marshal(p)
-	if err != nil {
-		logctx.Error(ctx, "failed to marshal pending", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
-		return fmt.Errorf("failed to marshal pending: %s", err)
-	}
+	// Yuval:not needed any more
+	// jsonData, err := json.Marshal(p)
+	// if err != nil {
+	// 	logctx.Error(ctx, "failed to marshal pending", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
+	// 	return fmt.Errorf("failed to marshal pending: %s", err)
+	// }
 
-	_, err = r.client.RPush(ctx, key, jsonData).Result()
+	// _, err = r.client.RPush(ctx, key, jsonData).Result()
 
-	if err != nil {
-		logctx.Error(ctx, "failed to store pending swap tx", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
-		return fmt.Errorf("failed to store pending swap tx: %s", err)
-	}
+	// if err != nil {
+	// 	logctx.Error(ctx, "failed to store pending swap tx", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
+	// 	return fmt.Errorf("failed to store pending swap tx: %s", err)
+	// }
 
-	logctx.Info(ctx, "stored pending swap tx", logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
+	// logctx.Info(ctx, "stored pending swap tx", logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
 	return nil
 }
