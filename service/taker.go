@@ -110,6 +110,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 	}
 
 	orders := []models.Order{}
+	cancelled := []models.Order{}
 	// validate all pending orders fragments of auction
 	for _, frag := range swap.Frags {
 		// get order by ID
@@ -129,6 +130,10 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 			}
 			orders = append(orders, *order)
 		}
+		// cancelled orders
+		if order.Cancelled {
+			cancelled = append(cancelled, *order)
+		}
 	}
 	// store orders
 	err = s.orderBookStore.StoreOpenOrders(ctx, orders)
@@ -136,8 +141,44 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
 		return err
 	}
+	// remove cancelled orders
+	err = s.cancelUnlockedOrders(ctx, cancelled)
+	if err != nil {
+		logctx.Error(ctx, "cancelUnlockedOrders Failed", logger.Error(err), logger.String("swapId", swapId.String()))
+		return err
+	}
 
 	return s.orderBookStore.RemoveSwap(ctx, swapId)
+}
+
+// private impl
+// handle orders whichg were cancelled while they were pending
+// already marked as cancelled
+// unfilled - completely remove
+// partially filled - keep in userId:filled
+func (s *Service) cancelUnlockedOrders(ctx context.Context, orders []models.Order) error {
+	for _, order := range orders {
+		if order.IsUnfilled() {
+			err := s.orderBookStore.CancelUnfilledOrder(ctx, order)
+			if err != nil {
+				logctx.Error(ctx, "error CancelUnfilledOrder", logger.Error(err))
+				return err
+			}
+
+			logctx.Info(ctx, "unfilled order removed", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+
+		} else {
+			err := s.orderBookStore.CancelPartialFilledOrder(ctx, order)
+			if err != nil {
+				logctx.Error(ctx, "error occured when cancelling partial order", logger.Error(err))
+				return err
+			}
+
+			logctx.Info(ctx, "partial filled order cancelled", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+
+		}
+	}
+	return nil
 }
 
 func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
