@@ -23,6 +23,9 @@ func CreateUserFilledOrdersKey(userId uuid.UUID) string {
 func CreateOrderIDKey(orderId uuid.UUID) string {
 	return fmt.Sprintf("orderID:%s:order", orderId)
 }
+func CreateClosedOrderKey(orderId uuid.UUID) string {
+	return fmt.Sprintf("order:closed:%s", orderId)
+}
 
 // CreateClientOIDKey creates a Redis key for a single client order ID
 func CreateClientOIDKey(clientOId uuid.UUID) string {
@@ -44,6 +47,10 @@ func CreateSwapKey(swapId uuid.UUID) string {
 	return fmt.Sprintf("swapId:%s", swapId)
 }
 
+func CreateResolvedSwapKey(swapId uuid.UUID) string {
+	return fmt.Sprintf("swap:resolved:%s", swapId)
+}
+
 // CreateUserApiKeyKey creates a Redis key for storing the user by their API key
 func CreateUserApiKeyKey(apiKey string) string {
 	return fmt.Sprintf("userApiKey:%s:user", apiKey)
@@ -60,13 +67,18 @@ func CreateSwapTrackerKey(status models.SwapStatus) string {
 }
 
 // CreatePendingSwapTxsKey creates a Redis key for storing pending swap transactions
-func CreatePendingSwapTxsKey() string {
-	return "pendingSwapTxs"
-}
+// func CreatePendingSwapTxsKey() string {
+// 	return "pendingSwapTxs"
+// }
 
 // CreateCompletedSwapsKey creates a Redis key for storing completed swaps
 func CreateCompletedSwapsKey(userId uuid.UUID) string {
 	return fmt.Sprintf("userId:%s:completedSwaps", userId)
+}
+
+// CreateCompletedSwapsKey creates a Redis key for storing completed swaps
+func CreateUserResolvedSwapsKey(userId uuid.UUID) string {
+	return fmt.Sprintf("userId:%s:resolvedSwaps", userId)
 }
 
 // GENERIC store funcs
