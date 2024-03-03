@@ -84,7 +84,7 @@ func (h *Handler) convertFromTokenDec(ctx context.Context, tokenName, amountStr 
 // 3. address is found in supported tokens
 // returns error if needed
 // returns empty string if no need to resolve
-func (h *Handler) nameFromAddress(name, address string) (string, error) {
+func (h *Handler) nameFromAddress(address string) (string, error) {
 	token := h.supportedTokens.ByAddress(address)
 	if token == nil {
 		return "", models.ErrTokenNotsupported
@@ -95,7 +95,7 @@ func (h *Handler) nameFromAddress(name, address string) (string, error) {
 func (h *Handler) resolveQuoteTokenNames(req *QuoteReq) error {
 	// has address but no name
 	if req.InToken == "" {
-		InName, err := h.nameFromAddress(req.InToken, req.InTokenAddress)
+		InName, err := h.nameFromAddress(req.InTokenAddress)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func (h *Handler) resolveQuoteTokenNames(req *QuoteReq) error {
 		}
 	}
 	if req.OutToken == "" {
-		OutName, err := h.nameFromAddress(req.OutToken, req.OutTokenAddress)
+		OutName, err := h.nameFromAddress(req.OutTokenAddress)
 		if err != nil {
 			return err
 		}
@@ -169,7 +169,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 
 	convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, svcQuoteRes.Size)
 	if convOutAmount == "" {
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("OutToken", req.OutToken))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "convOutAmount return empty string")
 		return nil
 	}
 	// convert res

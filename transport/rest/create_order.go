@@ -196,7 +196,7 @@ type pFInput struct {
 	clientOrderId string
 }
 
-func parseFields(w http.ResponseWriter, input pFInput) (*pfParsed, error) {
+func parseFields(_ http.ResponseWriter, input pFInput) (*pfParsed, error) {
 	decPrice, err := decimal.NewFromString(input.price)
 	if err != nil {
 		return nil, fmt.Errorf("'price' is not a valid number format")

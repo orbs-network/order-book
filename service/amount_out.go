@@ -69,8 +69,13 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 			logctx.Error(ctx, "order::it.Next() returned nil")
 			return models.QuoteRes{}, models.ErrUnexpectedError
 		}
+
 		// skip orders with locked funds
-		if order.GetAvailableSize().IsPositive() {
+		if order.Cancelled {
+			logctx.Error(ctx, "cancelled order exists in the price list (ignore and continue)", logger.String("orderId", order.Id.String()))
+		}
+		// skip orders with locked funds or cancelled
+		if order.GetAvailableSize().IsPositive() && !order.Cancelled {
 			// max Spend in B token  for this order
 			orderSizeB := order.Price.Mul(order.GetAvailableSize())
 			// spend the min of orderSizeB/inAmountB

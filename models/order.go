@@ -258,6 +258,11 @@ func (o *Order) Fill(ctx context.Context, fillSize decimal.Decimal) (isFilled bo
 }
 
 func (o *Order) Lock(ctx context.Context, size decimal.Decimal) error {
+	// cant lock cancelled liquidity
+	if o.Cancelled {
+		logctx.Error(ctx, "order is cancelled", logger.String("orderId", o.Id.String()))
+		return ErrOrderCancelled
+	}
 	if o.GetAvailableSize().LessThan(size) {
 		logctx.Error(ctx, "size to be locked greater than sizePending", logger.String("orderId", o.Id.String()), logger.String("pendingSize", o.SizePending.String()), logger.String("requestedLockSize", size.String()))
 		return ErrUnexpectedSizeFilled

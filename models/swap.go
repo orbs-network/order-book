@@ -49,6 +49,7 @@ func MarshalOrderFrags(orderFrags []OrderFrag) ([]byte, error) {
 }
 
 type Swap struct {
+	Id        uuid.UUID   `json:"id"`
 	Created   time.Time   `json:"created"`
 	Started   time.Time   `json:"started"`
 	Resolved  time.Time   `json:"resolved"`
