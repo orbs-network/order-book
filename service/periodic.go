@@ -3,10 +3,9 @@ package service
 import (
 	"context"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/google/uuid"
+	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/transport/restutils"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -49,32 +48,11 @@ func secondsSinceTimestamp(t time.Time) (int64, error) {
 	return seconds, nil
 }
 
-func (s *Service) checkSwapStarted(ctx context.Context, swapKey string, secPeriod int64) {
-	splt := strings.Split(swapKey, ":")
-	// key invalid
-	if len(splt) < 2 {
-		logctx.Error(ctx, "swapKey couldnt split on colone", logger.String("swapKey", swapKey))
-		return
-	}
-	// parse swapID
-	swapId := splt[2]
-	uid, err := uuid.Parse(swapId)
-	if err != nil {
-		logctx.Error(ctx, "uuid failed to parse swapId", logger.String("swapid", swapId), logger.Error(err))
-		return
-	}
-	// not found
-	swap, err := s.orderBookStore.GetSwap(ctx, uid)
-	if err != nil {
-		logctx.Error(ctx, "Error swap not found", logger.String("swapId", swapId), logger.Error(err))
-		return
-	}
-
+func (s *Service) checkSwapStarted(ctx context.Context, swap models.Swap, secPeriod int64) {
 	// already started
 	if swap.IsStarted() {
 		return
 	}
-
 	// check if not started during a period of x sec
 	sec, err := secondsSinceTimestamp(swap.Created)
 	if err != nil {
@@ -85,23 +63,23 @@ func (s *Service) checkSwapStarted(ctx context.Context, swapKey string, secPerio
 		// no need to abort
 		return
 	}
-	logctx.Info(ctx, "swap was not started after allowed period", logger.String("swapId", swapId))
-	err = s.AbortSwap(ctx, uid)
+	logctx.Info(ctx, "swap was not started after allowed period", logger.String("swapId", swap.Id.String()))
+	err = s.AbortSwap(ctx, swap.Id)
 	if err != nil {
 		logctx.Error(ctx, "failed to AutoabortSwap", logger.String("created", swap.Created.String()), logger.Error(err))
 		return
 	}
 	// SUCCESS
-	logctx.Info(ctx, "Auto abortSwap after interval", logger.String("swapId", swapId), logger.Int("secPerios", int(secPeriod)))
+	logctx.Info(ctx, "Auto abortSwap after interval", logger.String("swapId", swap.Id.String()), logger.Int("secPerios", int(secPeriod)))
 }
 
 func (s *Service) checkNonStartedSwaps(ctx context.Context, secPeriod int64) error {
-	swapKeys, err := s.orderBookStore.EnumSubKeysOf(ctx, "swap:open")
+	openSwaps, err := s.orderBookStore.GetOpenSwaps(ctx)
 	if err != nil {
 		return err
 	}
-	for _, swapKey := range swapKeys {
-		s.checkSwapStarted(ctx, swapKey, secPeriod)
+	for _, swap := range openSwaps {
+		s.checkSwapStarted(ctx, swap, secPeriod)
 	}
 	return nil
 }
