@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/orbs-network/order-book/data/store"
 	"github.com/orbs-network/order-book/models"
 	"github.com/shopspring/decimal"
 )
@@ -138,19 +137,11 @@ func (m *MockOrderBookStore) StoreNewPendingSwap(ctx context.Context, pendingSwa
 	return m.Error
 }
 
-func (m *MockOrderBookStore) ProcessCompletedSwapOrders(ctx context.Context, ordersWithSize []store.OrderWithSize, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error {
-	return m.Error
-}
-
 func (m *MockOrderBookStore) ResolveSwap(ctx context.Context, swap models.Swap) error {
 	return m.Error
 }
 
 func (m *MockOrderBookStore) StoreUserResolvedSwap(ctx context.Context, userId uuid.UUID, swap models.Swap) error {
-	return m.Error
-}
-
-func (m *MockOrderBookStore) StoreCompletedSwap(ctx context.Context, input store.StoreCompletedSwapInput) error {
 	return m.Error
 }
 
