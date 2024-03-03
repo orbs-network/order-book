@@ -18,7 +18,7 @@ func (r *redisRepository) saveSwap(ctx context.Context, swapId uuid.UUID, swap m
 		return fmt.Errorf("failed to marshal swap: %v", err)
 	}
 
-	swapKey := CreateSwapKey(swapId)
+	swapKey := CreateOpenSwapKey(swapId)
 	if resolved {
 		swapKey = CreateResolvedSwapKey(swapId)
 	}
@@ -41,7 +41,7 @@ func (r *redisRepository) StoreSwap(ctx context.Context, swapId uuid.UUID, frags
 }
 
 func (r *redisRepository) GetSwap(ctx context.Context, swapId uuid.UUID) (*models.Swap, error) {
-	swapKey := CreateSwapKey(swapId)
+	swapKey := CreateOpenSwapKey(swapId)
 
 	swapJson, err := r.client.Get(ctx, swapKey).Result()
 	// Error
@@ -68,8 +68,8 @@ func (r *redisRepository) GetSwap(ctx context.Context, swapId uuid.UUID) (*model
 
 func (r *redisRepository) RemoveSwap(ctx context.Context, swapId uuid.UUID) error {
 	logctx.Info(ctx, "RemoveSwap", logger.String("key", swapId.String()))
-	swapKey := CreateSwapKey(swapId)
+	swapKey := CreateOpenSwapKey(swapId)
 	err := r.client.Del(ctx, swapKey).Err()
-	logctx.Error(ctx, "Redis del failed", logger.String("key", swapKey), logger.Error(err))
+	logctx.Error(ctx, "RemoveSwap Redis del failed", logger.String("key", swapKey), logger.Error(err))
 	return err
 }

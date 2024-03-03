@@ -42,9 +42,9 @@ func CreateSellSidePricesKey(symbol models.Symbol) string {
 	return fmt.Sprintf("%s:sell:prices", symbol)
 }
 
-// CreateSwapKey creates a Redis key for storing the swap data
-func CreateSwapKey(swapId uuid.UUID) string {
-	return fmt.Sprintf("swapId:%s", swapId)
+// CreateOpenSwapKey creates a Redis key for storing the swap data
+func CreateOpenSwapKey(swapId uuid.UUID) string {
+	return fmt.Sprintf("swap:open:%s", swapId)
 }
 
 func CreateResolvedSwapKey(swapId uuid.UUID) string {
@@ -59,16 +59,6 @@ func CreateUserApiKeyKey(apiKey string) string {
 // CreateUserIdKey creates a Redis key for storing the user by their ID
 func CreateUserIdKey(userId uuid.UUID) string {
 	return fmt.Sprintf("userId:%s:user", userId)
-}
-
-// CreateSwapTrackerKey creates a Redis key for storing swaps of different statuses
-func CreateSwapTrackerKey(status models.SwapStatus) string {
-	return fmt.Sprintf("swapTracker:%s", status)
-}
-
-// CreateCompletedSwapsKey creates a Redis key for storing completed swaps
-func CreateCompletedSwapsKey(userId uuid.UUID) string {
-	return fmt.Sprintf("userId:%s:completedSwaps", userId)
 }
 
 // CreateCompletedSwapsKey creates a Redis key for storing completed swaps

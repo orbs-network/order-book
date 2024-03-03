@@ -24,7 +24,7 @@ func TestRedisRepository_GetSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectGet(CreateSwapKey(swapId)).SetVal(swapJson[0])
+		mock.ExpectGet(CreateOpenSwapKey(swapId)).SetVal(swapJson[0])
 
 		swap, err := repo.GetSwap(ctx, swapId)
 		assert.NoError(t, err)
@@ -38,7 +38,7 @@ func TestRedisRepository_GetSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectSMembers(CreateSwapKey(swapId)).SetErr(assert.AnError)
+		mock.ExpectSMembers(CreateOpenSwapKey(swapId)).SetErr(assert.AnError)
 
 		_, err := repo.GetSwap(ctx, swapId)
 		assert.Equal(t, models.ErrUnexpectedError, err)
@@ -56,7 +56,7 @@ func TestRedisRepository_RemoveSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectDel(CreateSwapKey(swapId)).SetVal(1)
+		mock.ExpectDel(CreateOpenSwapKey(swapId)).SetVal(1)
 
 		err := repo.RemoveSwap(ctx, swapId)
 
@@ -70,7 +70,7 @@ func TestRedisRepository_RemoveSwap(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectDel(CreateSwapKey(swapId)).SetErr(assert.AnError)
+		mock.ExpectDel(CreateOpenSwapKey(swapId)).SetErr(assert.AnError)
 
 		err := repo.RemoveSwap(ctx, swapId)
 
