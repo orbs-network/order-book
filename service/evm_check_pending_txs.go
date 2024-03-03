@@ -63,7 +63,6 @@ func (e *EvmClient) GetPendingSwaps(ctx context.Context) ([]models.Swap, error) 
 // CheckPendingTxs checks all pending transactions and updates the order book accordingly
 func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 	logctx.Debug(ctx, "Checking pending swaps...")
-	//pendingSwaps, err := e.orderBookStore.GetPendingSwaps(ctx)
 	pendingSwaps, err := e.GetPendingSwaps(ctx)
 	if err != nil {
 		logctx.Error(ctx, "Failed to get pending swaps", logger.Error(err))
@@ -79,8 +78,6 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-
-	//ptxs := make([]models.SwapTx, 0)
 
 	for i := 0; i < len(pendingSwaps); i++ {
 		logctx.Info(ctx, "Trying to process pending swap", logger.Int("index", i), logger.String("txHash", pendingSwaps[i].TxHash), logger.String("swapId", pendingSwaps[i].Id.String()))
@@ -123,7 +120,6 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 				}
 			case models.TX_PENDING:
 				logctx.Info(ctx, "Transaction still pending", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
-				//ptxs = append(ptxs, p)
 			default:
 				logctx.Error(ctx, "Unknown transaction status", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 				return
@@ -133,16 +129,6 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 	}
 
 	wg.Wait()
-
-	//mu.Lock()
-	// Store swaps that are still pending - WHY?
-	//err = e.orderBookStore.StorePendingSwaps(ctx, ptxs)
-	//mu.Unlock()
-
-	// if err != nil {
-	// 	logctx.Error(ctx, "Failed to store updated pending swaps", logger.Error(err))
-	// 	return err
-	// }
 
 	logctx.Info(ctx, "Finished checking pending swaps", logger.Int("numPending", len(pendingSwaps)))
 	return nil

@@ -66,11 +66,6 @@ func CreateSwapTrackerKey(status models.SwapStatus) string {
 	return fmt.Sprintf("swapTracker:%s", status)
 }
 
-// CreatePendingSwapTxsKey creates a Redis key for storing pending swap transactions
-// func CreatePendingSwapTxsKey() string {
-// 	return "pendingSwapTxs"
-// }
-
 // CreateCompletedSwapsKey creates a Redis key for storing completed swaps
 func CreateCompletedSwapsKey(userId uuid.UUID) string {
 	return fmt.Sprintf("userId:%s:completedSwaps", userId)

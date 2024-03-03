@@ -142,14 +142,6 @@ func (m *MockOrderBookStore) StoreNewPendingSwap(ctx context.Context, pendingSwa
 	return m.Error
 }
 
-// func (m *MockOrderBookStore) GetPendingSwaps(ctx context.Context) ([]models.SwapTx, error) {
-// 	return m.PendingSwaps, m.Error
-// }
-
-// func (m *MockOrderBookStore) StorePendingSwaps(ctx context.Context, pendingSwaps []models.SwapTx) error {
-// 	return m.Error
-// }
-
 func (m *MockOrderBookStore) ProcessCompletedSwapOrders(ctx context.Context, ordersWithSize []store.OrderWithSize, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error {
 	return m.Error
 }
