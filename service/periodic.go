@@ -52,12 +52,12 @@ func secondsSinceTimestamp(t time.Time) (int64, error) {
 func (s *Service) checkSwapStarted(ctx context.Context, swapKey string, secPeriod int64) {
 	splt := strings.Split(swapKey, ":")
 	// key invalid
-	if len(splt) == 0 {
+	if len(splt) < 2 {
 		logctx.Error(ctx, "swapKey couldnt split on colone", logger.String("swapKey", swapKey))
 		return
 	}
 	// parse swapID
-	swapId := splt[1]
+	swapId := splt[2]
 	uid, err := uuid.Parse(swapId)
 	if err != nil {
 		logctx.Error(ctx, "uuid failed to parse swapId", logger.String("swapid", swapId), logger.Error(err))
@@ -96,7 +96,7 @@ func (s *Service) checkSwapStarted(ctx context.Context, swapKey string, secPerio
 }
 
 func (s *Service) checkNonStartedSwaps(ctx context.Context, secPeriod int64) error {
-	swapKeys, err := s.orderBookStore.EnumSubKeysOf(ctx, "swapId")
+	swapKeys, err := s.orderBookStore.EnumSubKeysOf(ctx, "swap:open")
 	if err != nil {
 		return err
 	}
