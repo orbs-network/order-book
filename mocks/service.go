@@ -125,6 +125,10 @@ func (m *MockOrderBookStore) RemoveSwap(ctx context.Context, swapId uuid.UUID) e
 	return m.Error
 }
 
+func (m *MockOrderBookStore) GetOpenSwaps(ctx context.Context) ([]models.Swap, error) {
+	return []models.Swap{}, m.Error
+}
+
 func (m *MockOrderBookStore) GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter {
 	return m.AskOrderIter
 }

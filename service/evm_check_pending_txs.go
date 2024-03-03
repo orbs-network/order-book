@@ -2,59 +2,26 @@ package service
 
 import (
 	"context"
-	"strings"
 	"sync"
 
-	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func Key2Id(key string) string {
-	splt := strings.Split(key, ":")
-
-	if len(splt) < 2 {
-		return ""
-	}
-	return splt[1]
-}
-
-func Key2UUID(key string) *uuid.UUID {
-	id := Key2Id(key)
-	if id == "" {
-		return nil
-	}
-	uid, err := uuid.Parse(id)
-	if err != nil {
-		return nil
-	}
-	return &uid
-}
-
 func (e *EvmClient) GetPendingSwaps(ctx context.Context) ([]models.Swap, error) {
 	res := []models.Swap{}
-	keys, err := e.orderBookStore.EnumSubKeysOf(ctx, "swapId")
+	openSwaps, err := e.orderBookStore.GetOpenSwaps(ctx)
 	if err != nil {
-		logctx.Error(ctx, "Failed to enum swapID keys", logger.Error(err))
+		logctx.Error(ctx, "Failed to enum swap:open keys", logger.Error(err))
 		return res, err
 	}
-	for _, key := range keys {
-		id := Key2UUID(key)
-		if id != nil {
-			swap, err := e.orderBookStore.GetSwap(ctx, *id)
-			swap.Id = *id // confirm exists
-			if err != nil {
-				logctx.Error(ctx, "Failed to get swap", logger.Error(err), logger.String("swapKey", key))
-			} else {
-				// swap was started but not resolved
-				if !swap.Started.IsZero() && swap.Resolved.IsZero() {
-					// make sure id is there
-					res = append(res, *swap)
-				}
-			}
-		} else {
-			logctx.Error(ctx, "failed to create id from key", logger.String("key", key))
+	for _, swap := range openSwaps {
+
+		// swap was started but not resolved
+		if !swap.Started.IsZero() && swap.Resolved.IsZero() {
+			// make sure id is there
+			res = append(res, swap)
 		}
 	}
 	return res, nil
