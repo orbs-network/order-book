@@ -134,10 +134,6 @@ func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol
 	return m.BidOrderIter
 }
 
-func (m *MockOrderBookStore) UpdateSwapTracker(ctx context.Context, swapStatus models.SwapStatus, swapId uuid.UUID) error {
-	return m.Error
-}
-
 func (m *MockOrderBookStore) StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) error {
 	return m.Error
 }

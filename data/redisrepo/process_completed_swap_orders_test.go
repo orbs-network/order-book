@@ -78,7 +78,7 @@ func TestRedisRepo_ProcessCompletedSwapOrders(t *testing.T) {
 		}).SetVal(1)
 
 		// Remove swap
-		mock.ExpectDel(CreateSwapKey(swapId)).SetVal(1)
+		mock.ExpectDel(CreateOpenSwapKey(swapId)).SetVal(1)
 
 		mock.ExpectTxPipelineExec()
 
@@ -124,7 +124,7 @@ func TestRedisRepo_ProcessCompletedSwapOrders(t *testing.T) {
 		}).SetVal(1)
 
 		// Remove swap
-		mock.ExpectDel(CreateSwapKey(swapId)).SetVal(1)
+		mock.ExpectDel(CreateOpenSwapKey(swapId)).SetVal(1)
 
 		mock.ExpectTxPipelineExec()
 

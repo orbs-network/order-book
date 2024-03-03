@@ -56,11 +56,10 @@ type OrderBookStore interface {
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
 	// taker side
-	UpdateSwapTracker(ctx context.Context, swapStatus models.SwapStatus, swapId uuid.UUID) error
 	GetSwap(ctx context.Context, swapId uuid.UUID) (*models.Swap, error)
 	StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error
 	RemoveSwap(ctx context.Context, swapId uuid.UUID) error
-	// Pending transactions (TODO: rename)
+	// Pending Swap+Transaction (TODO: rename)
 	StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) error
 	ProcessCompletedSwapOrders(ctx context.Context, ordersWithSize []OrderWithSize, swapId uuid.UUID, tx *models.Tx, isSuccessful bool) error
 	// removes from "swapid" key
