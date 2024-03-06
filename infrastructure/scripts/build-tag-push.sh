@@ -1,0 +1,2 @@
+aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin 506367651493.dkr.ecr.ap-northeast-1.amazonaws.com
+docker buildx build --platform linux/amd64 --build-arg APP_PATH=./cmd/order-book -t 506367651493.dkr.ecr.ap-northeast-1.amazonaws.com/order-book-repo-prod:0.0.1 -f cmd/order-book.Dockerfile --push .
