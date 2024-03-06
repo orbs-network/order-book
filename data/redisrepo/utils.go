@@ -6,6 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/utils/logger"
+	"github.com/orbs-network/order-book/utils/logger/logctx"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -70,12 +72,15 @@ func CreateUserResolvedSwapsKey(userId uuid.UUID) string {
 func AddVal2Set(ctx context.Context, client redis.Cmdable, key, val string) error {
 	added, err := client.SAdd(ctx, key, val).Result()
 	if err != nil {
+		logctx.Error(ctx, "Failed to add element to set", logger.Error(err), logger.String("key", key), logger.String("val", val))
 		return err
 	}
 
 	if added == 0 {
+		logctx.Warn(ctx, "Element already in set", logger.String("key", key), logger.String("val", val))
 		return models.ErrValAlreadyInSet
 	}
 
+	logctx.Info(ctx, "Added element to set", logger.String("key", key), logger.String("val", val))
 	return nil
 }

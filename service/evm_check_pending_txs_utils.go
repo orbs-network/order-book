@@ -14,10 +14,12 @@ import (
 )
 
 // update swap fields
+//
 // move swap to resolved key
+//
 // update orders state
+//
 // save swap to the users involved
-
 func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccessful bool, mu *sync.Mutex) ([]models.Order, error) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -111,5 +113,6 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 		logctx.Error(ctx, "Error StoreOpenOrders", logger.Error(err), logger.String("swapId", swap.Id.String()))
 	}
 
+	logctx.Info(ctx, "Resolved swap", logger.String("swapId", swap.Id.String()), logger.Bool("isSuccessful", isSuccessful), logger.String("created", swap.Created.String()), logger.String("resolved", swap.Resolved.String()), logger.String("txHash", swap.TxHash))
 	return orders, nil
 }
