@@ -30,6 +30,7 @@ func (r *redisRepository) StoreOpenOrder(ctx context.Context, order models.Order
 		logctx.Error(ctx, "failed to store open order in Redis", logger.Error(err), logger.String("orderId", order.Id.String()))
 		return fmt.Errorf("failed to stores open order in Redis: %v", err)
 	}
+
 	logctx.Debug(ctx, "stored open order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
 	return nil
 }
@@ -52,6 +53,8 @@ func (r *redisRepository) StoreOpenOrders(ctx context.Context, orders []models.O
 		logctx.Error(ctx, "failed to stores open order in Redis", logger.Error(err), logger.Strings("orderIds", models.OrderIdsToStrings(ctx, &orders)))
 		return fmt.Errorf("failed to stores open order in Redis: %v", err)
 	}
+
+	logctx.Debug(ctx, "stored open orders in Redis", logger.Strings("orderIds", models.OrderIdsToStrings(ctx, &orders)))
 	return nil
 }
 
