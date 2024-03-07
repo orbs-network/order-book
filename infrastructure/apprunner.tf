@@ -38,6 +38,13 @@ resource "aws_apprunner_service" "order-book" {
 
   }
 
+  network_configuration {
+    egress_configuration {
+      egress_type       = "VPC"
+      vpc_connector_arn = aws_apprunner_vpc_connector.connector.arn
+    }
+  }
+
   tags = local.tags
 }
 
@@ -45,5 +52,5 @@ resource "aws_apprunner_service" "order-book" {
 resource "aws_apprunner_vpc_connector" "connector" {
   vpc_connector_name = "order-book-${var.environment_name}-connector"
   subnets            = module.subnets.public_subnet_ids
-  security_groups    = [module.vpc.vpc_default_security_group_id]
+  security_groups    = [aws_security_group.app_runner_sg.id]
 }
