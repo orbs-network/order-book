@@ -26,7 +26,7 @@ resource "aws_apprunner_service" "order-book" {
       image_configuration {
         runtime_environment_variables = {
           # TODO: update
-          "REDIS_URL"           = "redis://db:6379/0"
+          "REDIS_URL"           = "redis://${module.redis.endpoint}:${module.redis.port}"
           "RPC_URL"             = "http://rpc:8080"
           "PORT"                = "8080"
           "REPORT_SEC_INTERVAL" = "-1"
@@ -39,4 +39,11 @@ resource "aws_apprunner_service" "order-book" {
   }
 
   tags = local.tags
+}
+
+
+resource "aws_apprunner_vpc_connector" "connector" {
+  vpc_connector_name = "order-book-${var.environment_name}-connector"
+  subnets            = module.subnets.public_subnet_ids
+  security_groups    = [module.vpc.vpc_default_security_group_id]
 }
