@@ -13,13 +13,15 @@ import (
 func (r *redisRepository) TxStart(ctx context.Context) (uint, error) {
 	// --- START TRANSACTION ---
 	tx := r.client.TxPipeline()
-	txid := r.ixIndex + 1
+	r.ixIndex += 1
+	txid := r.ixIndex
 	r.txMap[txid] = tx
 
 	return txid, nil
 }
 
 func (r *redisRepository) TxEnd(ctx context.Context, txid uint) {
+	// --- END TRANSACTION ---
 	if tx, ok := r.txMap[txid]; ok {
 		_, err := tx.Exec(ctx)
 		if err != nil {
