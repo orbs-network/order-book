@@ -6,7 +6,7 @@ resource "aws_security_group" "redis_sg" {
     from_port   = 6379
     to_port     = 6379
     protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr_block]
+    cidr_blocks = module.subnets.public_subnet_cidrs
   }
 
   egress {
@@ -22,13 +22,6 @@ resource "aws_security_group" "redis_sg" {
 resource "aws_security_group" "app_runner_sg" {
   name   = "order-book-app-runner-sg"
   vpc_id = module.vpc.vpc_id
-
-  ingress {
-    from_port   = 6379
-    to_port     = 6379
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr_block]
-  }
 
   egress {
     from_port   = 0
