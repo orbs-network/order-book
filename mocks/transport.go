@@ -29,7 +29,7 @@ func (m *MockOrderBookService) CreateOrder(ctx context.Context, input service.Cr
 	return *m.Order, m.Error
 }
 
-func (m *MockOrderBookService) CancelOrder(ctx context.Context, input service.CancelOrderInput) (cancelledOrderId *uuid.UUID, err error) {
+func (m *MockOrderBookService) CancelOrder(ctx context.Context, input service.CancelOrderInput) (*uuid.UUID, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
