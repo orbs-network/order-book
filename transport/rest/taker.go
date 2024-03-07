@@ -163,7 +163,11 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	side := pair.GetSide(req.InToken)
 	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount, minOutAmount)
 	if err != nil {
-		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
+		if err == models.ErrMinOutAmount {
+			restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
+		} else {
+			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
+		}
 		return nil
 	}
 
