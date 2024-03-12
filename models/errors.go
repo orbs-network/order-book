@@ -3,6 +3,7 @@ package models
 import "errors"
 
 var ErrNotFound = errors.New("entity not found")
+var ErrUnsupportedOperation = errors.New("unsupported operation")
 var ErrClashingOrderId = errors.New("order already exists")
 var ErrClashingClientOrderId = errors.New("order already exists")
 var ErrUnexpectedError = errors.New("unexpected error")

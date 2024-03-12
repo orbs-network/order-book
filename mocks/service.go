@@ -102,6 +102,31 @@ func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uui
 	return orderIds, m.Error
 }
 
+// Generic Building blocks with no biz logic in a single TX
+func (m *MockOrderBookStore) PerformTx(ctx context.Context, action func(txid uint) error) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) TxModifyOrder(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) TxModifyPrices(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) TxModifyClientOId(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) TxModifyUserOpenOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	return m.Error
+}
+
 func (m *MockOrderBookStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {
 	if m.Error != nil {
 		return nil, m.Error

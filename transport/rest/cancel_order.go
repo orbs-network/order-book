@@ -106,6 +106,12 @@ func (h *Handler) handleCancelOrder(input hInput) {
 		return
 	}
 
+	if err == models.ErrOrderCancelled {
+		logctx.Warn(input.ctx, "order already cancelled", logger.String("id", input.id.String()))
+		restutils.WriteJSONError(input.ctx, input.w, http.StatusConflict, "Order already cancelled")
+		return
+	}
+
 	if err == models.ErrOrderPending {
 		logctx.Warn(input.ctx, "order is cancelled but part of it is pending (locked)", logger.String("id", input.id.String()))
 		restutils.WriteJSONError(input.ctx, input.w, http.StatusConflict, "order is cancelled but some of it's size is pending")

@@ -12,7 +12,7 @@ import (
 
 // Cancels a partial filled order.
 // Order is removed from the prices sorted set, user's order set and order hash is updated to cancelled
-// May only be called if order is not pending and partially filled
+// can be called to locked orders
 func (r *redisRepository) CancelPartialFilledOrder(ctx context.Context, order models.Order) error {
 
 	if order.IsPending() {
