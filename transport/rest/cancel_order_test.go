@@ -76,6 +76,7 @@ func TestHandler_CancelOrderByOrderId(t *testing.T) {
 			http.StatusNotFound,
 			"{\"status\":404,\"msg\":\"Order not found\"}\n",
 		},
+		{"order already cancelled", &mocks.MockOrderBookService{Error: models.ErrOrderCancelled}, fmt.Sprintf("/order/%s", orderId.String()), http.StatusConflict, "{\"status\":409,\"msg\":\"Order already cancelled\"}\n"},
 		{
 			"unexpected error from service",
 			&mocks.MockOrderBookService{Error: assert.AnError},

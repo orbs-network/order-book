@@ -93,6 +93,9 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (*uui
 				logctx.Error(ctx, "Failed updating order", logger.String("id", input.Id.String()), logger.Error(err))
 				return fmt.Errorf("failed updating order: %w", err)
 			}
+		default:
+			logctx.Error(ctx, "unexpected order state", logger.String("orderId", order.Id.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+			return models.ErrUnexpectedError
 		}
 
 		return nil
