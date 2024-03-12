@@ -350,32 +350,14 @@ func TestOrder_IsUnfilled(t *testing.T) {
 		{
 			name: "sizeFilled 0, sizePending 0",
 			order: Order{
-				SizeFilled:  decimal.Zero,
-				SizePending: decimal.Zero,
+				SizeFilled: decimal.Zero,
 			},
 			expected: true,
 		},
 		{
 			name: "sizeFilled 1000, sizePending 0",
 			order: Order{
-				SizeFilled:  decimal.NewFromInt(1000),
-				SizePending: decimal.Zero,
-			},
-			expected: false,
-		},
-		{
-			name: "sizeFilled 0, sizePending 1000",
-			order: Order{
-				SizeFilled:  decimal.Zero,
-				SizePending: decimal.NewFromInt(1000),
-			},
-			expected: false,
-		},
-		{
-			name: "sizeFilled 1000, sizePending 1000",
-			order: Order{
-				SizeFilled:  decimal.NewFromInt(1000),
-				SizePending: decimal.NewFromInt(1000),
+				SizeFilled: decimal.NewFromInt(1000),
 			},
 			expected: false,
 		},

@@ -73,7 +73,7 @@ func (r *redisRepository) TxModifyPrices(ctx context.Context, txid uint, operati
 			// Add order to the sorted set for that token pair
 			f64Price, _ := order.Price.Float64()
 			timestamp := float64(order.Timestamp.UTC().UnixNano()) / 1e9
-			score := f64Price + (timestamp / 1e12) // Use a combination of price and scaled timestamp so that orders with the same price are sorted by time. This should not be used for price comparison.
+			score := f64Price + (timestamp / 1e12) // Use a combination of price and scaled timestamp so that orders with the same price are sorted by time. THIS SHOULD NOT BE USED FOR PRICE COMPARISON. Rather, use the price field in the order struct.
 
 			if order.Side == models.BUY {
 				buyPricesKey := CreateBuySidePricesKey(order.Symbol)

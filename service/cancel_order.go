@@ -36,6 +36,11 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (*uui
 		return nil, models.ErrOrderCancelled
 	}
 
+	if order.IsFilled() {
+		logctx.Warn(ctx, "order already filled", logger.String("orderId", order.Id.String()))
+		return nil, models.ErrOrderFilled
+	}
+
 	err = s.orderBookStore.PerformTx(ctx, func(txid uint) error {
 		order.Cancelled = true
 
