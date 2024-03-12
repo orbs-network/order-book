@@ -219,7 +219,7 @@ func (o *Order) IsFilled() bool {
 }
 
 func (o *Order) IsUnfilled() bool {
-	return o.SizeFilled.IsZero() && o.SizePending.IsZero()
+	return o.SizeFilled.IsZero()
 }
 
 func (o *Order) IsPartialFilled() bool {

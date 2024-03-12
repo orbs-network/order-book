@@ -103,19 +103,31 @@ func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uui
 }
 
 // Generic Building blocks with no biz logic in a single TX
-func (m *MockOrderBookStore) TxStart(ctx context.Context) (uint, error) {
-	return 0, m.Error
+func (m *MockOrderBookStore) PerformTx(ctx context.Context, action func(txid uint) error) error {
+	return m.Error
 }
-func (m *MockOrderBookStore) TxEnd(ctx context.Context, txid uint) {
 
-}
-func (m *MockOrderBookStore) TxRemoveOrderFromPrice(ctx context.Context, txid uint, order models.Order) error {
+func (m *MockOrderBookStore) TxModifyOrder(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
 	return m.Error
 }
-func (m *MockOrderBookStore) TxDeleteOrder(ctx context.Context, txid uint, orderId uuid.UUID) error {
+
+func (m *MockOrderBookStore) TxModifyPrices(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
 	return m.Error
 }
-func (m *MockOrderBookStore) TxStoreOrder(ctx context.Context, txid uint, order models.Order) error {
+
+func (m *MockOrderBookStore) TxModifyClientOId(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) TxModifyUserOpenOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) TxRemoveUnfilledOrder(ctx context.Context, txid uint, order models.Order) error {
 	return m.Error
 }
 

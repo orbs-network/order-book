@@ -40,13 +40,18 @@ type OrderBookStore interface {
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	GetOrdersForUser(ctx context.Context, userId uuid.UUID, isFilledOrders bool) (orders []models.Order, totalOrders int, err error)
 	CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
-	// Generic Building blocks with no biz logic in a single TX
-	TxStart(ctx context.Context) (uint, error)
-	TxEnd(ctx context.Context, txid uint)
-	TxRemoveOrderFromPrice(ctx context.Context, txid uint, order models.Order) error
-	TxDeleteOrder(ctx context.Context, txid uint, orderId uuid.UUID) error
-	TxStoreOrder(ctx context.Context, txid uint, order models.Order) error
+	// ------------------------------
+	// Generic Building blocks with no biz logic in a single
 
+	// PerformTX should be used for all interactions with the Redis repository. Handles the transaction lifecycle.
+	PerformTx(ctx context.Context, action func(txid uint) error) error
+	TxModifyOrder(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
+	TxModifyPrices(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
+	TxModifyClientOId(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
+	TxModifyUserOpenOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
+	TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
+	TxRemoveUnfilledOrder(ctx context.Context, txid uint, order models.Order) error
+	// ------------------------------
 	// LH side
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter

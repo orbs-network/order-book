@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -15,53 +16,10 @@ type CancelOrderInput struct {
 	UserId      uuid.UUID
 }
 
-//flow chart
-//https://miro.com/welcomeonboard/Umt0YnpDN3BEcUh1U0JZaHNpejJNUHV3QmpBTGpTNFdybXVlemk2QlV4RHAwc2xVSXR5VzM0NzJwUlhGZEFRMnwzMDc0NDU3MzU4MzEyODA0NjQ2fDI=?share_link_id=23847173917
+// Flow chart - https://miro.com/welcomeonboard/Umt0YnpDN3BEcUh1U0JZaHNpejJNUHV3QmpBTGpTNFdybXVlemk2QlV4RHAwc2xVSXR5VzM0NzJwUlhGZEFRMnwzMDc0NDU3MzU4MzEyODA0NjQ2fDI=?share_link_id=23847173917
 
+// CancelOrder cancels an order by its ID or clientOId. If `isClientOId` is true, the `id` is treated as a clientOinput.Id, otherwise it is treated as an orderId
 func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (*uuid.UUID, error) {
-	// get order
-	order, err := s.getOrder(ctx, input.IsClientOId, input.Id)
-	if err != nil {
-		logctx.Warn(ctx, "order not found", logger.String("id", input.Id.String()), logger.Bool("isClientOId", input.IsClientOId))
-		return nil, err
-	}
-	// remove from price
-	txid, err := s.orderBookStore.TxStart(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer s.orderBookStore.TxEnd(ctx, txid)
-
-	err = s.orderBookStore.TxRemoveOrderFromPrice(ctx, txid, *order)
-	if err != nil {
-		logctx.Error(ctx, "TxRemoveOrderFromPrice", logger.String("id", input.Id.String()), logger.Bool("isClientOId", input.IsClientOId))
-		return nil, err
-	}
-	// mark as cancelled
-	order.Cancelled = true
-	// isUnfilled?
-	if order.IsUnfilled() {
-		// non Pending?
-		if !order.IsPending() {
-			err := s.orderBookStore.TxDeleteOrder(ctx, txid, order.Id)
-			if err != nil {
-				logctx.Error(ctx, "DeleteOrder error  in Cancel Unfilled non pending Order", logger.String("orderId", input.Id.String()), logger.Error(err))
-				return nil, err
-			}
-			return &order.Id, nil
-		}
-	}
-	// store cancelled state change
-	err = s.orderBookStore.TxStoreOrder(ctx, txid, *order)
-	if err != nil {
-		logctx.Error(ctx, "StoreOpenOrder error  in cancel of filled or pending order", logger.String("orderId", input.Id.String()), logger.Error(err))
-		return nil, err
-	}
-	return &order.Id, nil
-}
-
-// CancelOrder cancels an order by its ID or clientOId. If `isClientOId` is true, the `id` is treated as a clientOinput.Id, otherwise it is treated as an orderId.
-func (s *Service) CancelOrderOld(ctx context.Context, input CancelOrderInput) (*uuid.UUID, error) {
 
 	order, err := s.getOrder(ctx, input.IsClientOId, input.Id)
 	if err != nil {
@@ -73,42 +31,66 @@ func (s *Service) CancelOrderOld(ctx context.Context, input CancelOrderInput) (*
 		return nil, models.ErrNotFound
 	}
 
-	if order.IsPending() {
-		logctx.Info(ctx, "cancelling a pending order", logger.String("orderId", order.Id.String()), logger.String("sizePending", order.SizePending.String()))
-		err = s.orderBookStore.CancelPendingOrder(ctx, *order)
-		if err != nil {
-			logctx.Error(ctx, "error CancelPendingOrder", logger.Error(err))
-			return nil, err
-		}
-		return nil, models.ErrOrderPending
+	if order.Cancelled {
+		logctx.Warn(ctx, "order already cancelled", logger.String("orderId", order.Id.String()))
+		return nil, models.ErrOrderCancelled
 	}
 
-	if order.IsFilled() {
-		logctx.Warn(ctx, "cancelling order not possible when order is filled", logger.String("orderId", order.Id.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("size", order.Size.String()))
-		return nil, models.ErrOrderFilled
-	}
+	err = s.orderBookStore.PerformTx(ctx, func(txid uint) error {
+		order.Cancelled = true
 
-	if order.IsUnfilled() {
-		err = s.orderBookStore.CancelUnfilledOrder(ctx, *order)
-		if err != nil {
-			logctx.Error(ctx, "error CancelUnfilledOrder", logger.Error(err))
-			return nil, err
+		// remove from prices
+		if err := s.orderBookStore.TxModifyPrices(ctx, txid, models.Remove, *order); err != nil {
+			logctx.Error(ctx, "Failed removing order from prices", logger.String("id", input.Id.String()), logger.String("side", order.Side.String()), logger.Error(err))
+			return fmt.Errorf("failed removing order from prices: %w", err)
 		}
 
-		logctx.Info(ctx, "unfilled order removed", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
-
-		return &order.Id, nil
-	} else {
-		err = s.orderBookStore.CancelPartialFilledOrder(ctx, *order)
-		if err != nil {
-			logctx.Error(ctx, "error occured when cancelling partial order", logger.Error(err))
-			return nil, err
+		// remove from user's open orders
+		if err = s.orderBookStore.TxModifyUserOpenOrders(ctx, txid, models.Remove, *order); err != nil {
+			logctx.Error(ctx, "Failed removing order from user open orders", logger.String("id", input.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
+			return fmt.Errorf("failed removing order from user open orders: %w", err)
 		}
 
-		logctx.Info(ctx, "partial filled order cancelled", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+		switch {
+		// ORDER IS PARTIALLY FILLED AND NOT PENDING
+		case !order.IsUnfilled() && !order.IsPending():
+			logctx.Debug(ctx, "cancelling partially filled and not pending order", logger.String("orderId", order.Id.String()))
+			if err := s.orderBookStore.TxModifyUserFilledOrders(ctx, txid, models.Add, *order); err != nil {
+				logctx.Error(ctx, "Failed adding order to user filled orders", logger.String("id", input.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
+				return fmt.Errorf("failed adding order to user filled orders: %w", err)
+			}
+			if err = s.orderBookStore.TxModifyOrder(ctx, txid, models.Update, *order); err != nil {
+				logctx.Error(ctx, "Failed updating order to cancelled", logger.String("id", input.Id.String()), logger.Error(err))
+				return fmt.Errorf("failed updating order to cancelled: %w", err)
+			}
+		// ORDER IS PARTIALLY FILLED AND PENDING
+		case !order.IsUnfilled() && order.IsPending():
+			logctx.Debug(ctx, "cancelling partially filled and pending order", logger.String("orderId", order.Id.String()))
+			if err = s.orderBookStore.TxModifyOrder(ctx, txid, models.Update, *order); err != nil {
+				logctx.Error(ctx, "Failed updating order", logger.String("id", input.Id.String()), logger.Error(err))
+				return fmt.Errorf("failed updating order: %w", err)
+			}
+		// ORDER IS UNFILLED AND NOT PENDING
+		case order.IsUnfilled() && !order.IsPending():
+			logctx.Debug(ctx, "cancelling unfilled and not pending order", logger.String("orderId", order.Id.String()))
+			if err = s.orderBookStore.TxRemoveUnfilledOrder(ctx, txid, *order); err != nil {
+				logctx.Error(ctx, "Failed removing unfilled order", logger.String("id", input.Id.String()), logger.Error(err))
+				return fmt.Errorf("failed removing unfilled order: %w", err)
+			}
+		// ORDER IS UNFILLED AND PENDING
+		case order.IsUnfilled() && order.IsPending():
+			logctx.Debug(ctx, "cancelling unfilled and pending order", logger.String("orderId", order.Id.String()))
+			if err = s.orderBookStore.TxModifyOrder(ctx, txid, models.Update, *order); err != nil {
+				logctx.Error(ctx, "Failed updating order", logger.String("id", input.Id.String()), logger.Error(err))
+				return fmt.Errorf("failed updating order: %w", err)
+			}
+		}
 
-		return &order.Id, nil
-	}
+		return nil
+	})
+
+	logctx.Debug(ctx, "order cancelled", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+	return &order.Id, nil
 }
 
 func (s *Service) getOrder(ctx context.Context, isClientOId bool, orderId uuid.UUID) (order *models.Order, err error) {

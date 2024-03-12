@@ -2,16 +2,214 @@ package redisrepo
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
+	"github.com/redis/go-redis/v9"
 )
 
 // Generic Building blocks with no biz logic in a single TX
-func (r *redisRepository) TxStart(ctx context.Context) (uint, error) {
-	// --- START TRANSACTION ---
+
+// Perform a transaction with a single action. This should be used for all interactions with the Redis repository.
+// Handles the transaction lifecycle.
+// The action function should be a single Redis command or a series of Redis commands that should be executed in a single transaction.
+// See the methods below (eg. TxModifyOrder, TxModifyPrices, etc.)
+func (r *redisRepository) PerformTx(ctx context.Context, action func(txid uint) error) error {
+	txid, err := r.txStart(ctx)
+	if err != nil {
+		logctx.Error(ctx, "PerformTransaction txStart failed", logger.Error(err))
+		return fmt.Errorf("PerformTransaction txStart failed: %w", err)
+	}
+	defer func() {
+		logctx.Debug(ctx, "PerformTransaction defer txEnd", logger.Int("txid", int(txid)))
+		r.txEnd(ctx, txid)
+	}()
+
+	err = action(txid)
+	if err != nil {
+		logctx.Error(ctx, "PerformTransaction action failed", logger.Error(err), logger.Int("txid", int(txid)))
+		return fmt.Errorf("PerformTransaction action failed: %w", err)
+	}
+
+	logctx.Debug(ctx, "PerformTransaction success", logger.Int("txid", int(txid)))
+	return nil
+}
+
+// This should be used for all interactions with the `order:<id>` hash key
+func (r *redisRepository) TxModifyOrder(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	if tx, ok := r.txMap[txid]; ok {
+
+		switch operation {
+		case models.Add, models.Update:
+			// Store order details by order ID
+			orderIDKey := CreateOrderIDKey(order.Id)
+			orderMap := order.OrderToMap()
+			tx.HSet(ctx, orderIDKey, orderMap)
+			logctx.Debug(ctx, "TxModifyOrder add", logger.String("orderId", order.Id.String()), logger.String("orderMap", fmt.Sprintf("%v", orderMap)))
+		case models.Remove:
+			orderIDKey := CreateOrderIDKey(order.Id)
+			tx.Del(ctx, orderIDKey)
+			logctx.Debug(ctx, "TxModifyOrder remove", logger.String("orderId", order.Id.String()))
+		default:
+			logctx.Error(ctx, "TxModifyOrder unsupported operation", logger.Int("operation", int(operation)))
+			return models.ErrUnsupportedOperation
+		}
+
+		return nil
+	} else {
+		logctx.Error(ctx, "TxModifyOrder txid not found", logger.Int("txid", int(txid)))
+		return models.ErrNotFound
+	}
+}
+
+// This should be used for all interactions with the `prices:<symbol>:buy` and `prices:<symbol>:sell` sorted sets (used to store bid/ask prices for each token pair)
+func (r *redisRepository) TxModifyPrices(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	if tx, ok := r.txMap[txid]; ok {
+
+		switch operation {
+		case models.Add:
+			// Add order to the sorted set for that token pair
+			f64Price, _ := order.Price.Float64()
+			timestamp := float64(order.Timestamp.UTC().UnixNano()) / 1e9
+			score := f64Price + (timestamp / 1e12) // Use a combination of price and scaled timestamp so that orders with the same price are sorted by time. This should not be used for price comparison.
+
+			if order.Side == models.BUY {
+				buyPricesKey := CreateBuySidePricesKey(order.Symbol)
+				tx.ZAdd(ctx, buyPricesKey, redis.Z{
+					Score:  score,
+					Member: order.Id.String(),
+				})
+			} else {
+				sellPricesKey := CreateSellSidePricesKey(order.Symbol)
+				tx.ZAdd(ctx, sellPricesKey, redis.Z{
+					Score:  score,
+					Member: order.Id.String(),
+				})
+			}
+			logctx.Debug(ctx, "TxModifyPrices add", logger.String("orderId", order.Id.String()), logger.String("symbol", order.Symbol.String()), logger.String("side", order.Side.String()))
+		case models.Remove:
+			if order.Side == models.BUY {
+				buyPricesKey := CreateBuySidePricesKey(order.Symbol)
+				tx.ZRem(ctx, buyPricesKey, order.Id.String())
+			} else {
+				sellPricesKey := CreateSellSidePricesKey(order.Symbol)
+				tx.ZRem(ctx, sellPricesKey, order.Id.String())
+			}
+			logctx.Debug(ctx, "TxModifyPrices remove", logger.String("orderId", order.Id.String()), logger.String("symbol", order.Symbol.String()), logger.String("side", order.Side.String()))
+		default:
+			logctx.Error(ctx, "TxModifyPrices unsupported operation", logger.Int("operation", int(operation)))
+			return models.ErrUnsupportedOperation
+		}
+		return nil
+	} else {
+		logctx.Error(ctx, "TxModifyPrices txid not found", logger.Int("txid", int(txid)))
+		return models.ErrNotFound
+	}
+}
+
+// This should be used for all interactions with the `clientOID:<clientOID>` hash key
+func (r *redisRepository) TxModifyClientOId(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	if tx, ok := r.txMap[txid]; ok {
+		switch operation {
+		case models.Add:
+			clientOIdKey := CreateClientOIDKey(order.ClientOId)
+			tx.Set(ctx, clientOIdKey, order.Id.String(), 0)
+			logctx.Debug(ctx, "ModifyClientOId add", logger.String("clientOID", order.ClientOId.String()), logger.String("orderId", order.Id.String()))
+		case models.Remove:
+			clientOIdKey := CreateClientOIDKey(order.ClientOId)
+			tx.Del(ctx, clientOIdKey)
+			logctx.Debug(ctx, "ModifyClientOId remove", logger.String("clientOID", order.ClientOId.String()), logger.String("orderId", order.Id.String()))
+		default:
+			logctx.Error(ctx, "ModifyClientOId unsupported operation", logger.Int("operation", int(operation)))
+			return models.ErrUnsupportedOperation
+		}
+		return nil
+	} else {
+		logctx.Error(ctx, "ModifyClientOId txid not found", logger.Int("txid", int(txid)))
+		return models.ErrNotFound
+	}
+}
+
+// This should be used for all interactions with the `user:<userId>:openOrders` sorted set (used to store open orders for each user)
+func (r *redisRepository) TxModifyUserOpenOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	if tx, ok := r.txMap[txid]; ok {
+		switch operation {
+		case models.Add:
+			userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
+			userOrdersScore := float64(order.Timestamp.UTC().UnixNano())
+			tx.ZAdd(ctx, userOrdersKey, redis.Z{
+				Score:  userOrdersScore,
+				Member: order.Id.String(),
+			})
+			logctx.Debug(ctx, "ModifyUserOpenOrders add", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
+		case models.Remove:
+			userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
+			tx.ZRem(ctx, userOrdersKey, order.Id.String())
+			logctx.Debug(ctx, "ModifyUserOpenOrders remove", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
+		default:
+			logctx.Error(ctx, "ModifyUserOpenOrders unsupported operation", logger.Int("operation", int(operation)))
+			return models.ErrUnsupportedOperation
+		}
+		return nil
+	} else {
+		logctx.Error(ctx, "ModifyUserOpenOrders txid not found", logger.Int("txid", int(txid)))
+		return models.ErrNotFound
+	}
+}
+
+// This should be used for all interactions with the `user:<userId>:filledOrders` sorted set (used to store partial-filled and cancelled OR fully filled orders for each user)
+func (r *redisRepository) TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+	if tx, ok := r.txMap[txid]; ok {
+		switch operation {
+		case models.Add:
+			userFilledOrdersKey := CreateUserFilledOrdersKey(order.UserId)
+			userFilledOrdersScore := float64(order.Timestamp.UTC().UnixNano())
+			tx.ZAdd(ctx, userFilledOrdersKey, redis.Z{
+				Score:  userFilledOrdersScore,
+				Member: order.Id.String(),
+			})
+			logctx.Debug(ctx, "ModifyUserFilledOrders add", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
+		case models.Remove:
+			userFilledOrdersKey := CreateUserFilledOrdersKey(order.UserId)
+			tx.ZRem(ctx, userFilledOrdersKey, order.Id.String())
+			logctx.Debug(ctx, "ModifyUserFilledOrders remove", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
+		default:
+			logctx.Error(ctx, "ModifyUserFilledOrders unsupported operation", logger.Int("operation", int(operation)))
+			return models.ErrUnsupportedOperation
+		}
+		return nil
+	} else {
+		logctx.Error(ctx, "ModifyUserFilledOrders txid not found", logger.Int("txid", int(txid)))
+		return models.ErrNotFound
+	}
+}
+
+// Removed an unfilled order
+func (r *redisRepository) TxRemoveUnfilledOrder(ctx context.Context, txid uint, order models.Order) error {
+
+	if err := r.TxModifyPrices(ctx, txid, models.Remove, order); err != nil {
+		return err
+	}
+
+	if err := r.TxModifyUserOpenOrders(ctx, txid, models.Remove, order); err != nil {
+		return err
+	}
+
+	if err := r.TxModifyClientOId(ctx, txid, models.Remove, order); err != nil {
+		return err
+	}
+
+	if err := r.TxModifyOrder(ctx, txid, models.Remove, order); err != nil {
+		return err
+	}
+
+	logctx.Debug(ctx, "TxRemoveUnfilledOrder", logger.String("orderId", order.Id.String()))
+	return nil
+}
+
+func (r *redisRepository) txStart(ctx context.Context) (uint, error) {
 	tx := r.client.TxPipeline()
 	r.ixIndex += 1
 	txid := r.ixIndex
@@ -20,54 +218,13 @@ func (r *redisRepository) TxStart(ctx context.Context) (uint, error) {
 	return txid, nil
 }
 
-func (r *redisRepository) TxEnd(ctx context.Context, txid uint) {
-	// --- END TRANSACTION ---
+func (r *redisRepository) txEnd(ctx context.Context, txid uint) {
 	if tx, ok := r.txMap[txid]; ok {
 		_, err := tx.Exec(ctx)
 		if err != nil {
-			logctx.Error(ctx, "TxEnd exec failed", logger.Int("txid", int(txid)), logger.Error(err))
+			logctx.Error(ctx, "txEnd exec failed", logger.Int("txid", int(txid)), logger.Error(err))
 		}
 		return
 	}
-	logctx.Error(ctx, "TxEnd txid not found", logger.Int("txid", int(txid)))
-}
-func (r *redisRepository) TxRemoveOrderFromPrice(ctx context.Context, txid uint, order models.Order) error {
-	if tx, ok := r.txMap[txid]; ok {
-		if order.Side == models.BUY {
-			buyPricesKey := CreateBuySidePricesKey(order.Symbol)
-			tx.ZRem(ctx, buyPricesKey, order.Id.String())
-		} else {
-			sellPricesKey := CreateSellSidePricesKey(order.Symbol)
-			tx.ZRem(ctx, sellPricesKey, order.Id.String())
-		}
-		return nil
-	} else {
-		logctx.Error(ctx, "TxRemoveOrderFromPrice txid not found", logger.Int("txid", int(txid)))
-		return models.ErrNotFound
-	}
-}
-func (r *redisRepository) TxDeleteOrder(ctx context.Context, txid uint, orderId uuid.UUID) error {
-	if tx, ok := r.txMap[txid]; ok {
-		userOrdersKey := CreateUserOpenOrdersKey(orderId)
-		tx.ZRem(ctx, userOrdersKey, orderId)
-		return nil
-	} else {
-		logctx.Error(ctx, "TxDeleteOrder txid not found", logger.Int("txid", int(txid)))
-		return models.ErrNotFound
-	}
-}
-
-// stores only the state of the order
-// as opposed to storeOrderTX - which should be deprecated in the end
-func (r *redisRepository) TxStoreOrder(ctx context.Context, txid uint, order models.Order) error {
-	if tx, ok := r.txMap[txid]; ok {
-		// Store order details by order ID
-		orderIDKey := CreateOrderIDKey(order.Id)
-		orderMap := order.OrderToMap()
-		tx.HSet(ctx, orderIDKey, orderMap)
-		return nil
-	} else {
-		logctx.Error(ctx, "TxStoreOrder txid not found", logger.Int("txid", int(txid)))
-		return models.ErrNotFound
-	}
+	logctx.Error(ctx, "txEnd txid not found", logger.Int("txid", int(txid)))
 }
