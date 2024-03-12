@@ -41,12 +41,10 @@ func TestRedisRepository_TxStartEndPerform(t *testing.T) {
 			ixIndex: 0,
 		}
 
-		// Set expectations
 		mock.ExpectTxPipeline()
 
-		txid, err := repo.txStart(context.Background())
+		txid := repo.txStart(context.Background())
 
-		assert.NoError(t, err)
 		assert.Equal(t, uint(1), txid)
 		assert.Contains(t, repo.txMap, txid)
 	})
@@ -62,10 +60,7 @@ func TestRedisRepository_TxStartEndPerform(t *testing.T) {
 
 		repo.txEnd(context.Background(), 1)
 
-		// Check that the transaction was attempted to be executed
 		assert.NoError(t, mock.ExpectationsWereMet())
-
-		// Ensure the txMap no longer contains the transaction
 		assert.NotContains(t, repo.txMap, 1)
 	})
 
@@ -369,32 +364,5 @@ func TestRedisRepository_TxModifyUserFilledOrders(t *testing.T) {
 		})
 
 		assert.ErrorIs(t, err, models.ErrUnsupportedOperation)
-	})
-}
-
-func TestRedisRepository_TxRemoveUnfilledOrder(t *testing.T) {
-
-	ctx, mock, repo := setupTest()
-	timestamp := time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)
-	order := models.Order{
-		Side:      models.BUY,
-		Timestamp: timestamp,
-	}
-
-	t.Run("successfully removes unfilled order", func(t *testing.T) {
-
-		mock.ExpectTxPipeline()
-		mock.ExpectZRem(CreateBuySidePricesKey(order.Symbol), order.Id.String()).SetVal(1)
-		mock.ExpectZRem(CreateUserOpenOrdersKey(order.UserId), order.Id.String()).SetVal(1)
-		mock.ExpectDel(CreateClientOIDKey(order.ClientOId)).SetVal(1)
-		mock.ExpectDel(CreateOrderIDKey(order.Id)).SetVal(1)
-		mock.ExpectTxPipelineExec()
-
-		err := repo.PerformTx(ctx, func(txid uint) error {
-			return repo.TxRemoveUnfilledOrder(ctx, txid, order)
-		})
-
-		assert.NoError(t, err)
-		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }

@@ -17,27 +17,24 @@ import (
 // The action function should be a single Redis command or a series of Redis commands that should be executed in a single transaction.
 // See the methods below (eg. TxModifyOrder, TxModifyPrices, etc.)
 func (r *redisRepository) PerformTx(ctx context.Context, action func(txid uint) error) error {
-	txid, err := r.txStart(ctx)
-	if err != nil {
-		logctx.Error(ctx, "PerformTransaction txStart failed", logger.Error(err))
-		return fmt.Errorf("PerformTransaction txStart failed: %w", err)
-	}
-	defer func() {
-		logctx.Debug(ctx, "PerformTransaction defer txEnd", logger.Int("txid", int(txid)))
-		r.txEnd(ctx, txid)
-	}()
+	txid := r.txStart(ctx)
 
-	err = action(txid)
+	err := action(txid)
 	if err != nil {
-		logctx.Error(ctx, "PerformTransaction action failed", logger.Error(err), logger.Int("txid", int(txid)))
-		return fmt.Errorf("PerformTransaction action failed: %w", err)
+		logctx.Error(ctx, "PerformTx action failed", logger.Error(err), logger.Int("txid", int(txid)))
+		return fmt.Errorf("PerformTx action failed: %w", err)
 	}
 
-	logctx.Debug(ctx, "PerformTransaction success", logger.Int("txid", int(txid)))
+	err = r.txEnd(ctx, txid)
+	if err != nil {
+		logctx.Error(ctx, "PerformTx txEnd commit failed", logger.Error(err), logger.Int("txid", int(txid)))
+		return fmt.Errorf("PerformTx txEnd commit failed: %w", err)
+	}
+
 	return nil
 }
 
-// This should be used for all interactions with the `order:<id>` hash key
+// This should be used for all write interactions with the `order:<id>` hash key
 func (r *redisRepository) TxModifyOrder(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
 	var tx redis.Pipeliner
 	var ok bool
@@ -66,7 +63,7 @@ func (r *redisRepository) TxModifyOrder(ctx context.Context, txid uint, operatio
 
 }
 
-// This should be used for all interactions with the `prices:<symbol>:buy` and `prices:<symbol>:sell` sorted sets (used to store bid/ask prices for each token pair)
+// This should be used for all write interactions with the `prices:<symbol>:buy` and `prices:<symbol>:sell` sorted sets (used to store bid/ask prices for each token pair)
 func (r *redisRepository) TxModifyPrices(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
 	var tx redis.Pipeliner
 	var ok bool
@@ -113,7 +110,7 @@ func (r *redisRepository) TxModifyPrices(ctx context.Context, txid uint, operati
 
 }
 
-// This should be used for all interactions with the `clientOID:<clientOID>` hash key
+// This should be used for all write interactions with the `clientOID:<clientOID>` hash key
 func (r *redisRepository) TxModifyClientOId(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
 	var tx redis.Pipeliner
 	var ok bool
@@ -138,7 +135,7 @@ func (r *redisRepository) TxModifyClientOId(ctx context.Context, txid uint, oper
 	return nil
 }
 
-// This should be used for all interactions with the `user:<userId>:openOrders` sorted set (used to store open orders for each user)
+// This should be used for all write interactions with the `user:<userId>:openOrders` sorted set (used to store open orders for each user)
 func (r *redisRepository) TxModifyUserOpenOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
 	var tx redis.Pipeliner
 	var ok bool
@@ -167,7 +164,7 @@ func (r *redisRepository) TxModifyUserOpenOrders(ctx context.Context, txid uint,
 	return nil
 }
 
-// This should be used for all interactions with the `user:<userId>:filledOrders` sorted set (used to store partial-filled and cancelled OR fully filled orders for each user)
+// This should be used for all write interactions with the `user:<userId>:filledOrders` sorted set (used to store partial-filled and cancelled OR fully filled orders for each user)
 func (r *redisRepository) TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
 	var tx redis.Pipeliner
 	var ok bool
@@ -196,45 +193,35 @@ func (r *redisRepository) TxModifyUserFilledOrders(ctx context.Context, txid uin
 	return nil
 }
 
-// Removed an unfilled order
-func (r *redisRepository) TxRemoveUnfilledOrder(ctx context.Context, txid uint, order models.Order) error {
-
-	if err := r.TxModifyPrices(ctx, txid, models.Remove, order); err != nil {
-		return err
-	}
-
-	if err := r.TxModifyUserOpenOrders(ctx, txid, models.Remove, order); err != nil {
-		return err
-	}
-
-	if err := r.TxModifyClientOId(ctx, txid, models.Remove, order); err != nil {
-		return err
-	}
-
-	if err := r.TxModifyOrder(ctx, txid, models.Remove, order); err != nil {
-		return err
-	}
-
-	logctx.Debug(ctx, "TxRemoveUnfilledOrder", logger.String("orderId", order.Id.String()))
-	return nil
-}
-
-func (r *redisRepository) txStart(ctx context.Context) (uint, error) {
+// Create a new transaction and return the transaction ID
+func (r *redisRepository) txStart(ctx context.Context) uint {
 	tx := r.client.TxPipeline()
 	r.ixIndex += 1
 	txid := r.ixIndex
 	r.txMap[txid] = tx
 
-	return txid, nil
+	return txid
 }
 
-func (r *redisRepository) txEnd(ctx context.Context, txid uint) {
-	if tx, ok := r.txMap[txid]; ok {
-		_, err := tx.Exec(ctx)
-		if err != nil {
-			logctx.Error(ctx, "txEnd exec failed", logger.Int("txid", int(txid)), logger.Error(err))
-		}
-		return
+// Commit a given transaction
+func (r *redisRepository) txEnd(ctx context.Context, txid uint) error {
+	var tx redis.Pipeliner
+	var ok bool
+	if tx, ok = r.txMap[txid]; !ok {
+		logctx.Error(ctx, "txEnd txid not found", logger.Int("txid", int(txid)))
+		return models.ErrNotFound
 	}
-	logctx.Error(ctx, "txEnd txid not found", logger.Int("txid", int(txid)))
+
+	cmderList, err := tx.Exec(ctx)
+
+	for _, cmder := range cmderList {
+		logctx.Debug(ctx, "Command executed in transaction", logger.String("command", cmder.String()))
+	}
+
+	if err != nil {
+		logctx.Error(ctx, "txEnd transaction exec failed", logger.Error(err), logger.Int("txid", int(txid)))
+		return fmt.Errorf("txEnd transaction exec failed for txId %q: %w", txid, err)
+	}
+
+	return nil
 }

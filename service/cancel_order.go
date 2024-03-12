@@ -78,8 +78,12 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (*uui
 		// ORDER IS UNFILLED AND NOT PENDING
 		case order.IsUnfilled() && !order.IsPending():
 			logctx.Debug(ctx, "cancelling unfilled and not pending order", logger.String("orderId", order.Id.String()))
-			if err = s.orderBookStore.TxRemoveUnfilledOrder(ctx, txid, *order); err != nil {
-				logctx.Error(ctx, "Failed removing unfilled order", logger.String("id", input.Id.String()), logger.Error(err))
+			if err := s.orderBookStore.TxModifyClientOId(ctx, txid, models.Remove, *order); err != nil {
+				logctx.Error(ctx, "Failed removing order from clientOId", logger.String("id", input.Id.String()), logger.Error(err))
+				return fmt.Errorf("failed removing unfilled order: %w", err)
+			}
+			if err = s.orderBookStore.TxModifyOrder(ctx, txid, models.Remove, *order); err != nil {
+				logctx.Error(ctx, "Failed removing order", logger.String("id", input.Id.String()), logger.Error(err))
 				return fmt.Errorf("failed removing unfilled order: %w", err)
 			}
 		// ORDER IS UNFILLED AND PENDING
