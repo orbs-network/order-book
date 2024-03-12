@@ -58,7 +58,8 @@ func TestRedisRepository_TxStartEndPerform(t *testing.T) {
 			txMap:  map[uint]redis.Pipeliner{1: pipeline},
 		}
 
-		repo.txEnd(context.Background(), 1)
+		err := repo.txEnd(context.Background(), 1)
+		assert.NoError(t, err)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 		assert.NotContains(t, repo.txMap, 1)
