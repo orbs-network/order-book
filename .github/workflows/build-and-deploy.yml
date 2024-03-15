@@ -61,7 +61,7 @@ jobs:
 
   deploy-development:
     runs-on: ubuntu-latest
-    needs: [build-server, build-swapstracker, build-maker-mock]
+    needs: [build-server, build-swaps-tracker, build-maker-mock]
     # environment: development
 
     steps:
