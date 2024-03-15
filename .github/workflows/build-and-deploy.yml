@@ -78,7 +78,7 @@ jobs:
 
       - name: Pull and Release Image for Swaps Tracker Nonprod
         run: |
-          heroku container:release worker --app ob-pending-swaps-track
+          heroku container:release worker --app ob-pending-swaps-tracker
         env:
           HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
 
