@@ -22,7 +22,7 @@ jobs:
         with:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_app_name: "ob-server-development"
-          hero_app_type: "web"
+          heroku_app_type: "web"
 
   build-swaps-tracker:
     runs-on: ubuntu-latest
@@ -35,7 +35,7 @@ jobs:
         with:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_app_name: "ob-swaps-tracker-development"
-          hero_app_type: "worker"
+          heroku_app_type: "worker"
 
   build-maker-mock:
     runs-on: ubuntu-latest
