@@ -1,3 +1,5 @@
+# NOTE: This pipeline is deprecated and will be removed in the near future
+
 name: Build and Deploy to Heroku
 
 on:
