@@ -8,6 +8,9 @@ inputs:
   heroku_app_name:
     description: "Heroku app name"
     required: true
+  heroku_app_type:
+    description: "Heroku app type"
+    required: true
 
 runs:
   using: "composite"
@@ -21,13 +24,15 @@ runs:
     - name: Build Docker Image for Server
       shell: bash
       run: |
-        docker build --build-arg APP_PATH=./cmd/order-book -t registry.heroku.com/$HEROKU_APP_NAME/web -f cmd/order-book.Dockerfile .
+        docker build --build-arg APP_PATH=./cmd/order-book -t registry.heroku.com/$HEROKU_APP_NAME/$HEROKU_APP_TYPE -f cmd/order-book.Dockerfile .
       env:
         HEROKU_APP_NAME: ${{ inputs.heroku_app_name }}
+        HEROKU_APP_TYPE: ${{ inputs.heroku_app_type }}
 
     - name: Push Docker Image for Server to Registry
       shell: bash
-      run: docker push registry.heroku.com/$HEROKU_APP_NAME/web
+      run: docker push registry.heroku.com/$HEROKU_APP_NAME/$HEROKU_APP_TYPE
       env:
         HEROKU_API_KEY: ${{ inputs.heroku_api_key }}
         HEROKU_APP_NAME: ${{ inputs.heroku_app_name }}
+        HEROKU_APP_TYPE: ${{ inputs.heroku_app_type }}
