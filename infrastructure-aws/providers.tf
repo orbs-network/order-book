@@ -4,10 +4,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-    heroku = {
-      source  = "heroku/heroku"
-      version = "~> 5.0"
-    }
   }
 
 
@@ -15,8 +11,9 @@ terraform {
 }
 
 provider "aws" {
+  region = var.region
   assume_role {
-    role_arn     = "arn:aws:iam::506367651493:role/terraform"
+    role_arn     = "arn:aws:iam::${var.aws_deploy_account}:role/${var.aws_deploy_iam_role_name}"
     session_name = "Terraform"
   }
 }

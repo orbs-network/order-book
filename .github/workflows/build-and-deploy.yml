@@ -1,0 +1,142 @@
+name: Build and deploy
+env:
+  terraform_state_s3_bucket: "orbs-terraform-tfstate"
+  terraform_state_s3_key_prefix: "order-book"
+  terraform_state_dynamodb_table: "orbs-terraform-locks"
+  build_path: "."
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "**"
+jobs:
+  build-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+
+      - name: Build server image and push to Heroku
+        uses: ./.github/actions/build-push-image
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: "ob-server-development"
+          heroku_app_type: "web"
+
+  build-swaps-tracker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+
+      - name: Build swaps tracker image and push to Heroku
+        uses: ./.github/actions/build-push-image
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: "ob-swaps-tracker-development"
+          heroku_app_type: "worker"
+
+  build-maker-mock:
+    runs-on: ubuntu-latest
+    needs: [build-server, build-swaps-tracker]
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+
+      - name: Login to Heroku Container Registry
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t registry.heroku.com/ob-maker-mock/worker -f e2e/maker/Dockerfile .
+          docker push registry.heroku.com/ob-maker-mock/worker
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Release Image
+        run: heroku container:release worker --app ob-maker-mock
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+  deploy-development:
+    runs-on: ubuntu-latest
+    needs: [build-server, build-swaps-tracker, build-maker-mock]
+    environment: development
+
+    steps:
+      - name: Login to Heroku Container Registry
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Pull and Release Image for Server Nonprod
+        run: |
+          heroku container:release web --app ob-server-development
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Pull and Release Image for Swaps Tracker Nonprod
+        run: |
+          heroku container:release worker --app ob-swaps-tracker-development
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: deploy-development
+    environment: staging
+
+    steps:
+      - name: Login to Heroku Container Registry
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Pull and Release Image for Server Staging
+        run: |
+          docker pull registry.heroku.com/ob-server-development/web
+          docker tag registry.heroku.com/ob-server-development/web registry.heroku.com/ob-server-staging/web
+          docker push registry.heroku.com/ob-server-staging/web
+          heroku container:release web --app ob-server-staging
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Pull and Release Image for Swaps Tracker Staging
+        run: |
+          docker pull registry.heroku.com/ob-swaps-tracker-development/worker
+          docker tag registry.heroku.com/ob-swaps-tracker-development/worker registry.heroku.com/ob-swaps-tracker-staging/worker
+          docker push registry.heroku.com/ob-swaps-tracker-staging/worker
+          heroku container:release worker --app ob-swaps-tracker-staging
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [deploy-development, deploy-staging]
+    environment: production
+
+    steps:
+      - name: Login to Heroku Container Registry
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Pull and Release Image for Server Production
+        run: |
+          docker pull registry.heroku.com/ob-server-staging/web
+          docker tag registry.heroku.com/ob-server-staging/web registry.heroku.com/ob-server-production/web
+          docker push registry.heroku.com/ob-server-production/web
+          heroku container:release web --app ob-server-production
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Pull and Release Image for Swaps Tracker Production
+        run: |
+          docker pull registry.heroku.com/ob-swaps-tracker-staging/worker
+          docker tag registry.heroku.com/ob-swaps-tracker-staging/worker registry.heroku.com/ob-swaps-tracker-production/worker
+          docker push registry.heroku.com/ob-swaps-tracker-production/worker
+          heroku container:release worker --app ob-swaps-tracker-production
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
