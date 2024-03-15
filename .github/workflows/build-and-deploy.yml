@@ -1,0 +1,63 @@
+name: Build and deploy
+env:
+  terraform_state_s3_bucket: "orbs-terraform-tfstate"
+  terraform_state_s3_key_prefix: "order-book"
+  terraform_state_dynamodb_table: "orbs-terraform-locks"
+  build_path: "."
+# on:
+#   push:
+#     branches: ["main"]
+#     paths:
+#       - "**"
+on: push
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: read # This is required for actions/checkout
+jobs:
+  build-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+
+      - name: Build server image and push to Heroku
+        uses: ./.github/actions/build-push-image
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: "ob-server-development"
+
+  build-swaps-tracker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+
+      - name: Build swaps tracker image and push to Heroku
+        uses: ./.github/actions/build-push-image
+        with:
+          heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
+          heroku_app_name: "ob-swaps-tracker-development"
+
+  build-maker-mock:
+    runs-on: ubuntu-latest
+    needs: [build-server, build-swaps-tracker]
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v3
+
+      - name: Login to Heroku Container Registry
+        run: heroku container:login
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t registry.heroku.com/ob-maker-mock/worker -f e2e/maker/Dockerfile .
+          docker push registry.heroku.com/ob-maker-mock/worker
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+      - name: Release Image
+        run: heroku container:release worker --app ob-maker-mock
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
