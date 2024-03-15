@@ -1,3 +1,2 @@
-environment_name = "prod"
-image_tag        = "0.0.1"
-az_count         = 1
+environment_name = "production"
+log_level        = "info"

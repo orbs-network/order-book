@@ -1,45 +1,45 @@
-variable "aws_deploy_account" {
-  description = "AWS account id to deploy to"
-  type        = string
-  default     = "506367651493"
-}
-
-variable "aws_deploy_iam_role_name" {
-  description = "AWS IAM role name to assume for deployment"
-  type        = string
-  default     = "terraform"
-}
-
 variable "environment_name" {
   type        = string
   description = "Environment specific name"
 }
 
-variable "region" {
+variable "rpc_url" {
   type        = string
-  default     = "ap-northeast-1"
-  description = "AWS region used"
+  description = "Blockchain RPC URL for the application"
+  sensitive   = true
 }
 
-variable "image_tag" {
+variable "log_level" {
   type        = string
-  description = "Docker image tag"
+  description = "Log level for the application"
+  default     = "info"
 }
 
-variable "vpc_cidr_block" {
+variable "swap_contract_address" {
   type        = string
-  description = "The CIDR block for the VPC"
-  default     = "10.1.0.0/16"
+  description = "Swap reactor contract address"
 }
 
-variable "multi_az_enabled" {
-  type        = bool
-  description = "Enable multi AZ redundancy"
-  default     = false
+variable "verify_signature" {
+  type        = string
+  description = "Whether to verify the signature sent with the order (not compulsory as the signature is verified on-chain)"
+  default     = "false"
 }
 
-variable "az_count" {
-  type        = number
-  description = "Number of availability zones to use"
-  default     = 3
+variable "maker_mock_api_key" {
+  type        = string
+  description = "Heroku API key"
+  default     = "test"
+}
+
+variable "maker_mock_is_disabled" {
+  type        = string
+  description = "Whether to disable the maker mock creating new orders"
+  default     = "true"
+}
+
+variable "maker_mock_private_key" {
+  type        = string
+  description = "Private key for the maker mock"
+  default     = "test"
 }
