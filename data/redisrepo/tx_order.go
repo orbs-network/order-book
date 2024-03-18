@@ -200,6 +200,7 @@ func (r *redisRepository) txStart(ctx context.Context) uint {
 	txid := r.ixIndex
 	r.txMap[txid] = tx
 
+	logctx.Info(ctx, "redisRepository txStart", logger.Int("txid", int(txid)))
 	return txid
 }
 
