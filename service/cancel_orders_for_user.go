@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -10,20 +9,33 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) (orderIds []uuid.UUID, err error) {
+func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orderIds []uuid.UUID, err error) {
 
-	orderIds, err = s.orderBookStore.CancelOrdersForUser(ctx, userId)
-
-	if err == models.ErrNotFound {
+	ids, err := s.orderBookStore.GetOpenOrderIds(ctx, userId)
+	if err != nil {
 		logctx.Info(ctx, "no orders found for user", logger.String("userId", userId.String()))
 		return []uuid.UUID{}, err
 	}
-
-	if err != nil {
-		logctx.Error(ctx, "could not cancel orders for user", logger.Error(err), logger.String("userId", userId.String()))
-		return []uuid.UUID{}, fmt.Errorf("could not cancel orders for user: %w", err)
+	res := []uuid.UUID{}
+	for _, id := range ids {
+		order, err := s.getOrder(ctx, false, id)
+		if err != nil {
+			logctx.Error(ctx, "could not get order", logger.Error(err), logger.String("orderId", id.String()))
+		}
+		// matching symbol only if provided
+		symbolMatches := symbol == "" || order.Symbol == symbol
+		if order != nil && symbolMatches {
+			uid, err := s.CancelOrder(ctx, CancelOrderInput{
+				Id:          id,
+				IsClientOId: false,
+				UserId:      userId,
+			}) //, symbol)
+			if err != nil {
+				logctx.Error(ctx, "could not cancel order", logger.Error(err), logger.String("orderId", uid.String()))
+			}
+			res = append(res, *uid)
+		}
 	}
 
-	logctx.Debug(ctx, "cancelled all orders for user", logger.String("userId", userId.String()), logger.Int("numOrders", len(orderIds)))
-	return orderIds, nil
+	return res, nil
 }

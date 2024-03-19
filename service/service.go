@@ -18,7 +18,7 @@ type OrderBookService interface {
 	GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.Order, error)
 	GetOrderByClientOId(ctx context.Context, clientOId uuid.UUID) (*models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
-	CancelOrdersForUser(ctx context.Context, userId uuid.UUID) (orderIds []uuid.UUID, err error)
+	CancelOrdersForUser(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orderIds []uuid.UUID, err error)
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)
 	GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
 	GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
