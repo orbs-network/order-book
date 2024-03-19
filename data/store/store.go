@@ -41,7 +41,11 @@ type OrderBookStore interface {
 	GetOrdersForUser(ctx context.Context, userId uuid.UUID, isFilledOrders bool) (orders []models.Order, totalOrders int, err error)
 	CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
 	// ------------------------------
-	// Generic Building blocks with no biz logic in a single
+	// Generic getters
+	//GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]models.Order, error)
+	GetOpenOrderIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
+	// ------------------------------
+	// Generic Building blocks with no biz logic in a single tx
 
 	// PerformTX should be used for all interactions with the Redis repository. Handles the transaction lifecycle.
 	PerformTx(ctx context.Context, action func(txid uint) error) error
