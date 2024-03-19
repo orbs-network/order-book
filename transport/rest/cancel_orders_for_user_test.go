@@ -59,7 +59,7 @@ func TestHandler_CancelOrdersForUser(t *testing.T) {
 			"successfully cancelled orders for user",
 			&mocks.MockOrderBookService{Orders: []models.Order{mocks.Order}},
 			http.StatusOK,
-			fmt.Sprintf("{\"cancelledOrderIds\":[\"%s\"]}", mocks.Order.Id.String()),
+			fmt.Sprintf("{\"symbol\":\"\",\"cancelledOrderIds\":[\"%s\"]}", mocks.Order.Id.String()),
 		},
 	}
 

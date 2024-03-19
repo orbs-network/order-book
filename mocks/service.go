@@ -94,6 +94,13 @@ func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.U
 	return m.Orders, len(m.Orders), nil
 }
 
+func (m *MockOrderBookStore) GetOpenOrderIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
+	var orderIds []uuid.UUID
+	for _, order := range m.Orders {
+		orderIds = append(orderIds, order.Id)
+	}
+	return orderIds, m.Error
+}
 func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
 	var orderIds []uuid.UUID
 	for _, order := range m.Orders {

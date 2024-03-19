@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -13,6 +14,7 @@ import (
 )
 
 type CancelOrdersForUserResponse struct {
+	Symbol            string      `json:"symbol"`
 	CancelledOrderIds []uuid.UUID `json:"cancelledOrderIds"`
 }
 
@@ -25,8 +27,15 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(ctx, "user trying to cancel all their orders", logger.String("userId", user.Id.String()))
-	orderIds, err := h.svc.CancelOrdersForUser(ctx, user.Id)
+	// get symbol
+	symbol := r.URL.Query().Get("symbol")
+	symbol = strings.ToUpper(symbol)
+	if symbol == "" {
+		logctx.Warn(ctx, "cancelAll symbol was not provided, cancelling all orders in all symbols", logger.String("userId", user.Id.String()))
+	}
+
+	logctx.Info(ctx, "user trying to cancel all their orders", logger.String("symbol", symbol), logger.String("userId", user.Id.String()))
+	orderIds, err := h.svc.CancelOrdersForUser(ctx, user.Id, models.Symbol(symbol))
 
 	if err == models.ErrNotFound {
 		logctx.Info(ctx, "no orders found for user", logger.String("userId", user.Id.String()))
@@ -43,6 +52,7 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	logctx.Info(ctx, "cancelled all orders for user", logger.String("userId", user.Id.String()), logger.Int("numOrders", len(orderIds)))
 
 	res := CancelOrdersForUserResponse{
+		Symbol:            symbol,
 		CancelledOrderIds: orderIds,
 	}
 

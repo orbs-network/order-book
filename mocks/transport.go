@@ -65,7 +65,7 @@ func (m *MockOrderBookService) GetFilledOrdersForUser(ctx context.Context, userI
 	return m.Orders, len(m.Orders), m.Error
 }
 
-func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) (orderIds []uuid.UUID, err error) {
+func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orderIds []uuid.UUID, err error) {
 	var ids []uuid.UUID
 	for _, order := range m.Orders {
 		ids = append(ids, order.Id)
