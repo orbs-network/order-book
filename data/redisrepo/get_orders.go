@@ -37,27 +37,3 @@ func (r *redisRepository) GetOpenOrderIds(ctx context.Context, userId uuid.UUID)
 	return orderIds, nil
 
 }
-
-// func (r *redisRepository) GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]models.Order, error) {
-
-// 	orderIds := r.GetOpenOrdersIds()
-// 	// We only want to fetch open orders
-// 	orders, err := r.FindOrdersByIds(ctx, orderIds, true)
-// 	if err != nil {
-// 		logctx.Error(ctx, "failed to find orders by IDs", logger.String("userId", userId.String()), logger.Error(err))
-// 		return nil, fmt.Errorf("failed to find orders by IDs: %v", err)
-// 	}
-// 	// no symbol filter
-// 	if symbol == "" {
-// 		return orders, nil
-// 	}
-// 	// filter only relevant symbols
-// 	res := []models.Order{}
-// 	for _, order := range orders {
-// 		if order.Symbol == symbol {
-// 			res = append(res, order)
-// 		}
-// 	}
-// 	return res, nil
-
-// }
