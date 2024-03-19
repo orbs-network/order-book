@@ -22,18 +22,19 @@ func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID, sym
 		if err != nil {
 			logctx.Error(ctx, "could not get order", logger.Error(err), logger.String("orderId", id.String()))
 		}
-		// matching symbol only if provided
-		symbolMatches := symbol == "" || order.Symbol == symbol
-		if order != nil && symbolMatches {
-			uid, err := s.CancelOrder(ctx, CancelOrderInput{
-				Id:          id,
-				IsClientOId: false,
-				UserId:      userId,
-			}) //, symbol)
-			if err != nil {
-				logctx.Error(ctx, "could not cancel order", logger.Error(err), logger.String("orderId", uid.String()))
+		if order != nil {
+			// matching symbol only if provided
+			if symbol == "" || order.Symbol == symbol {
+				uid, err := s.CancelOrder(ctx, CancelOrderInput{
+					Id:          id,
+					IsClientOId: false,
+					UserId:      userId,
+				}) //, symbol)
+				if err != nil {
+					logctx.Error(ctx, "could not cancel order", logger.Error(err), logger.String("orderId", uid.String()))
+				}
+				res = append(res, *uid)
 			}
-			res = append(res, *uid)
 		}
 	}
 
