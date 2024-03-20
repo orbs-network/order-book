@@ -26,7 +26,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			return models.QuoteRes{}, models.ErrIterFail
 		}
 		if !it.HasNext() {
-			logctx.Warn(ctx, "GetMinAsk failed")
+			logctx.Debug(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()), logger.String("minOutAmount", fmt.Sprintf("%v", minOutAmount)))
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
 		res, err = getOutAmountInAToken(ctx, it, inAmount)
@@ -89,8 +89,8 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 			outAmountA = outAmountA.Add(gainA)
 
 			// res
-			logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
-			logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
+			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
+			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
 			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainA, InSize: spendB})
 		}
 	}
@@ -99,7 +99,7 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
 		return models.QuoteRes{}, models.ErrInsufficientLiquity
 	}
-	logctx.Info(ctx, fmt.Sprintf("append OrderFrag outAmountA: %s", outAmountA.String()))
+	logctx.Debug(ctx, fmt.Sprintf("append OrderFrag outAmountA: %s", outAmountA.String()))
 	return models.QuoteRes{Size: outAmountA, OrderFrags: frags}, nil
 }
 
@@ -130,14 +130,14 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 		outAmountB = outAmountB.Add(gainB)
 
 		// res
-		logctx.Info(ctx, fmt.Sprintf("append OrderFrag spendA: %s", spendA.String()))
-		logctx.Info(ctx, fmt.Sprintf("append OrderFrag gainB: %s", gainB.String()))
+		logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendA: %s", spendA.String()))
+		logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainB: %s", gainB.String()))
 		frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainB, InSize: spendA})
 	}
 	if inAmountA.IsPositive() {
 		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
 		return models.QuoteRes{}, models.ErrInsufficientLiquity
 	}
-	logctx.Info(ctx, fmt.Sprintf("append OrderFrag outAmountB: %s", outAmountB.String()))
+	logctx.Debug(ctx, fmt.Sprintf("append OrderFrag outAmountB: %s", outAmountB.String()))
 	return models.QuoteRes{Size: outAmountB, OrderFrags: frags}, nil
 }

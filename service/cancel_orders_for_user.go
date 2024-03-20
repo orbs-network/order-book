@@ -13,7 +13,7 @@ func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID, sym
 
 	ids, err := s.orderBookStore.GetOpenOrderIds(ctx, userId)
 	if err != nil {
-		logctx.Info(ctx, "no orders found for user", logger.String("userId", userId.String()))
+		logctx.Debug(ctx, "no orders found for user", logger.String("userId", userId.String()))
 		return []uuid.UUID{}, err
 	}
 

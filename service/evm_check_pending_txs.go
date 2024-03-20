@@ -37,17 +37,17 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 	}
 
 	if len(pendingSwaps) == 0 {
-		logctx.Info(ctx, "No pending swaps. Sleeping...")
+		logctx.Debug(ctx, "No pending swaps. Sleeping...")
 		return nil
 	}
 
-	logctx.Info(ctx, "Found pending swaps to process", logger.Int("numPending", len(pendingSwaps)))
+	logctx.Debug(ctx, "Found pending swaps to process", logger.Int("numPending", len(pendingSwaps)))
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
 	for i := 0; i < len(pendingSwaps); i++ {
-		logctx.Info(ctx, "Trying to process pending swap", logger.Int("index", i), logger.String("txHash", pendingSwaps[i].TxHash), logger.String("swapId", pendingSwaps[i].Id.String()))
+		logctx.Debug(ctx, "Trying to process pending swap", logger.Int("index", i), logger.String("txHash", pendingSwaps[i].TxHash), logger.String("swapId", pendingSwaps[i].Id.String()))
 
 		wg.Add(1)
 		go func(index int) {
@@ -72,21 +72,21 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 
 			switch tx.Status {
 			case models.TX_SUCCESS:
-				logctx.Info(ctx, "Transaction successful", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
+				logctx.Debug(ctx, "Transaction successful", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 				_, err = e.ResolveSwap(ctx, p, true, &mu)
 				if err != nil {
 					logctx.Error(ctx, "Failed to process successful transaction", logger.Error(err), logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 					return
 				}
 			case models.TX_FAILURE:
-				logctx.Info(ctx, "Transaction failed", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
+				logctx.Debug(ctx, "Transaction failed", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 				_, err = e.ResolveSwap(ctx, p, false, &mu)
 				if err != nil {
 					logctx.Error(ctx, "Failed to process failed transaction", logger.Error(err), logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 					return
 				}
 			case models.TX_PENDING:
-				logctx.Info(ctx, "Transaction still pending", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
+				logctx.Debug(ctx, "Transaction still pending", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 			default:
 				logctx.Error(ctx, "Unknown transaction status", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 				return
@@ -97,6 +97,6 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 
 	wg.Wait()
 
-	logctx.Info(ctx, "Finished checking pending swaps", logger.Int("numPending", len(pendingSwaps)))
+	logctx.Debug(ctx, "Finished checking pending swaps", logger.Int("numPending", len(pendingSwaps)))
 	return nil
 }

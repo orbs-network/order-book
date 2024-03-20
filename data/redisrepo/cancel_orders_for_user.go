@@ -80,6 +80,6 @@ func (r *redisRepository) CancelOrdersForUser(ctx context.Context, userId uuid.U
 		logctx.Error(ctx, "encountered order in an unexpected state when cancelling all orders for user", logger.String("orderId", order.Id.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
 	}
 
-	logctx.Info(ctx, "removed all orders for user", logger.String("userId", userId.String()), logger.Int("numOrders", len(ordersToCancel)))
+	logctx.Debug(ctx, "removed all orders for user", logger.String("userId", userId.String()), logger.Int("numOrders", len(ordersToCancel)))
 	return orderIds, nil
 }

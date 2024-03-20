@@ -101,7 +101,7 @@ func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash stri
 }
 
 func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
-	logctx.Info(ctx, "AbortSwap", logger.String("swapId", swapId.String()))
+	logctx.Debug(ctx, "AbortSwap", logger.String("swapId", swapId.String()))
 	// get swap from store
 	swap, err := s.orderBookStore.GetSwap(ctx, swapId)
 	if err != nil {
@@ -165,7 +165,7 @@ func (s *Service) cancelUnlockedOrders(ctx context.Context, orders []models.Orde
 				return err
 			}
 
-			logctx.Info(ctx, "unfilled order removed", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+			logctx.Debug(ctx, "unfilled order removed", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
 
 		} else {
 			err := s.orderBookStore.CancelPartialFilledOrder(ctx, order)
@@ -174,7 +174,7 @@ func (s *Service) cancelUnlockedOrders(ctx context.Context, orders []models.Orde
 				return err
 			}
 
-			logctx.Info(ctx, "partial filled order cancelled", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+			logctx.Debug(ctx, "partial filled order cancelled", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
 
 		}
 	}

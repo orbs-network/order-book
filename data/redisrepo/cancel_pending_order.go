@@ -43,6 +43,6 @@ func (r *redisRepository) CancelPendingOrder(ctx context.Context, order models.O
 	}
 	// --- END TRANSACTION ---
 
-	logctx.Info(ctx, "cancelled pending order", logger.String("userId", order.UserId.String()), logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
+	logctx.Debug(ctx, "cancelled pending order", logger.String("userId", order.UserId.String()), logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
 	return nil
 }

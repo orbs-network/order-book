@@ -37,7 +37,7 @@ func (h *Handler) CancelOrderByOrderId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(ctx, "user trying to cancel order by orderID", logger.String("userId", user.Id.String()), logger.String("orderId", orderId.String()))
+	logctx.Debug(ctx, "user trying to cancel order by orderID", logger.String("userId", user.Id.String()), logger.String("orderId", orderId.String()))
 
 	h.handleCancelOrder(hInput{
 		ctx:         ctx,
@@ -66,7 +66,7 @@ func (h *Handler) CancelOrderByClientOId(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	logctx.Info(ctx, "user trying to cancel order by clientOId", logger.String("userId", user.Id.String()), logger.String("clientOId", clientOId.String()))
+	logctx.Debug(ctx, "user trying to cancel order by clientOId", logger.String("userId", user.Id.String()), logger.String("clientOId", clientOId.String()))
 
 	h.handleCancelOrder(hInput{
 		ctx:         ctx,

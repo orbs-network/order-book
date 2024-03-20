@@ -42,7 +42,7 @@ func (e *evmRepository) GetTx(ctx context.Context, id string) (*models.Tx, error
 		}
 
 		if pending {
-			logctx.Info(ctx, "Transaction %q is pending", logger.String("txHash", txHash.String()))
+			logctx.Debug(ctx, "Transaction %q is pending", logger.String("txHash", txHash.String()))
 			return &models.Tx{
 				Status:    models.TX_PENDING,
 				TxHash:    tx.Hash().Hex(),

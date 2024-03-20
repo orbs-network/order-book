@@ -150,7 +150,7 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		logctx.Info(ctx, "user created order", logger.String("userId", user.Id.String()), logger.String("price", parsedFields.roundedDecPrice.String()), logger.String("size", parsedFields.decSize.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
+		logctx.Debug(ctx, "user created order", logger.String("userId", user.Id.String()), logger.String("price", parsedFields.roundedDecPrice.String()), logger.String("size", parsedFields.decSize.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
 		createdOrders = append(createdOrders, order)
 	}
 
@@ -163,7 +163,7 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(ctx, "user created orders", logger.String("userId", user.Id.String()), logger.Int("numOfOrders", len(createdOrders)))
+	logctx.Debug(ctx, "user created orders", logger.String("userId", user.Id.String()), logger.Int("numOfOrders", len(createdOrders)))
 	response.Status = http.StatusCreated
 	restutils.WriteJSONResponse(ctx, w, http.StatusCreated, response, logger.String("userId", user.Id.String()))
 

@@ -31,7 +31,7 @@ func (h *Handler) GetOrderById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to get order by ID", logger.String("userId", user.Id.String()), logger.String("orderId", orderId.String()))
+	logctx.Debug(r.Context(), "user trying to get order by ID", logger.String("userId", user.Id.String()), logger.String("orderId", orderId.String()))
 	order, err := h.svc.GetOrderById(r.Context(), orderId)
 
 	if err != nil {

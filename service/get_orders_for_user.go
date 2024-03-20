@@ -11,7 +11,7 @@ import (
 )
 
 func (s *Service) GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
-	logctx.Info(ctx, "getting open orders for user", logger.String("user_id", userId.String()))
+	logctx.Debug(ctx, "getting open orders for user", logger.String("user_id", userId.String()))
 	orders, totalOrders, err = s.orderBookStore.GetOrdersForUser(ctx, userId, false)
 
 	if err != nil {
@@ -19,13 +19,13 @@ func (s *Service) GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (o
 		return nil, 0, fmt.Errorf("error getting open orders for user: %w", err)
 	}
 
-	logctx.Info(ctx, "returning open orders for user", logger.String("user_id", userId.String()), logger.Int("orders_count", len(orders)))
+	logctx.Debug(ctx, "returning open orders for user", logger.String("user_id", userId.String()), logger.Int("orders_count", len(orders)))
 
 	return orders, totalOrders, nil
 }
 
 func (s *Service) GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
-	logctx.Info(ctx, "getting filled orders for user", logger.String("user_id", userId.String()))
+	logctx.Debug(ctx, "getting filled orders for user", logger.String("user_id", userId.String()))
 	orders, totalOrders, err = s.orderBookStore.GetOrdersForUser(ctx, userId, true)
 
 	if err != nil {
@@ -33,7 +33,7 @@ func (s *Service) GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) 
 		return nil, 0, fmt.Errorf("error getting filled orders for user: %w", err)
 	}
 
-	logctx.Info(ctx, "returning filled orders for user", logger.String("user_id", userId.String()), logger.Int("orders_count", len(orders)))
+	logctx.Debug(ctx, "returning filled orders for user", logger.String("user_id", userId.String()), logger.Int("orders_count", len(orders)))
 
 	return orders, totalOrders, nil
 }

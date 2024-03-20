@@ -81,6 +81,6 @@ func AddVal2Set(ctx context.Context, client redis.Cmdable, key, val string) erro
 		return models.ErrValAlreadyInSet
 	}
 
-	logctx.Info(ctx, "Added element to set", logger.String("key", key), logger.String("val", val))
+	logctx.Debug(ctx, "Added element to set", logger.String("key", key), logger.String("val", val))
 	return nil
 }

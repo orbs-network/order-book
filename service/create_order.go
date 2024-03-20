@@ -34,7 +34,7 @@ func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (mode
 	}
 
 	if existingOrder == nil {
-		logctx.Info(ctx, "no existing order with same orderId. Trying to create new order", logger.String("clientOrderId", input.ClientOrderID.String()))
+		logctx.Debug(ctx, "no existing order with same orderId. Trying to create new order", logger.String("clientOrderId", input.ClientOrderID.String()))
 		return s.createNewOrder(ctx, input, input.UserId)
 	}
 
@@ -56,7 +56,7 @@ func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (mode
 func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, userId uuid.UUID) (models.Order, error) {
 	orderId := uuid.New()
 
-	logctx.Info(ctx, "creating new order", logger.String("orderId", orderId.String()), logger.String("clientOrderId", input.ClientOrderID.String()))
+	logctx.Debug(ctx, "creating new order", logger.String("orderId", orderId.String()), logger.String("clientOrderId", input.ClientOrderID.String()))
 
 	order := models.Order{
 		Id:        orderId,

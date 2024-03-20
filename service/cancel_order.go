@@ -107,7 +107,7 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (*uui
 
 func (s *Service) getOrder(ctx context.Context, isClientOId bool, orderId uuid.UUID) (order *models.Order, err error) {
 	if isClientOId {
-		logctx.Info(ctx, "finding order by clientOId", logger.String("clientOId", orderId.String()))
+		logctx.Debug(ctx, "finding order by clientOId", logger.String("clientOId", orderId.String()))
 
 		order, err = s.orderBookStore.FindOrderById(ctx, orderId, true)
 		if err != nil {
@@ -115,7 +115,7 @@ func (s *Service) getOrder(ctx context.Context, isClientOId bool, orderId uuid.U
 			return nil, err
 		}
 	} else {
-		logctx.Info(ctx, "finding order by orderId", logger.String("orderId", orderId.String()))
+		logctx.Debug(ctx, "finding order by orderId", logger.String("orderId", orderId.String()))
 		order, err = s.orderBookStore.FindOrderById(ctx, orderId, false)
 		if err != nil {
 			logctx.Error(ctx, "could not get order by orderId", logger.Error(err))

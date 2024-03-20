@@ -62,12 +62,12 @@ func (r *redisRepository) GetSwap(ctx context.Context, swapId uuid.UUID) (*model
 		return nil, models.ErrMarshalError
 	}
 
-	logctx.Info(ctx, "got swap", logger.String("swapId", swapId.String()))
+	logctx.Debug(ctx, "got swap", logger.String("swapId", swapId.String()))
 	return &swap, nil
 }
 
 func (r *redisRepository) RemoveSwap(ctx context.Context, swapId uuid.UUID) error {
-	logctx.Info(ctx, "RemoveSwap", logger.String("key", swapId.String()))
+	logctx.Debug(ctx, "RemoveSwap", logger.String("key", swapId.String()))
 	swapKey := CreateOpenSwapKey(swapId)
 	err := r.client.Del(ctx, swapKey).Err()
 	logctx.Error(ctx, "RemoveSwap Redis del failed", logger.String("key", swapKey), logger.Error(err))
