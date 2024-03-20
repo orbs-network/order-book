@@ -58,7 +58,7 @@ func (r *Reporter) Stop() {
 
 func (r *Reporter) sumOrderSide(isAsk bool, it models.OrderIter) error {
 	if !it.HasNext() {
-		logctx.Warn(r.ctx, "GetMinAsk failed")
+		logctx.Info(r.ctx, "no orders in iterator")
 	}
 	topOrder := float64(0)
 	sumSize := float64(0)

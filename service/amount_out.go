@@ -26,7 +26,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			return models.QuoteRes{}, models.ErrIterFail
 		}
 		if !it.HasNext() {
-			logctx.Warn(ctx, "GetMinAsk failed")
+			logctx.Info(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()), logger.String("minOutAmount", fmt.Sprintf("%v", minOutAmount)))
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
 		res, err = getOutAmountInAToken(ctx, it, inAmount)

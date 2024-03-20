@@ -31,7 +31,7 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	symbol := r.URL.Query().Get("symbol")
 	symbol = strings.ToUpper(symbol)
 	if symbol == "" {
-		logctx.Warn(ctx, "cancelAll symbol was not provided, cancelling all orders in all symbols", logger.String("userId", user.Id.String()))
+		logctx.Info(ctx, "cancelAll symbol was not provided, cancelling all orders in all symbols", logger.String("userId", user.Id.String()))
 	}
 
 	logctx.Info(ctx, "user trying to cancel all their orders", logger.String("symbol", symbol), logger.String("userId", user.Id.String()))
