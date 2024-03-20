@@ -21,10 +21,10 @@ func (r *redisRepository) GetOrdersForUser(ctx context.Context, userId uuid.UUID
 
 	var key string
 	if isFilledOrders {
-		logctx.Info(ctx, "getting filled orders for user", logger.String("userId", userId.String()))
+		logctx.Debug(ctx, "getting filled orders for user", logger.String("userId", userId.String()))
 		key = CreateUserFilledOrdersKey(userId)
 	} else {
-		logctx.Info(ctx, "getting open orders for user", logger.String("userId", userId.String()))
+		logctx.Debug(ctx, "getting open orders for user", logger.String("userId", userId.String()))
 		key = CreateUserOpenOrdersKey(userId)
 	}
 
@@ -71,6 +71,6 @@ func (r *redisRepository) GetOrdersForUser(ctx context.Context, userId uuid.UUID
 		ordersSlice = append(ordersSlice, o...)
 	}
 
-	logctx.Info(ctx, "got orders for user", logger.String("userId", userId.String()), logger.Int("count", len(orders)))
+	logctx.Debug(ctx, "got orders for user", logger.String("userId", userId.String()), logger.Int("count", len(orders)))
 	return ordersSlice, totalOrders, nil
 }

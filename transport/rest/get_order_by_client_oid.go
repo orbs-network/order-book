@@ -21,7 +21,7 @@ func (h *Handler) GetOrderByClientOId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to get order by clientOId", logger.String("clientOId", clientOId.String()))
+	logctx.Debug(r.Context(), "user trying to get order by clientOId", logger.String("clientOId", clientOId.String()))
 	order, err := h.svc.GetOrderByClientOId(r.Context(), clientOId)
 
 	if err != nil {

@@ -67,6 +67,6 @@ func (r *redisRepository) FindOrdersByIds(ctx context.Context, ids []uuid.UUID, 
 		}
 	}
 
-	logctx.Info(ctx, "found orders by IDs", logger.Int("numIdsProvided", len(ids)), logger.Int("numOrders", len(orders)))
+	logctx.Debug(ctx, "found orders by IDs", logger.Int("numIdsProvided", len(ids)), logger.Int("numOrders", len(orders)))
 	return orders, nil
 }

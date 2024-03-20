@@ -89,7 +89,7 @@ func (r *redisRepository) GetMarketDepth(ctx context.Context, symbol models.Symb
 		}
 	}
 
-	logctx.Info(ctx, "fetched market depth", logger.String("symbol", symbol.String()), logger.Int("depth", depth), logger.Int("numAsks", len(marketDepth.Asks)), logger.Int("numBids", len(marketDepth.Bids)))
+	logctx.Debug(ctx, "fetched market depth", logger.String("symbol", symbol.String()), logger.Int("depth", depth), logger.Int("numAsks", len(marketDepth.Asks)), logger.Int("numBids", len(marketDepth.Bids)))
 	return marketDepth, nil
 }
 
@@ -111,6 +111,6 @@ func (r *redisRepository) fetchOrderIds(ctx context.Context, key string, depth i
 		orderIds[i] = orderId
 	}
 
-	logctx.Info(ctx, "fetched order IDs", logger.String("key", key), logger.Int("depth", depth), logger.Int("numOrders", len(orderIds)))
+	logctx.Debug(ctx, "fetched order IDs", logger.String("key", key), logger.Int("depth", depth), logger.Int("numOrders", len(orderIds)))
 	return orderIds, nil
 }

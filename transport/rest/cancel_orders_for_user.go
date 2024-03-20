@@ -31,14 +31,14 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 	symbol := r.URL.Query().Get("symbol")
 	symbol = strings.ToUpper(symbol)
 	if symbol == "" {
-		logctx.Info(ctx, "cancelAll symbol was not provided, cancelling all orders in all symbols", logger.String("userId", user.Id.String()))
+		logctx.Debug(ctx, "cancelAll symbol was not provided, cancelling all orders in all symbols", logger.String("userId", user.Id.String()))
 	}
 
-	logctx.Info(ctx, "user trying to cancel all their orders", logger.String("symbol", symbol), logger.String("userId", user.Id.String()))
+	logctx.Debug(ctx, "user trying to cancel all their orders", logger.String("symbol", symbol), logger.String("userId", user.Id.String()))
 	orderIds, err := h.svc.CancelOrdersForUser(ctx, user.Id, models.Symbol(symbol))
 
 	if err == models.ErrNotFound {
-		logctx.Info(ctx, "no orders found for user", logger.String("userId", user.Id.String()))
+		logctx.Debug(ctx, "no orders found for user", logger.String("userId", user.Id.String()))
 		restutils.WriteJSONError(ctx, w, http.StatusNotFound, "No orders found")
 		return
 	}
@@ -49,7 +49,7 @@ func (h *Handler) CancelOrdersForUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(ctx, "cancelled all orders for user", logger.String("userId", user.Id.String()), logger.Int("numOrders", len(orderIds)))
+	logctx.Debug(ctx, "cancelled all orders for user", logger.String("userId", user.Id.String()), logger.Int("numOrders", len(orderIds)))
 
 	res := CancelOrdersForUserResponse{
 		Symbol:            symbol,

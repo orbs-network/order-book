@@ -113,6 +113,6 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 		logctx.Error(ctx, "Error StoreOpenOrders", logger.Error(err), logger.String("swapId", swap.Id.String()))
 	}
 
-	logctx.Info(ctx, "Resolved swap", logger.String("swapId", swap.Id.String()), logger.Bool("isSuccessful", isSuccessful), logger.String("created", swap.Created.String()), logger.String("resolved", swap.Resolved.String()), logger.String("txHash", swap.TxHash))
+	logctx.Debug(ctx, "Resolved swap", logger.String("swapId", swap.Id.String()), logger.Bool("isSuccessful", isSuccessful), logger.String("created", swap.Created.String()), logger.String("resolved", swap.Resolved.String()), logger.String("txHash", swap.TxHash))
 	return orders, nil
 }

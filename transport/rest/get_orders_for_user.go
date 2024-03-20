@@ -21,7 +21,7 @@ func (h *Handler) GetOpenOrdersForUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to get their open orders", logger.String("userId", user.Id.String()))
+	logctx.Debug(r.Context(), "user trying to get their open orders", logger.String("userId", user.Id.String()))
 
 	orders, totalOrders, err := h.svc.GetOpenOrdersForUser(r.Context(), user.Id)
 
@@ -58,7 +58,7 @@ func (h *Handler) GetFilledOrdersForUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to get their filled orders", logger.String("userId", user.Id.String()))
+	logctx.Debug(r.Context(), "user trying to get their filled orders", logger.String("userId", user.Id.String()))
 
 	orders, totalOrders, err := h.svc.GetFilledOrdersForUser(r.Context(), user.Id)
 

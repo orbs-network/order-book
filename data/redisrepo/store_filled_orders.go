@@ -29,7 +29,7 @@ func (r *redisRepository) StoreFilledOrders(ctx context.Context, orders []models
 		return fmt.Errorf("failed to store filled orders in Redis: %v", err)
 	}
 
-	logctx.Info(ctx, "stored filled orders in Redis", logger.Strings("orderIds", models.OrderIdsToStrings(ctx, &orders)))
+	logctx.Debug(ctx, "stored filled orders in Redis", logger.Strings("orderIds", models.OrderIdsToStrings(ctx, &orders)))
 	return nil
 }
 

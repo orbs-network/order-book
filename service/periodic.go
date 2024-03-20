@@ -15,7 +15,7 @@ func (s *Service) startPeriodicChecks() {
 	secSwapStarted := restutils.GetEnv("SEC_PERIODIC_INTERVAL", "10")
 	sec, _ := strconv.Atoi(secSwapStarted)
 	ctx := context.Background()
-	logctx.Info(ctx, "startPeriodicChecks", logger.Int("sec_interval", sec))
+	logctx.Debug(ctx, "startPeriodicChecks", logger.Int("sec_interval", sec))
 	go func() {
 		interval := time.Tick(time.Second * time.Duration(sec))
 		for range interval {
@@ -29,7 +29,7 @@ func (s *Service) periodicCheck(ctx context.Context) {
 	sec, _ := strconv.Atoi(secSwapStarted)
 
 	if sec > 0 { // USE ZERO as Turn Off feature flag
-		logctx.Info(ctx, "SEC_SWAP_STARTED", logger.Int("sec_interval", sec))
+		logctx.Debug(ctx, "SEC_SWAP_STARTED", logger.Int("sec_interval", sec))
 		err := s.checkNonStartedSwaps(ctx, int64(sec))
 		if err != nil {
 			logctx.Error(ctx, "Error in peridic checks", logger.Error(err))
@@ -63,14 +63,14 @@ func (s *Service) checkSwapStarted(ctx context.Context, swap models.Swap, secPer
 		// no need to abort
 		return
 	}
-	logctx.Info(ctx, "swap was not started after allowed period", logger.String("swapId", swap.Id.String()))
+	logctx.Debug(ctx, "swap was not started after allowed period", logger.String("swapId", swap.Id.String()))
 	err = s.AbortSwap(ctx, swap.Id)
 	if err != nil {
 		logctx.Error(ctx, "failed to AutoabortSwap", logger.String("created", swap.Created.String()), logger.Error(err))
 		return
 	}
 	// SUCCESS
-	logctx.Info(ctx, "Auto abortSwap after interval", logger.String("swapId", swap.Id.String()), logger.Int("secPerios", int(secPeriod)))
+	logctx.Debug(ctx, "Auto abortSwap after interval", logger.String("swapId", swap.Id.String()), logger.Int("secPerios", int(secPeriod)))
 }
 
 func (s *Service) checkNonStartedSwaps(ctx context.Context, secPeriod int64) error {

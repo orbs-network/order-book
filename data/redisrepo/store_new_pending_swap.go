@@ -39,6 +39,6 @@ func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Swap
 		return fmt.Errorf("failed to update swap started time: %s", err)
 	}
 
-	logctx.Info(ctx, "store pending swap", logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
+	logctx.Debug(ctx, "store pending swap", logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
 	return nil
 }

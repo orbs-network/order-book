@@ -16,6 +16,6 @@ func (s *Service) GetMarketDepth(ctx context.Context, symbol models.Symbol, dept
 		return models.MarketDepth{}, err
 	}
 
-	logctx.Info(ctx, "got market depth", logger.String("symbol", symbol.String()))
+	logctx.Debug(ctx, "got market depth", logger.String("symbol", symbol.String()))
 	return marketDepth, nil
 }

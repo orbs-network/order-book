@@ -28,7 +28,7 @@ func NewReporter(svc *Service) *Reporter {
 		num = 10
 	}
 	ctx := context.Background()
-	logctx.Info(ctx, "NewReporter()", logger.String("SecInterval", strSec))
+	logctx.Debug(ctx, "NewReporter()", logger.String("SecInterval", strSec))
 
 	return &Reporter{svc: svc, stop: make(chan struct{}), ctx: ctx, secInterval: num}
 }
@@ -38,7 +38,7 @@ func (r *Reporter) logRoutine() {
 	for {
 		select {
 		case <-r.stop:
-			logctx.Info(r.ctx, "Reporter routine stopped.")
+			logctx.Debug(r.ctx, "Reporter routine stopped.")
 			return
 		case <-time.After(time.Duration(r.secInterval) * time.Second):
 			r.tick()
@@ -47,18 +47,18 @@ func (r *Reporter) logRoutine() {
 }
 
 func (r *Reporter) Start() {
-	logctx.Info(r.ctx, "Reporter logging routine.")
+	logctx.Debug(r.ctx, "Reporter logging routine.")
 	go r.logRoutine()
 }
 
 func (r *Reporter) Stop() {
-	logctx.Info(r.ctx, "Reporter logging routine.")
+	logctx.Debug(r.ctx, "Reporter logging routine.")
 	close(r.stop)
 }
 
 func (r *Reporter) sumOrderSide(isAsk bool, it models.OrderIter) error {
 	if !it.HasNext() {
-		logctx.Info(r.ctx, "no orders in iterator")
+		logctx.Debug(r.ctx, "no orders in iterator")
 	}
 	topOrder := float64(0)
 	sumSize := float64(0)

@@ -60,7 +60,7 @@ func (h *Handler) GetMarketDepth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Info(r.Context(), "user trying to get market depth", logger.String("userId", user.Id.String()), logger.String("symbol", symbol.String()), logger.Int("limit", limit))
+	logctx.Debug(r.Context(), "user trying to get market depth", logger.String("userId", user.Id.String()), logger.String("symbol", symbol.String()), logger.Int("limit", limit))
 	marketDepth, err := h.svc.GetMarketDepth(r.Context(), symbol, limit)
 
 	if err != nil {

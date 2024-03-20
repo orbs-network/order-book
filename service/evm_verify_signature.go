@@ -165,7 +165,7 @@ func (e *EvmClient) VerifySignature(ctx context.Context, input VerifySignatureIn
 		return false, fmt.Errorf("signature does not match")
 	}
 
-	logctx.Info(ctx, "signature is valid", logger.String("recoveredPub", hex.EncodeToString(recoveredPubBytes)), logger.String("originalPub", hex.EncodeToString(originalPubBytes)))
+	logctx.Debug(ctx, "signature is valid", logger.String("recoveredPub", hex.EncodeToString(recoveredPubBytes)), logger.String("originalPub", hex.EncodeToString(originalPubBytes)))
 	// Signature is valid
 	return true, nil
 }

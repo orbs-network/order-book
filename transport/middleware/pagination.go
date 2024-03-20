@@ -53,7 +53,7 @@ func PaginationMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		ctx := utils.WithPaginationCtx(r.Context(), &utils.Paginator{Page: page, PageSize: pageSize})
 
-		logctx.Info(ctx, "pagination middleware", logger.String("url", r.URL.Path), logger.Int("page", page), logger.Int("pageSize", pageSize))
+		logctx.Debug(ctx, "pagination middleware", logger.String("url", r.URL.Path), logger.Int("page", page), logger.Int("pageSize", pageSize))
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

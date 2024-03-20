@@ -61,6 +61,6 @@ func (r *redisRepository) CancelPartialFilledOrder(ctx context.Context, order mo
 	}
 	// --- END TRANSACTION ---
 
-	logctx.Info(ctx, "cancelled partial filled order", logger.String("userId", order.UserId.String()), logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
+	logctx.Debug(ctx, "cancelled partial filled order", logger.String("userId", order.UserId.String()), logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
 	return nil
 }
