@@ -19,6 +19,7 @@ type MockOrderBookService struct {
 	Symbols      []models.Symbol
 	User         *models.User
 	BeginSwapRes models.BeginSwapRes
+	OrderEvents  chan []byte
 }
 
 func (m *MockOrderBookService) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {
@@ -71,6 +72,10 @@ func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId u
 		ids = append(ids, order.Id)
 	}
 	return ids, m.Error
+}
+
+func (m *MockOrderBookService) SubscribeUserOrders(ctx context.Context, userId uuid.UUID) (chan []byte, error) {
+	return m.OrderEvents, m.Error
 }
 
 func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal) (models.QuoteRes, error) {

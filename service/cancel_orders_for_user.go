@@ -34,6 +34,9 @@ func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID, sym
 			if err != nil {
 				logctx.Error(ctx, "could not cancel order", logger.Error(err), logger.String("orderId", uid.String()))
 			}
+
+			s.publishOrderEvent(ctx, &order)
+
 			res = append(res, *uid)
 		}
 	}

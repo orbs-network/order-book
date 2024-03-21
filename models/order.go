@@ -207,6 +207,10 @@ func (o *Order) MapToOrder(data map[string]string) error {
 	return nil
 }
 
+func (o *Order) ToJson() ([]byte, error) {
+	return json.Marshal(o)
+}
+
 // GetAvailableSize returns the size that is available to be filled
 func (o *Order) GetAvailableSize() decimal.Decimal {
 	used := o.SizePending.Add(o.SizeFilled)

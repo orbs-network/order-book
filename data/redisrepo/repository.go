@@ -7,18 +7,26 @@ import (
 )
 
 type redisRepository struct {
-	client  redis.Cmdable
+	cmdable redis.Cmdable
+	client  *redis.Client
 	txMap   map[uint]redis.Pipeliner
 	ixIndex uint
 }
 
-func NewRedisRepository(client redis.Cmdable) (*redisRepository, error) {
-	if client == nil {
+func NewRedisRepository(cmdable redis.Cmdable) (*redisRepository, error) {
+	if cmdable == nil {
 		return nil, fmt.Errorf("redis client cannot be nil")
 	}
+
+	client, ok := cmdable.(*redis.Client)
+	if !ok {
+		return nil, fmt.Errorf("cmdable is not a *redis.Client")
+	}
+
 	txMap := make(map[uint]redis.Pipeliner)
 	return &redisRepository{
-		client: client,
-		txMap:  txMap,
+		cmdable: cmdable,
+		client:  client,
+		txMap:   txMap,
 	}, nil
 }

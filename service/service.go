@@ -22,6 +22,8 @@ type OrderBookService interface {
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)
 	GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
 	GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
+	// Subscribe to order updates for a specific user
+	SubscribeUserOrders(ctx context.Context, userId uuid.UUID) (chan []byte, error)
 
 	// taker api - INSTEAD
 	GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal) (models.QuoteRes, error)

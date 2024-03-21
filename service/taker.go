@@ -69,6 +69,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 			logctx.Error(ctx, "Lock order Failed", logger.Error(err))
 			return models.BeginSwapRes{}, err
 		}
+		s.publishOrderEvent(ctx, &res.Orders[i])
 	}
 
 	// save
@@ -128,6 +129,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 				logctx.Error(ctx, "Unlock Failed", logger.Error(err))
 				return err
 			}
+			s.publishOrderEvent(ctx, order)
 			orders = append(orders, *order)
 		}
 		// cancelled orders
@@ -215,6 +217,7 @@ func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
 			} else {
 				openOrders = append(openOrders, *order)
 			}
+			s.publishOrderEvent(ctx, order)
 		}
 	}
 	// store partial orders
