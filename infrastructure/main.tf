@@ -17,7 +17,6 @@ resource "heroku_app" "server" {
     "LOG_LEVEL"             = var.log_level
     "RPC_URL"               = var.rpc_url
     "SWAP_CONTRACT_ADDRESS" = var.swap_contract_address
-    "VERIFY_SIGNATURE"      = var.verify_signature
   }
 
   lifecycle {

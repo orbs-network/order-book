@@ -20,12 +20,6 @@ variable "swap_contract_address" {
   description = "Swap reactor contract address"
 }
 
-variable "verify_signature" {
-  type        = string
-  description = "Whether to verify the signature sent with the order (not compulsory as the signature is verified on-chain)"
-  default     = "false"
-}
-
 variable "maker_mock_api_key" {
   type        = string
   description = "Heroku API key"

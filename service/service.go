@@ -32,7 +32,6 @@ type OrderBookService interface {
 }
 
 type BlockChainService interface {
-	VerifySignature(ctx context.Context, input VerifySignatureInput) (bool, error)
 	CheckPendingTxs(ctx context.Context) error
 }
 

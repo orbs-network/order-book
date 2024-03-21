@@ -115,20 +115,6 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 			AbiFragment:   abiFragment,
 		})
 
-		if err == models.ErrSignatureVerificationError {
-			logctx.Warn(ctx, "signature verification error", logger.Error(err), logger.String("userId", user.Id.String()))
-			response.Status = http.StatusBadRequest
-			response.Msg = "Signature verification error"
-			break
-		}
-
-		if err == models.ErrSignatureVerificationFailed {
-			logctx.Warn(ctx, "signature verification failed", logger.String("userId", user.Id.String()))
-			response.Status = http.StatusUnauthorized
-			response.Msg = "Extracted public key does not match user's public key"
-			return
-		}
-
 		if err == models.ErrClashingClientOrderId {
 			logctx.Warn(ctx, "order with clientOrderId already exists", logger.Error(err), logger.String("clientOrderId", parsedFields.clientOrderId.String()), logger.String("userId", user.Id.String()))
 			response.Status = http.StatusConflict
