@@ -102,6 +102,9 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (*uui
 	})
 
 	logctx.Debug(ctx, "order cancelled", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
+
+	s.publishOrderEvent(ctx, order)
+
 	return &order.Id, nil
 }
 

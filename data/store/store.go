@@ -72,4 +72,8 @@ type OrderBookStore interface {
 	StoreUserResolvedSwap(ctx context.Context, userId uuid.UUID, swap models.Swap) error
 	// utils
 	EnumSubKeysOf(ctx context.Context, key string) ([]string, error)
+
+	// PubSub
+	PublishEvent(ctx context.Context, key string, value interface{}) error
+	SubscribeToEvents(ctx context.Context, channel string) (chan []byte, error)
 }

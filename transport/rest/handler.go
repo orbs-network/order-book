@@ -13,6 +13,7 @@ import (
 	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/transport/middleware"
 	"github.com/orbs-network/order-book/transport/restutils"
+	"github.com/orbs-network/order-book/transport/websocket"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
@@ -117,6 +118,8 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	mmApi.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
 	// Cancel all orders for a user
 	mmApi.HandleFunc("/orders", h.CancelOrdersForUser).Methods("DELETE")
+	// Subscribe to order events (websocket)
+	mmApi.HandleFunc("/ws/orders", websocket.WebSocketOrderHandler(h.svc, getUserByApiKey)).Methods("GET")
 }
 
 // Liquidity Hub specific routes

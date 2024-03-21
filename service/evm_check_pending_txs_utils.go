@@ -73,6 +73,8 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 				continue
 			}
 
+			e.publishOrderEvent(ctx, &order)
+
 			if order.IsFilled() {
 				// add to filled orders if completely filled
 				filledOrders = append(filledOrders, order)

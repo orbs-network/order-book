@@ -27,6 +27,8 @@ type MockOrderBookStore struct {
 	Sets map[string]map[string]struct{}
 	// Pending swaps
 	PendingSwaps []models.SwapTx
+	// PubSub
+	EventsChan chan []byte
 }
 
 func (m *MockOrderBookStore) StoreOpenOrder(ctx context.Context, order models.Order) error {
@@ -187,4 +189,12 @@ func (m *MockOrderBookStore) EnumSubKeysOf(tx context.Context, key string) ([]st
 
 func (m *MockOrderBookStore) CancelPendingOrder(ctx context.Context, order models.Order) error {
 	return m.Error
+}
+
+func (m *MockOrderBookStore) PublishEvent(ctx context.Context, key string, value interface{}) error {
+	return m.Error
+}
+
+func (m *MockOrderBookStore) SubscribeToEvents(ctx context.Context, channel string) (chan []byte, error) {
+	return m.EventsChan, m.Error
 }
