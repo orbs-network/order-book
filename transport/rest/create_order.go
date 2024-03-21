@@ -91,18 +91,6 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		AbiFragment:   abiFragment,
 	})
 
-	if err == models.ErrSignatureVerificationError {
-		logctx.Warn(ctx, "signature verification error", logger.Error(err), logger.String("userId", user.Id.String()))
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "Signature verification error")
-		return
-	}
-
-	if err == models.ErrSignatureVerificationFailed {
-		logctx.Warn(ctx, "signature verification failed", logger.String("userId", user.Id.String()))
-		restutils.WriteJSONError(ctx, w, http.StatusUnauthorized, "Extracted public key does not match user's public key")
-		return
-	}
-
 	if err == models.ErrClashingOrderId {
 		logctx.Warn(ctx, "clashing order ID", logger.String("userId", user.Id.String()), logger.String("orderId", parsedFields.clientOrderId.String()))
 		restutils.WriteJSONError(ctx, w, http.StatusConflict, "Clashing order ID. Please retry")

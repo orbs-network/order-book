@@ -319,20 +319,6 @@ func TestHandler_CreateOrder(t *testing.T) {
 			string(orderSucessResJSON),
 		},
 		{
-			"signature verification error - should return `ErrSignatureVerificationError` error",
-			&mocks.MockOrderBookService{Order: &models.Order{}, Error: models.ErrSignatureVerificationError},
-			createBody(t, orderReq),
-			http.StatusBadRequest,
-			"{\"status\":400,\"msg\":\"Signature verification error\"}\n",
-		},
-		{
-			"signature verification failed - should return `ErrSignatureVerificationFailed` error",
-			&mocks.MockOrderBookService{Order: &models.Order{}, Error: models.ErrSignatureVerificationFailed},
-			createBody(t, orderReq),
-			http.StatusUnauthorized,
-			"{\"status\":401,\"msg\":\"Extracted public key does not match user's public key\"}\n",
-		},
-		{
 			"clashing order id - should return `Clashing order ID. Please retry` error",
 			&mocks.MockOrderBookService{Order: &models.Order{}, Error: models.ErrClashingOrderId},
 			createBody(t, orderReq),
