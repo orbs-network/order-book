@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -64,6 +65,10 @@ func (m *MockOrderBookService) GetOpenOrdersForUser(ctx context.Context, userId 
 
 func (m *MockOrderBookService) GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
 	return m.Orders, len(m.Orders), m.Error
+}
+
+func (m *MockOrderBookService) GetSwapFills(ctx context.Context, userId uuid.UUID, symbol models.Symbol, startAt, endAt time.Time) ([]models.Fill, error) {
+	return nil, m.Error
 }
 
 func (m *MockOrderBookService) CancelOrdersForUser(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orderIds []uuid.UUID, err error) {
