@@ -40,8 +40,11 @@ func (r *redisRepository) StoreSwap(ctx context.Context, swapId uuid.UUID, frags
 	return nil
 }
 
-func (r *redisRepository) GetSwap(ctx context.Context, swapId uuid.UUID) (*models.Swap, error) {
+func (r *redisRepository) GetSwap(ctx context.Context, swapId uuid.UUID, open bool) (*models.Swap, error) {
 	swapKey := CreateOpenSwapKey(swapId)
+	if !open {
+		swapKey = CreateResolvedSwapKey(swapId)
+	}
 
 	swapJson, err := r.client.Get(ctx, swapKey).Result()
 	// Error

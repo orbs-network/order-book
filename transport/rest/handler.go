@@ -102,8 +102,10 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	mmApi.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
 	// Get all open orders for a user
 	mmApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOpenOrdersForUser)).Methods("GET")
-	// Get all filled orders for a user
-	mmApi.HandleFunc("/fills", middleware.PaginationMiddleware(h.GetFilledOrdersForUser)).Methods("GET")
+	// Legacy way to Get all filled orders for a user
+	mmApi.HandleFunc("/fills-page", middleware.PaginationMiddleware(h.GetFilledOrdersForUser)).Methods("GET")
+	// correct way to Get fills using data in swaps
+	mmApi.HandleFunc("/fills", h.GetSwapFills).Methods("GET")
 	// Get all symbols
 	mmApi.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth
@@ -118,6 +120,8 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	mmApi.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
 	// Cancel all orders for a user
 	mmApi.HandleFunc("/orders", h.CancelOrdersForUser).Methods("DELETE")
+
+	// ------- WEBSOCKET -------
 	// Subscribe to order events (websocket)
 	mmApi.HandleFunc("/ws/orders", websocket.WebSocketOrderHandler(h.svc, getUserByApiKey)).Methods("GET")
 }
@@ -129,8 +133,8 @@ func (h *Handler) initTakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	takerApi := h.Router.PathPrefix("/taker/v1").Subrouter()
 
 	// disabled!
-	//middlewareValidUser := middleware.ValidateUserMiddleware(getUserByApiKey)
-	//takerApi.Use(middlewareValidUser) disable for now
+	middlewareValidUser := middleware.ValidateUserMiddleware(getUserByApiKey)
+	takerApi.Use(middlewareValidUser)
 
 	// IN: InAmount, InToken, OutToken or InTokenAddress, OutTokenAddress
 	// OUT: CURRENT potential outAmount

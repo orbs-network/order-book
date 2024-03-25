@@ -43,7 +43,7 @@ func (r *redisRepository) GetOpenSwaps(ctx context.Context) ([]models.Swap, erro
 	for _, key := range keys {
 		id := Key2UUID(ctx, key)
 		if id != nil {
-			swap, err := r.GetSwap(ctx, *id)
+			swap, err := r.GetSwap(ctx, *id, true)
 			if err != nil {
 				logctx.Error(ctx, "failed to get swap", logger.String("swapId", id.String()))
 			} else {

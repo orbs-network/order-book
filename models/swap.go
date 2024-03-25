@@ -31,6 +31,22 @@ type OrderFrag struct {
 	InSize  decimal.Decimal
 }
 
+// Individual Fill
+// get SwapFills for user
+type Fill struct {
+	OrderId   uuid.UUID       `json:"orderId"`
+	ClientOId uuid.UUID       `json:"clientOrderId"`
+	SwapId    uuid.UUID       `json:"swapId"`
+	Side      Side            `json:"side"`
+	Symbol    Symbol          `json:"symbol"`
+	Timestamp time.Time       `json:"timestamp"`
+	Price     decimal.Decimal `json:"price"`
+	Size      decimal.Decimal `json:"size"`
+	OrderSize decimal.Decimal `json:"orderSize"`
+
+	Cancelled bool `json:"cancelled"`
+}
+
 func (f *OrderFrag) ToMap() map[string]string {
 	return map[string]string{
 		"inSize":  f.InSize.String(),

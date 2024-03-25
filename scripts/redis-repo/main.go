@@ -239,7 +239,7 @@ func createSwaps() {
 		log.Fatalf("error storing swap: %v", err)
 	}
 
-	swap, err := repository.GetSwap(ctx, swapId)
+	swap, err := repository.GetSwap(ctx, swapId, true)
 	if err != nil {
 		log.Fatalf("error getting swap: %v", err)
 	}

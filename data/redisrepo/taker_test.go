@@ -26,7 +26,7 @@ func TestRedisRepository_GetSwap(t *testing.T) {
 
 		mock.ExpectGet(CreateOpenSwapKey(swapId)).SetVal(swapJson[0])
 
-		swap, err := repo.GetSwap(ctx, swapId)
+		swap, err := repo.GetSwap(ctx, swapId, true)
 		assert.NoError(t, err)
 		assert.Len(t, swap.Frags, 2, "Should have 2 orders in the swap")
 	})
@@ -40,7 +40,7 @@ func TestRedisRepository_GetSwap(t *testing.T) {
 
 		mock.ExpectSMembers(CreateOpenSwapKey(swapId)).SetErr(assert.AnError)
 
-		_, err := repo.GetSwap(ctx, swapId)
+		_, err := repo.GetSwap(ctx, swapId, true)
 		assert.Equal(t, models.ErrUnexpectedError, err)
 	})
 }

@@ -147,7 +147,7 @@ func (m *MockOrderBookStore) StoreUserByPublicKey(ctx context.Context, user mode
 	return m.Error
 }
 
-func (m *MockOrderBookStore) GetSwap(ctx context.Context, swapId uuid.UUID) (*models.Swap, error) {
+func (m *MockOrderBookStore) GetSwap(ctx context.Context, swapId uuid.UUID, open bool) (*models.Swap, error) {
 	if m.Error != nil {
 		return nil, m.Error
 	}
@@ -181,6 +181,10 @@ func (m *MockOrderBookStore) ResolveSwap(ctx context.Context, swap models.Swap) 
 
 func (m *MockOrderBookStore) StoreUserResolvedSwap(ctx context.Context, userId uuid.UUID, swap models.Swap) error {
 	return m.Error
+}
+
+func (m *MockOrderBookStore) GetUserResolvedSwapIds(ctx context.Context, userId uuid.UUID) ([]string, error) {
+	return []string{"111", "222"}, m.Error
 }
 
 func (m *MockOrderBookStore) EnumSubKeysOf(tx context.Context, key string) ([]string, error) {

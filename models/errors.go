@@ -27,6 +27,7 @@ var ErrUnexpectedSizePending = errors.New("unexpected sizePending")
 var ErrIterFail = errors.New("failed to get bid/ask iterator from store")
 var ErrTokenNotsupported = errors.New("token is not supported")
 var ErrMinOutAmount = errors.New("OutAmount is less than MinOutAmount")
+var ErrMaxRecExceeded = errors.New("max number of records exceeded, narrow down the range")
 
 // store generic errors
 var ErrValAlreadyInSet = errors.New("the value is already a member of the set")
