@@ -13,7 +13,7 @@ import (
 // StoreNewPendingSwap stores a new pending swap in order for its status (pending/complete) to be checked later
 func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.SwapTx) error {
 	// confirm swapID is valid
-	swap, err := r.GetSwap(ctx, p.SwapId)
+	swap, err := r.GetSwap(ctx, p.SwapId, true)
 	if err != nil {
 		if err == models.ErrNotFound {
 			logctx.Warn(ctx, "no swap found by that ID", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
