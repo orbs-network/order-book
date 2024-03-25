@@ -59,7 +59,7 @@ type OrderBookStore interface {
 	GetMinAsk(ctx context.Context, symbol models.Symbol) models.OrderIter
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
 	// taker side
-	GetSwap(ctx context.Context, swapId uuid.UUID) (*models.Swap, error)
+	GetSwap(ctx context.Context, swapId uuid.UUID, open bool) (*models.Swap, error)
 	StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error
 	RemoveSwap(ctx context.Context, swapId uuid.UUID) error
 	GetOpenSwaps(ctx context.Context) ([]models.Swap, error)
@@ -70,6 +70,8 @@ type OrderBookStore interface {
 	ResolveSwap(ctx context.Context, swap models.Swap) error
 	// save swapId in a set of the userId:resolvedSwap key
 	StoreUserResolvedSwap(ctx context.Context, userId uuid.UUID, swap models.Swap) error
+	GetUserResolvedSwapIds(ctx context.Context, userId uuid.UUID) ([]string, error)
+
 	// utils
 	EnumSubKeysOf(ctx context.Context, key string) ([]string, error)
 
