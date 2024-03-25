@@ -17,13 +17,13 @@ func (r *redisRepository) PublishEvent(ctx context.Context, key string, value in
 		return fmt.Errorf("failed to publish redis event: %v", err)
 	}
 
-	logctx.Info(ctx, "published redis event", logger.String("key", key))
+	logctx.Debug(ctx, "published redis event", logger.String("key", key))
 	return nil
 }
 
 // SubscribeToEvents subscribes to events on a given Redis channel
 func (r *redisRepository) SubscribeToEvents(ctx context.Context, channel string) (chan []byte, error) {
-	logctx.Info(ctx, "subscribing to channel", logger.String("channel", channel))
+	logctx.Debug(ctx, "subscribing to channel", logger.String("channel", channel))
 
 	// Subscribe to the specified channel
 	pubsub := r.client.Subscribe(ctx, channel)
@@ -45,7 +45,7 @@ func (r *redisRepository) SubscribeToEvents(ctx context.Context, channel string)
 		for msg := range ch {
 			messages <- []byte(msg.Payload)
 		}
-		logctx.Info(ctx, "subscription ended", logger.String("channel", channel))
+		logctx.Debug(ctx, "subscription ended", logger.String("channel", channel))
 		close(messages)
 	}()
 
