@@ -212,12 +212,15 @@ func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
 				logctx.Error(ctx, "FillOrder Failed", logger.Error(err))
 				return err
 			}
+			// publish fill event
+			s.publishFillEvent(ctx, order.UserId, *models.NewFill(order.Symbol, *swap, frag, order))
+
 			if filled {
 				filledOrders = append(filledOrders, *order)
+
 			} else {
 				openOrders = append(openOrders, *order)
 			}
-			s.publishOrderEvent(ctx, order)
 		}
 	}
 	// store partial orders

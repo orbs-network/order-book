@@ -59,7 +59,7 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 	filledOrders := []models.Order{}
 	updatedOrders := []models.Order{}
 
-	for _, order := range orders {
+	for i, order := range orders {
 		size, found := orderSizes[order.Id]
 		if !found {
 			logctx.Error(ctx, "Failed to get order frag size", logger.String("orderId", order.Id.String()))
@@ -73,7 +73,9 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 				continue
 			}
 
-			e.publishOrderEvent(ctx, &order)
+			// publish Fill Event
+			fill := models.NewFill(order.Symbol, swap, swap.Frags[i], &order)
+			e.publishFillEvent(ctx, order.UserId, *fill)
 
 			if order.IsFilled() {
 				// add to filled orders if completely filled
@@ -91,10 +93,11 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 			updatedOrders = append(updatedOrders, order)
 		}
 
+		e.publishOrderEvent(ctx, &order)
+
 		// append to users to be updated later
 		userIds[order.UserId] = true
 	}
-	// TODO: save orders new state
 
 	// update user(s) keys
 	for userId := range userIds {
