@@ -101,7 +101,7 @@ func (h *Handler) GetSwapFills(w http.ResponseWriter, r *http.Request) {
 	startAt, endAt := getStartEndTime(r)
 	fills, err := h.svc.GetSwapFills(r.Context(), user.Id, symbol, startAt, endAt)
 	if err != nil {
-		logctx.Error(r.Context(), "failed GetSwapFills", logger.Error(err), logger.String("userId", user.Id.String()))
+		logctx.Warn(r.Context(), "failed GetSwapFills", logger.Error(err), logger.String("userId", user.Id.String()))
 		switch err {
 		case models.ErrMaxRecExceeded:
 			// narrow down the time range, 256 exceeded
