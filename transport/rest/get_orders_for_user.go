@@ -97,7 +97,7 @@ func (h *Handler) GetSwapFills(w http.ResponseWriter, r *http.Request) {
 
 	logctx.Debug(r.Context(), "user trying to get their filled orders", logger.String("userId", user.Id.String()))
 
-	symbol := models.Symbol("MATIC-USDC")
+	symbol := models.Symbol("MATIC-USDC") // TODO: Get From Req and propegate
 	startAt, endAt := getStartEndTime(r)
 	fills, err := h.svc.GetSwapFills(r.Context(), user.Id, symbol, startAt, endAt)
 	if err != nil {
