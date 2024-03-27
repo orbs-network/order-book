@@ -53,7 +53,7 @@ func (s *Service) GetSwapFills(ctx context.Context, userId uuid.UUID, symbol mod
 
 	if len(swapIds) == 0 {
 		logctx.Warn(ctx, "user has no resolved swaps", logger.Error(err), logger.String("user_id", userId.String()))
-		return []models.Fill{}, models.ErrNotFound
+		return []models.Fill{}, nil
 	}
 
 	fills := []models.Fill{}
