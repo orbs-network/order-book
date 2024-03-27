@@ -77,6 +77,15 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 			restutils.WriteJSONResponse(ctx, w, http.StatusBadRequest, response, logger.String("userId", user.Id.String()))
 			return
 		}
+
+		if order.Symbol != args.Symbol {
+			logctx.Warn(ctx, "order symbol must be of same type", logger.String("userId", user.Id.String()), logger.String("orderSymbol", order.Symbol), logger.String("requestSymbol", args.Symbol))
+			response.Status = http.StatusBadRequest
+			response.Msg = fmt.Sprintf("Symbol in order %q does not match symbol in request %q", order.Symbol, args.Symbol)
+			response.Created = createdOrders
+			restutils.WriteJSONResponse(ctx, w, http.StatusBadRequest, response, logger.String("userId", user.Id.String()))
+			return
+		}
 	}
 
 	for _, order := range args.Orders {
