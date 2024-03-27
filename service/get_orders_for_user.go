@@ -72,7 +72,7 @@ func (s *Service) GetSwapFills(ctx context.Context, userId uuid.UUID, symbol mod
 			return nil, err
 		}
 		// check if swap is in time range
-		if swap.Resolved.After(startAt) && swap.Resolved.Before(endAt) {
+		if (swap.Resolved.Equal(startAt) || swap.Resolved.After(startAt)) && swap.Resolved.Before(endAt) {
 			// iterate through fragments
 			for _, frag := range swap.Frags {
 				order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
