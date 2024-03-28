@@ -58,6 +58,16 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 
 	logctx.Debug(ctx, "creating new order", logger.String("orderId", orderId.String()), logger.String("clientOrderId", input.ClientOrderID.String()))
 
+	if input.Price.IsZero() || input.Price.IsNegative() {
+		logctx.Warn(ctx, "price has to be positive", logger.String("orderId", orderId.String()), logger.String("price", input.Price.String()))
+		return models.Order{}, models.ErrInvalidInput
+	}
+
+	if input.Size.IsZero() || input.Size.IsNegative() {
+		logctx.Warn(ctx, "size has to be positive", logger.String("orderId", orderId.String()), logger.String("size", input.Size.String()))
+		return models.Order{}, models.ErrInvalidInput
+	}
+
 	order := models.Order{
 		Id:        orderId,
 		ClientOId: input.ClientOrderID,
