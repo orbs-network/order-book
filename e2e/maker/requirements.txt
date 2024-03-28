@@ -1,2 +1,2 @@
-orbs-orderbook-sdk==0.9.1
+orbs-orderbook-sdk==0.10.1
 requests==2.31.0

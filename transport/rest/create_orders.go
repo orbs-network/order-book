@@ -154,7 +154,7 @@ func (h *Handler) CreateOrders(w http.ResponseWriter, r *http.Request) {
 
 	if len(createdOrders) != len(args.Orders) {
 		logctx.Warn(ctx, "not all orders were created", logger.String("userId", user.Id.String()), logger.Int("numOfOrders", len(createdOrders)), logger.Int("numOfOrdersRequested", len(args.Orders)))
-		restutils.WriteJSONResponse(ctx, w, http.StatusBadRequest, response, logger.String("userId", user.Id.String()))
+		restutils.WriteJSONResponse(ctx, w, http.StatusMultiStatus, response, logger.String("userId", user.Id.String()))
 		return
 	}
 
