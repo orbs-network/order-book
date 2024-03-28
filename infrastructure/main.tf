@@ -39,6 +39,11 @@ resource "heroku_formation" "server" {
   size     = var.environment_name == "development" ? "Basic" : "Standard-2X"
 }
 
+resource "heroku_drain" "server" {
+  app_id = heroku_app.server.id
+  url    = "https://http-intake.logs.datadoghq.eu/api/v2/logs?dd-api-key=${var.dd_api_key}&ddsource=heroku&env=${var.environment_name}&service=ob-server-${var.environment_name}&host=order-book"
+}
+
 # --- Swaps Tracker ---
 resource "heroku_app" "swaps-tracker" {
   name   = "ob-swaps-tracker-${var.environment_name}"
@@ -73,6 +78,11 @@ resource "heroku_formation" "swaps-tracker" {
   type     = "worker"
   quantity = 1
   size     = var.environment_name == "development" ? "Basic" : "Standard-2X"
+}
+
+resource "heroku_drain" "swaps-tracker" {
+  app_id = heroku_app.swaps-tracker.id
+  url    = "https://http-intake.logs.datadoghq.eu/api/v2/logs?dd-api-key=${var.dd_api_key}&ddsource=heroku&env=${var.environment_name}&service=ob-swaps-tracker-${var.environment_name}&host=order-book"
 }
 
 # --- Maker Mock ---
