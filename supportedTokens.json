@@ -1,9 +1,16 @@
 {
-    "USDC": {
+    "USDC-OLD": {
+        "desc": "first usdc we used",
         "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
         "decimals": 6
     },
+    "USDC": {
+        "desc": "USDC.e most popular stablecoin March24",
+        "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "decimals": 6
+    },
     "MATIC": {
+        "desc": "erc-20 address of WMATIC wrapped",
         "address": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
         "decimals": 18
     }
