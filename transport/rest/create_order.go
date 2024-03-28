@@ -190,7 +190,7 @@ func parseFields(_ http.ResponseWriter, input pFInput) (*pfParsed, error) {
 		return nil, fmt.Errorf("'price' is not a valid number format")
 	}
 
-	if decPrice.IsNegative() {
+	if decPrice.IsZero() || decPrice.IsNegative() {
 		return nil, fmt.Errorf("'price' must be positive")
 	}
 
@@ -205,7 +205,7 @@ func parseFields(_ http.ResponseWriter, input pFInput) (*pfParsed, error) {
 		return nil, fmt.Errorf("'size' is not a valid number format")
 	}
 
-	if decSize.IsNegative() {
+	if decSize.IsZero() || decSize.IsNegative() {
 		return nil, fmt.Errorf("'size' must be positive")
 	}
 
