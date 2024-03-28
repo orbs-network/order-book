@@ -18,7 +18,6 @@ SIZE = "40"
 
 @pytest.fixture
 def ob_client():
-    print("HI")
     yield OrderBookSDK(base_url=BASE_URL, api_key=API_KEY)
 
 
