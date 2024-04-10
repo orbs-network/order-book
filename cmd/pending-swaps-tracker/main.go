@@ -23,7 +23,10 @@ func main() {
 
 	redisAddress, found := os.LookupEnv("REDIS_URL")
 	if !found {
-		panic("REDIS_URL not set")
+		redisAddress, found = os.LookupEnv("REDISCLOUD_URL")
+		if !found {
+			panic("Neither REDIS_URL nor REDISCLOUD_URL is set")
+		}
 	}
 
 	opt, err := redis.ParseURL(redisAddress)
