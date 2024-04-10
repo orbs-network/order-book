@@ -19,6 +19,8 @@ import (
 var defaultDuration = 10 * time.Second
 
 func main() {
+	log.Printf("Starting pending swaps tracker...")
+
 	redisAddress, found := os.LookupEnv("REDIS_URL")
 	if !found {
 		panic("REDIS_URL not set")

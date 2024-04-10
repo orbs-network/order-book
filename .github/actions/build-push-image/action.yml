@@ -24,7 +24,15 @@ runs:
     - name: Build Docker Image for Server
       shell: bash
       run: |
-        docker build --build-arg APP_PATH=./cmd/order-book -t registry.heroku.com/$HEROKU_APP_NAME/$HEROKU_APP_TYPE -f cmd/order-book.Dockerfile .
+        if [ "$HEROKU_APP_TYPE" == "web" ]; then
+          APP_PATH="./cmd/order-book"
+        elif [ "$HEROKU_APP_TYPE" == "worker" ]; then
+          APP_PATH="./cmd/pending-swaps-tracker"
+        else
+          echo "Invalid Heroku app type specified"
+          exit 1
+        fi
+        docker build --build-arg APP_PATH=$APP_PATH -t registry.heroku.com/$HEROKU_APP_NAME/$HEROKU_APP_TYPE -f cmd/order-book.Dockerfile .
       env:
         HEROKU_APP_NAME: ${{ inputs.heroku_app_name }}
         HEROKU_APP_TYPE: ${{ inputs.heroku_app_type }}

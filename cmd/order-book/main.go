@@ -23,6 +23,8 @@ func main() {
 }
 
 func setup() {
+	log.Printf("Starting server...")
+
 	redisAddress, found := os.LookupEnv("REDIS_URL")
 	if !found {
 		redisAddress, found = os.LookupEnv("REDISCLOUD_URL")
