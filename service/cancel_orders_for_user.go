@@ -31,11 +31,14 @@ func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID, sym
 				IsClientOId: false,
 				UserId:      userId,
 			})
+			// error
 			if err != nil {
-				logctx.Error(ctx, "could not cancel order", logger.Error(err), logger.String("orderId", uid.String()))
+				logctx.Error(ctx, "could not cancel order", logger.Error(err), logger.String("orderId", order.Id.String()))
+			} else if uid != nil {
+				// success
+				res = append(res, *uid)
 			}
 
-			res = append(res, *uid)
 		}
 	}
 
