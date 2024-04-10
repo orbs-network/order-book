@@ -73,6 +73,8 @@ func (r *redisRepository) RemoveSwap(ctx context.Context, swapId uuid.UUID) erro
 	logctx.Debug(ctx, "RemoveSwap", logger.String("key", swapId.String()))
 	swapKey := CreateOpenSwapKey(swapId)
 	err := r.client.Del(ctx, swapKey).Err()
-	logctx.Error(ctx, "RemoveSwap Redis del failed", logger.String("key", swapKey), logger.Error(err))
+	if err != nil {
+		logctx.Error(ctx, "RemoveSwap Redis del failed", logger.String("key", swapKey), logger.Error(err))
+	}
 	return err
 }
