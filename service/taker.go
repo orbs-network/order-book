@@ -133,7 +133,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 			orders = append(orders, *order)
 		}
 		// cancelled orders
-		if order.Cancelled {
+		if order != nil && order.Cancelled {
 			cancelled = append(cancelled, *order)
 		}
 	}
