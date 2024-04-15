@@ -26,7 +26,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			return models.QuoteRes{}, models.ErrIterFail
 		}
 		if !it.HasNext() {
-			logctx.Debug(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()), logger.String("minOutAmount", fmt.Sprintf("%v", minOutAmount)))
+			logctx.Warn(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()), logger.String("minOutAmount", minOutAmount.String()))
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
 		res, err = getOutAmountInAToken(ctx, it, inAmount)
@@ -34,7 +34,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 	} else { // SELL
 		it = s.orderBookStore.GetMaxBid(ctx, symbol)
 		if it == nil {
-			logctx.Error(ctx, "GetMaxBid failed no orders in iterator")
+			logctx.Warn(ctx, "GetMaxBid failed no orders in iterator")
 			return models.QuoteRes{}, models.ErrIterFail
 		}
 		if !it.HasNext() {
@@ -50,6 +50,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 
 	// apply min amount out threshold
 	if minOutAmount != nil && (*minOutAmount).GreaterThanOrEqual(res.Size) {
+		logctx.Info(ctx, "minOutAmount was applied", logger.String("minOutAmount", minOutAmount.String()), logger.String("amountOut", res.Size.String()))
 		return models.QuoteRes{}, models.ErrMinOutAmount
 	}
 
