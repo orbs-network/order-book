@@ -12,6 +12,11 @@ import (
 
 func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal) (models.QuoteRes, error) {
 
+	logctx.Info(ctx, "GetQuote started", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
+	if minOutAmount != nil {
+		logctx.Info(ctx, "GetQuote minOutAmount requested", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("minOutAmount", minOutAmount.String()))
+	}
+
 	// make sure inAmount is positivr
 	if !inAmount.IsPositive() {
 		return models.QuoteRes{}, models.ErrInAmount
@@ -26,7 +31,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			return models.QuoteRes{}, models.ErrIterFail
 		}
 		if !it.HasNext() {
-			logctx.Warn(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()), logger.String("minOutAmount", minOutAmount.String()))
+			logctx.Warn(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
 		res, err = getOutAmountInAToken(ctx, it, inAmount)
@@ -53,6 +58,8 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 		logctx.Info(ctx, "minOutAmount was applied", logger.String("minOutAmount", minOutAmount.String()), logger.String("amountOut", res.Size.String()))
 		return models.QuoteRes{}, models.ErrMinOutAmount
 	}
+
+	logctx.Info(ctx, "GetQuote Finished OK", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
 
 	return res, nil
 }
