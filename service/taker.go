@@ -30,6 +30,8 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 }
 
 func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.BeginSwapRes, error) {
+	logctx.Info(ctx, "BeginSwap start", logger.String("data.size", data.Size.String()))
+
 	// create swapID
 	swapId := uuid.New()
 	// no re-entry is needed
@@ -85,12 +87,14 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 		return models.BeginSwapRes{}, err
 	}
 
+	logctx.Info(ctx, "BeginSwap end ok", logger.String("swapId", string(res.SwapId.String())))
+
 	// add oredebook signature on the buffer HERE if needed
 	return res, nil
 }
 
 func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error {
-	logctx.Debug(ctx, "SwapStarted", logger.String("swapId", swapId.String()))
+	logctx.Info(ctx, "SwapStarted", logger.String("swapId", swapId.String()))
 	err := s.orderBookStore.StoreNewPendingSwap(ctx, models.SwapTx{
 		SwapId: swapId,
 		TxHash: txHash,
