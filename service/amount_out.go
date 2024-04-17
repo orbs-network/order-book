@@ -97,6 +97,7 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 			outAmountA = outAmountA.Add(gainA)
 
 			// res
+			logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
 			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainA, InSize: spendB})
@@ -138,6 +139,7 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 		outAmountB = outAmountB.Add(gainB)
 
 		// res
+		logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
 		logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendA: %s", spendA.String()))
 		logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainB: %s", gainB.String()))
 		frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainB, InSize: spendA})
