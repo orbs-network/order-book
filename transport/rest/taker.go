@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math"
 	"math/big"
 	"net/http"
 	"strings"
@@ -54,8 +53,10 @@ type QuoteRes struct {
 
 func (h *Handler) convertToTokenDec(ctx context.Context, tokenName string, amount decimal.Decimal) string {
 	if token := h.supportedTokens.ByName(tokenName); token != nil {
-		decMul := math.Pow10(token.Decimals)
-		mul := amount.Mul(decimal.NewFromInt(int64(decMul)))
+		dcmls := decimal.NewFromInt(10)
+		dcmls = dcmls.Pow(decimal.NewFromInt(int64(token.Decimals)))
+		mul := amount.Mul(dcmls)
+		// remove after point 1.00123 decimals
 		return mul.Truncate(0).String()
 	}
 	logctx.Error(ctx, "Token is not found in supported tokens: "+tokenName)
@@ -64,13 +65,14 @@ func (h *Handler) convertToTokenDec(ctx context.Context, tokenName string, amoun
 
 func (h *Handler) convertFromTokenDec(ctx context.Context, tokenName, amountStr string) (decimal.Decimal, error) {
 	if token := h.supportedTokens.ByName(tokenName); token != nil {
-		decDiv := math.Pow10(token.Decimals)
+		dcmls := decimal.NewFromInt(10)
+		dcmls = dcmls.Pow(decimal.NewFromInt(int64(token.Decimals)))
 		amount, err := decimal.NewFromString(amountStr)
 		if err != nil {
 			logctx.Error(ctx, "error converting amountStr: "+amountStr)
 			return decimal.Zero, err
 		}
-		res := amount.Div(decimal.NewFromInt(int64(decDiv)))
+		res := amount.Div(dcmls)
 		return res, nil
 	}
 	logctx.Error(ctx, "Token is not found in supported tokens: "+tokenName)
@@ -207,6 +209,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			takerInAmount := h.convertToTokenDec(r.Context(), req.InToken, swapData.Fragments[i].InSize)
 			takerOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].OutSize)
 
+			// conv to sol bigint
 			MakerInAmount := big.NewInt(0)
 			MakerInAmount.SetString(takerOutAmount, 10)
 
