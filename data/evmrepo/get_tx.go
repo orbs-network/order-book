@@ -32,17 +32,17 @@ func (e *evmRepository) GetTx(ctx context.Context, id string) (*models.Tx, error
 		tx, pending, errTx := e.client.TransactionByHash(ctx, txHash)
 
 		if tx == nil && errTx.Error() == "not found" {
-			logctx.Error(ctx, "Transaction %q not found", logger.String("txHash", txHash.String()))
+			logctx.Warn(ctx, "Transaction not found yet", logger.String("txHash", txHash.String()))
 			return nil, models.ErrNotFound
 		}
 
 		if errTx != nil {
-			logctx.Error(ctx, "Error fetching transaction: %v", logger.Error(errTx), logger.String("txHash", txHash.String()))
+			logctx.Error(ctx, "Error fetching transaction", logger.Error(errTx), logger.String("txHash", txHash.String()))
 			return nil, fmt.Errorf("error fetching transaction: %v", errTx)
 		}
 
 		if pending {
-			logctx.Debug(ctx, "Transaction %q is pending", logger.String("txHash", txHash.String()))
+			logctx.Info(ctx, "Transaction is pending", logger.String("txHash", txHash.String()))
 			return &models.Tx{
 				Status:    models.TX_PENDING,
 				TxHash:    tx.Hash().Hex(),
@@ -57,7 +57,7 @@ func (e *evmRepository) GetTx(ctx context.Context, id string) (*models.Tx, error
 
 			block, err := e.getBlock(ctx, receipt.BlockNumber)
 			if err != nil {
-				logctx.Error(ctx, "Error fetching block by number for successful transaction", logger.Error(err), logger.String("blockNumber", receipt.BlockNumber.String()), logger.String("txHash", txHash.String()))
+				logctx.Warn(ctx, "Error fetching block by number for successful transaction", logger.Error(err), logger.String("blockNumber", receipt.BlockNumber.String()), logger.String("txHash", txHash.String()))
 				return nil, fmt.Errorf("error fetching block by number: %v", err)
 			}
 
@@ -92,7 +92,7 @@ func (e *evmRepository) GetTx(ctx context.Context, id string) (*models.Tx, error
 	}
 
 	// Unexpected case
-	logctx.Error(ctx, "Unexpected case for transaction %q", logger.String("txHash", txHash.String()))
+	logctx.Error(ctx, "Unexpected case for transaction", logger.String("txHash", txHash.String()))
 	return nil, fmt.Errorf("unexpected case for transaction %q", txHash.String())
 }
 
