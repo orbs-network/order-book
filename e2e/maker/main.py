@@ -20,7 +20,7 @@ TICKER_URL = os.environ.get(
 TICKER_SYMBOL = os.environ.get("TICKER_SYMBOL", "MATIC-USDC")
 DEPTH_SIZE = os.environ.get("DEPTH_SIZE", "5")
 SLEEP_TIME = os.environ.get("SLEEP_TIME", "10")
-ORDER_SIZE_SCALE = os.environ.get("ORDER_SIZE_SCALE", "10")
+ORDER_SIZE_SCALE = os.environ.get("ORDER_SIZE_SCALE", "1000")
 
 
 class Ticker:
@@ -53,7 +53,7 @@ class Client:
         for i in range(int(DEPTH_SIZE)):
             cur_price *= factor
             print("Ask Price: ", cur_price)
-            cur_size = Decimal((i + 1) * ORDER_SIZE_SCALE)
+            cur_size = Decimal((i + 1) * int(ORDER_SIZE_SCALE))
 
             order_input = CreateOrderInput(
                 price=str(self._round(cur_price)),
