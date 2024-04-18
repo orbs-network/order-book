@@ -54,9 +54,12 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 	}
 
 	// apply min amount out threshold
-	if minOutAmount != nil && (*minOutAmount).GreaterThanOrEqual(res.Size) {
-		logctx.Info(ctx, "minOutAmount was applied", logger.String("minOutAmount", minOutAmount.String()), logger.String("amountOut", res.Size.String()))
-		return models.QuoteRes{}, models.ErrMinOutAmount
+	if minOutAmount != nil {
+		logctx.Info(ctx, "minOutAmount check", logger.String("minOutAmount", minOutAmount.String()), logger.String("amountOut", res.Size.String()))
+		if minOutAmount.GreaterThan(res.Size) {
+			logctx.Info(ctx, "minOutAmount was applied")
+			return models.QuoteRes{}, models.ErrMinOutAmount
+		}
 	}
 
 	logctx.Info(ctx, "GetQuote Finished OK", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
