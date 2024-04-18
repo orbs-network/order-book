@@ -20,7 +20,7 @@ TICKER_URL = os.environ.get(
 TICKER_SYMBOL = os.environ.get("TICKER_SYMBOL", "MATIC-USDC")
 DEPTH_SIZE = os.environ.get("DEPTH_SIZE", "5")
 SLEEP_TIME = os.environ.get("SLEEP_TIME", "10")
-ORDER_SIZE_SCALE = os.environ.get("ORDER_SIZE_SCALE", "1000")
+ORDER_SIZE_SCALE = os.environ.get("ORDER_SIZE_SCALE", "10")
 
 
 class Ticker:
