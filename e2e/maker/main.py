@@ -87,7 +87,7 @@ class Client:
         for i in range(int(DEPTH_SIZE)):
             cur_price *= factor
             print("Bid Price: ", cur_price)
-            cur_size = Decimal((i + 1) * ORDER_SIZE_SCALE)
+            cur_size = Decimal((i + 1) * int(ORDER_SIZE_SCALE))
 
             order_input = CreateOrderInput(
                 price=str(self._round(cur_price)),
