@@ -56,7 +56,10 @@ class Client:
             print("Ask Price: ", cur_price)
             cur_size = Decimal((i + 1) * int(ORDER_SIZE_SCALE))
             # add random float to size 0.5-10
-            cur_size += Decimal(random.uniform(0.5, 10))
+            rnd = Decimal(random.uniform(0.5, 10))
+            rnd = round(rnd, 4)
+            cur_size += rnd
+
             order_input = CreateOrderInput(
                 price=str(self._round(cur_price)),
                 size=str(cur_size),
@@ -91,7 +94,9 @@ class Client:
             print("Bid Price: ", cur_price)
             cur_size = Decimal((i + 1) * int(ORDER_SIZE_SCALE))
             # add random float to size 0.5-10
-            cur_size += Decimal(random.uniform(0.5, 10))
+            rnd = Decimal(random.uniform(0.5, 10))
+            rnd = round(rnd, 4)
+            cur_size += rnd
 
             order_input = CreateOrderInput(
                 price=str(self._round(cur_price)),
