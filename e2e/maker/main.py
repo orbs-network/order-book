@@ -57,7 +57,6 @@ class Client:
             cur_size = Decimal((i + 1) * int(ORDER_SIZE_SCALE))
             # add random float to size 0.5-10
             cur_size += Decimal(random.uniform(0.5, 10))
-
             order_input = CreateOrderInput(
                 price=str(self._round(cur_price)),
                 size=str(cur_size),
