@@ -62,37 +62,39 @@ func newBids() models.OrderIter {
 func TestService_getOutAmount(t *testing.T) {
 	ctx := context.Background()
 
+	// order have no onchain data hence -1 as decimals are ignored in impl
+
 	t.Run("getOutAmountInAToken- happy path", func(t *testing.T) {
-		res, err := getOutAmountInAToken(ctx, newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)))
+		res, err := getOutAmountInAToken(ctx, newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)), -1, -1)
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.Size.String(), decimal.NewFromFloat(1+2+3).String())
 	})
 	t.Run("getOutAmountInAToken- Partial fill", func(t *testing.T) {
-		res, err := getOutAmountInAToken(ctx, newAsks(), decimal.NewFromFloat(501))
+		res, err := getOutAmountInAToken(ctx, newAsks(), decimal.NewFromFloat(501), -1, -1)
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.Size.String(), decimal.NewFromFloat(0.501).String())
 	})
 
 	t.Run("getOutAmountInAToken- liquidity insufficient", func(t *testing.T) {
-		_, err := getOutAmountInAToken(ctx, newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)+1))
+		_, err := getOutAmountInAToken(ctx, newAsks(), decimal.NewFromFloat((1000*1)+(1001*2)+(1002*3)+1), -1, -1)
 		assert.Equal(t, err, models.ErrInsufficientLiquity)
 	})
 
 	t.Run("getOutAmountInBToken- happy path", func(t *testing.T) {
-		res, err := getOutAmountInBToken(ctx, newBids(), decimal.NewFromFloat(1+2+3))
+		res, err := getOutAmountInBToken(ctx, newBids(), decimal.NewFromFloat(1+2+3), -1, -1)
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.Size.String(), decimal.NewFromFloat((900*1)+(800*2)+(700*3)).String())
 	})
 
 	t.Run("getOutAmountInBToken- Partial fill", func(t *testing.T) {
 		fract := 0.501
-		res, err := getOutAmountInBToken(ctx, newBids(), decimal.NewFromFloat(fract))
+		res, err := getOutAmountInBToken(ctx, newBids(), decimal.NewFromFloat(fract), -1, -1)
 		assert.Equal(t, err, nil)
 		assert.Equal(t, res.Size.String(), decimal.NewFromFloat(900*fract).String())
 	})
 
 	t.Run("getOutAmountInBToken- liquidity insufficient", func(t *testing.T) {
-		_, err := getOutAmountInBToken(ctx, newBids(), decimal.NewFromFloat(1+2+3+1))
+		_, err := getOutAmountInBToken(ctx, newBids(), decimal.NewFromFloat(1+2+3+1), -1, -1)
 		assert.Equal(t, err, models.ErrInsufficientLiquity)
 	})
 }

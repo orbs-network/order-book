@@ -27,12 +27,12 @@ func TestTaker_Quote(t *testing.T) {
 		}
 		// buy
 		svc, _ := service.New(&store, evmClient)
-		res, err := svc.GetQuote(ctx, symbol, models.BUY, decimal.Zero, nil)
+		res, err := svc.GetQuote(ctx, symbol, models.BUY, decimal.Zero, nil, 18, 6)
 		assert.Equal(t, res, models.QuoteRes{})
 		assert.Error(t, err, models.ErrInAmount)
 		// sell
 		svc, _ = service.New(&store, evmClient)
-		res, err = svc.GetQuote(ctx, symbol, models.SELL, decimal.Zero, nil)
+		res, err = svc.GetQuote(ctx, symbol, models.SELL, decimal.Zero, nil, 6, 18)
 		assert.Equal(t, res, models.QuoteRes{})
 		assert.Error(t, err, models.ErrInAmount)
 
@@ -44,7 +44,7 @@ func TestTaker_Quote(t *testing.T) {
 
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
-		res, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil)
+		res, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil, 18, 6)
 		assert.True(t, res.Size.Equals(outAmount))
 		assert.NoError(t, err)
 	})
@@ -55,7 +55,7 @@ func TestTaker_Quote(t *testing.T) {
 
 		inAmount := decimal.NewFromInt(1)
 		outAmount := decimal.NewFromInt(900)
-		res, err := svc.GetQuote(ctx, symbol, models.SELL, inAmount, nil)
+		res, err := svc.GetQuote(ctx, symbol, models.SELL, inAmount, nil, 6, 18)
 		assert.True(t, res.Size.Equals(outAmount))
 		assert.NoError(t, err)
 	})
@@ -71,7 +71,7 @@ func TestTaker_BeginSwap(t *testing.T) {
 		// get quote does not lock liquidity
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
-		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil)
+		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil, 18, 6)
 		assert.True(t, oaRes.Size.Equals(outAmount))
 		assert.NoError(t, err)
 
@@ -83,7 +83,7 @@ func TestTaker_BeginSwap(t *testing.T) {
 		assert.True(t, oaRes.Size.Equals(swapRes.OutAmount))
 
 		// second quote however should return different outAmount as first order has already been filled
-		oaRes2, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil)
+		oaRes2, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil, 6, 18)
 		assert.NoError(t, err)
 		assert.NotEqual(t, oaRes.Size, oaRes2.Size)
 	})
@@ -108,7 +108,7 @@ func TestService_AbortSwap(t *testing.T) {
 
 		inAmount := decimal.NewFromInt(1000)
 		outAmount := decimal.NewFromInt(1)
-		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil)
+		oaRes, err := svc.GetQuote(ctx, symbol, models.BUY, inAmount, nil, 18, 6)
 		assert.True(t, oaRes.Size.Equals(outAmount))
 		assert.NoError(t, err)
 

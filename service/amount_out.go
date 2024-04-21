@@ -10,7 +10,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal) (models.QuoteRes, error) {
+func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, inDec, outDec int) (models.QuoteRes, error) {
 
 	logctx.Info(ctx, "GetQuote started", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
 	if minOutAmount != nil {
@@ -34,7 +34,8 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			logctx.Warn(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
-		res, err = getOutAmountInAToken(ctx, it, inAmount)
+
+		res, err = getOutAmountInAToken(ctx, it, inAmount, inDec, outDec)
 
 	} else { // SELL
 		it = s.orderBookStore.GetMaxBid(ctx, symbol)
@@ -46,7 +47,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			logctx.Warn(ctx, "GetMaxBid failed no orders in iterator")
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
-		res, err = getOutAmountInBToken(ctx, it, inAmount)
+		res, err = getOutAmountInBToken(ctx, it, inAmount, inDec, outDec)
 	}
 	if err != nil {
 		logctx.Error(ctx, "getQuoteResIn failed", logger.Error(err))
@@ -70,7 +71,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 // PAIR/SYMBOL A-B (ETH-USDC)
 // amount in B token (USD)
 // amount out A token (ETH)
-func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB decimal.Decimal) (models.QuoteRes, error) {
+func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB decimal.Decimal, inDec, outDec int) (models.QuoteRes, error) {
 	outAmountA := decimal.NewFromInt(0)
 	var frags []models.OrderFrag
 	var order *models.Order
@@ -84,16 +85,23 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 		// skip orders with locked funds
 		if order.Cancelled {
 			logctx.Error(ctx, "cancelled order exists in the price list (ignore and continue)", logger.String("orderId", order.Id.String()))
+			return models.QuoteRes{}, models.ErrUnexpectedError
 		}
 		// skip orders with locked funds or cancelled
 		if order.GetAvailableSize().IsPositive() && !order.Cancelled {
+			// calc onchain price to match solidity percision
+			ocPrice, err := order.OnchainPrice(inDec, outDec)
+			if err != nil {
+				logctx.Error(ctx, "Onchain price failed for order", logger.String("orderId", order.Id.String()), logger.Error(err))
+				return models.QuoteRes{}, models.ErrUnexpectedError
+			}
 			// max Spend in B token  for this order
-			orderSizeB := order.Price.Mul(order.GetAvailableSize())
+			orderSizeB := ocPrice.Mul(order.GetAvailableSize())
 			// spend the min of orderSizeB/inAmountB
 			spendB := decimal.Min(orderSizeB, inAmountB)
 
 			// Gain
-			gainA := spendB.Div(order.Price)
+			gainA := spendB.Div(ocPrice)
 
 			// sub-add
 			inAmountB = inAmountB.Sub(spendB)
@@ -101,6 +109,7 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 
 			// res
 			logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
+			logctx.Debug(ctx, fmt.Sprintf("Onchain Price: %s", ocPrice.String()))
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
 			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainA, InSize: spendB})
@@ -118,7 +127,7 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 // PAIR/SYMBOL A-B (ETH-USDC)
 // amount in A token (ETH)
 // amount out B token (USD)
-func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA decimal.Decimal) (models.QuoteRes, error) {
+func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA decimal.Decimal, inDec, outDec int) (models.QuoteRes, error) {
 	outAmountB := decimal.NewFromInt(0)
 	var order *models.Order
 	var frags []models.OrderFrag
@@ -133,8 +142,16 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 		spendA := decimal.Min(order.GetAvailableSize(), inAmountA)
 		fmt.Println("sizeA ", spendA.String())
 
+		// calc onchain price to match solidity percision
+		// replace in and out decimals to match the order's side
+		ocPrice, err := order.OnchainPrice(inDec, outDec)
+		if err != nil {
+			logctx.Error(ctx, "Onchain price failed for order", logger.String("orderId", order.Id.String()), logger.Error(err))
+			return models.QuoteRes{}, models.ErrUnexpectedError
+		}
+
 		// Gain
-		gainB := order.Price.Mul(spendA)
+		gainB := ocPrice.Mul(spendA)
 		fmt.Println("gainB ", gainB.String())
 
 		// sub-add
@@ -143,6 +160,7 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 
 		// res
 		logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
+		logctx.Debug(ctx, fmt.Sprintf("Onchain Price: %s", ocPrice.String()))
 		logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendA: %s", spendA.String()))
 		logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainB: %s", gainB.String()))
 		frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainB, InSize: spendA})
