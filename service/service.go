@@ -28,7 +28,7 @@ type OrderBookService interface {
 	SubscribeUserOrders(ctx context.Context, userId uuid.UUID) (chan []byte, error)
 
 	// taker api - INSTEAD
-	GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal) (models.QuoteRes, error)
+	GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, inDec, outDec int) (models.QuoteRes, error)
 	BeginSwap(ctx context.Context, data models.QuoteRes) (models.BeginSwapRes, error)
 	SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error
 	AbortSwap(ctx context.Context, swapId uuid.UUID) error

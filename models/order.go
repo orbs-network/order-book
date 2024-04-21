@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strconv"
 	"time"
 
@@ -242,6 +243,37 @@ func (o *Order) Status() string {
 	}
 
 	return "OPEN"
+}
+
+func BigInt2Dcml(num *big.Int, dcmls int64) decimal.Decimal {
+	// Convert the big.Int to decimal.Decimal
+	decimalValue := decimal.NewFromBigInt(num, 0)
+
+	// Normalize the decimal value by dividing by 10^18
+	divisor := decimal.NewFromInt(10).Pow(decimal.NewFromInt(dcmls))
+	return decimalValue.Div(divisor)
+}
+
+// Status returns the status of the order
+func (o *Order) OnchainPrice(inDec, outDec int) (decimal.Decimal, error) {
+	// patch for tests with no onchain data
+	if o.Signature.AbiFragment.Input.Amount == nil {
+		return o.Price, nil
+	}
+	in := BigInt2Dcml(o.Signature.AbiFragment.Input.Amount, int64(inDec))
+	fmt.Println("inAmount", in.String())
+	out := BigInt2Dcml(o.Signature.AbiFragment.Outputs[0].Amount, int64(outDec))
+	fmt.Println("outAmount", out.String())
+	var result decimal.Decimal
+	if o.Side == BUY {
+		result = in.Div(out)
+	} else {
+		result = out.Div(in)
+	}
+	fmt.Println("onchain price: ", result.String())
+	fmt.Println("origin  price: ", o.Price.String())
+
+	return decimal.NewFromString(result.String())
 }
 
 func (o *Order) Fill(ctx context.Context, fillSize decimal.Decimal) (isFilled bool, err error) {
