@@ -1,5 +1,6 @@
 import os
 import time
+import random
 from dataclasses import dataclass
 from decimal import Decimal
 from uuid import uuid4
@@ -54,6 +55,8 @@ class Client:
             cur_price *= factor
             print("Ask Price: ", cur_price)
             cur_size = Decimal((i + 1) * int(ORDER_SIZE_SCALE))
+            # add random float to size 0.5-10
+            cur_size += random.uniform(0.5, 10)
 
             order_input = CreateOrderInput(
                 price=str(self._round(cur_price)),
@@ -88,6 +91,8 @@ class Client:
             cur_price *= factor
             print("Bid Price: ", cur_price)
             cur_size = Decimal((i + 1) * int(ORDER_SIZE_SCALE))
+            # add random float to size 0.5-10
+            cur_size += random.uniform(0.5, 10)
 
             order_input = CreateOrderInput(
                 price=str(self._round(cur_price)),
