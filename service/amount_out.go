@@ -34,6 +34,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 			logctx.Warn(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
+
 		res, err = getOutAmountInAToken(ctx, it, inAmount)
 
 	} else { // SELL
@@ -84,9 +85,11 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 		// skip orders with locked funds
 		if order.Cancelled {
 			logctx.Error(ctx, "cancelled order exists in the price list (ignore and continue)", logger.String("orderId", order.Id.String()))
+			return models.QuoteRes{}, models.ErrUnexpectedError
 		}
 		// skip orders with locked funds or cancelled
 		if order.GetAvailableSize().IsPositive() && !order.Cancelled {
+
 			// max Spend in B token  for this order
 			orderSizeB := order.Price.Mul(order.GetAvailableSize())
 			// spend the min of orderSizeB/inAmountB
@@ -113,6 +116,7 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 
 			// res
 			logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
+
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
 			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainA, InSize: spendB})

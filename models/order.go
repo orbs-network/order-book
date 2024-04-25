@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"strconv"
 	"time"
 
@@ -242,6 +243,15 @@ func (o *Order) Status() string {
 	}
 
 	return "OPEN"
+}
+
+func BigInt2Dcml(num *big.Int, dcmls int64) decimal.Decimal {
+	// Convert the big.Int to decimal.Decimal
+	decimalValue := decimal.NewFromBigInt(num, 0)
+
+	// Normalize the decimal value by dividing by 10^18
+	divisor := decimal.NewFromInt(10).Pow(decimal.NewFromInt(dcmls))
+	return decimalValue.Div(divisor)
 }
 
 func (o *Order) Fill(ctx context.Context, fillSize decimal.Decimal) (isFilled bool, err error) {

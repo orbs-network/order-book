@@ -1,0 +1,6 @@
+# add randomness and decimal points
+cur_size += random.uniform(0.5, 10)
+
+
+oldGainA  9.98001998001998
+gainA     9.9800200403660389
