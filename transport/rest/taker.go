@@ -213,6 +213,30 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			MakerInAmount := big.NewInt(0)
 			MakerInAmount.SetString(takerOutAmount, 10)
 
+			fmt.Println("takerOutAmount    conv", takerOutAmount)
+			fmt.Println("takerOutAmount no conv", swapData.Fragments[i].OutSize.String())
+
+			// calc zlotin
+			// (output.amount * fill.inAmount) / order.input.amount,
+			// outAmount := swapData.Orders[i].Signature.AbiFragment.Outputs[0].Amount
+			// fmt.Println("zlt outAmount", outAmount.String())
+			// fillInAmount := swapData.Fragments[i].OutSize
+			// fmt.Println("zlt fillInAmount", fillInAmount.String())
+			// orderInAmount := swapData.Orders[i].Signature.AbiFragment.Input.Amount
+			// fmt.Println("zlt OrdrInAmount", orderInAmount.String())
+			// mulRslt := outAmount.Mul(outAmount, fillInAmount.BigInt())
+			// rslt := new(big.Int).Div(mulRslt, orderInAmount)
+			// fmt.Println("zlt result", rslt.String())
+
+			// // calc UV
+			// takerInNoConv := swapData.Fragments[i].InSize
+			// //takerInDec := decimal.NewFromBigInt(takerInAmount, 0)
+			// orderInAmoutDec := decimal.NewFromBigInt(orderInAmount, 0)
+			// mulIn := takerInNoConv.Mul(orderInAmoutDec)
+			// outAmountDec := decimal.NewFromBigInt(outAmount, 0)
+			// uvFillIn := mulIn.Div(outAmountDec)
+			// fmt.Println("uvFillIn", uvFillIn.String())
+
 			abiOrder := swapData.Orders[i].Signature.AbiFragment
 			abiOrder.ExclusivityOverrideBps = big.NewInt(0)
 
