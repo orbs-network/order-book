@@ -175,7 +175,7 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 		orderOut := decimal.NewFromBigInt(order.Signature.AbiFragment.Outputs[0].Amount, 0).Div(decimal.NewFromFloat(1e18))
 		gainB := mulIn.Div(orderOut)
 		// always give + 1%
-		gainB = gainB.Mul(decimal.NewFromFloat(1.01))
+		gainB = gainB.Mul(decimal.NewFromFloat(0.99))
 		fmt.Println("gainB ", gainB.String())
 
 		// sub-add
