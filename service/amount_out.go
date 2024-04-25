@@ -101,7 +101,19 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 			spendB := decimal.Min(orderSizeB, inAmountB)
 
 			// Gain
-			gainA := spendB.Div(ocPrice)
+			oldGainA := spendB.Div(order.Price)
+			println("oldGainA ", oldGainA.String())
+
+			// gain A onchain calc
+			//fill = takerIn * orderIn / orderOut
+			fmt.Println("orderIn ", order.Signature.AbiFragment.Input.Amount.String())
+			fmt.Println("orderOut ", order.Signature.AbiFragment.Outputs[0].Amount.String())
+			orderIn := decimal.NewFromBigInt(order.Signature.AbiFragment.Input.Amount, 0).Div(decimal.NewFromFloat(1e18))
+			mulIn := spendB.Mul(orderIn)
+			orderOut := decimal.NewFromBigInt(order.Signature.AbiFragment.Outputs[0].Amount, 0).Div(decimal.NewFromFloat(1e6))
+			// round up
+			gainA := mulIn.Div(orderOut).RoundUp(18)
+			fmt.Println("gainA ", gainA.String())
 
 			// sub-add
 			inAmountB = inAmountB.Sub(spendB)
@@ -151,7 +163,18 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 		}
 
 		// Gain
-		gainB := ocPrice.Mul(spendA)
+		oldGainB := order.Price.Mul(spendA)
+		fmt.Println("oldGainB ", oldGainB.String())
+
+		// gain B onchain calc
+		//fill = takerIn * orderIn / orderOut
+		fmt.Println("orderIn ", order.Signature.AbiFragment.Input.Amount.String())
+		fmt.Println("orderOut ", order.Signature.AbiFragment.Outputs[0].Amount.String())
+		orderIn := decimal.NewFromBigInt(order.Signature.AbiFragment.Input.Amount, 0).Div(decimal.NewFromFloat(1e6))
+		mulIn := spendA.Mul(orderIn)
+		orderOut := decimal.NewFromBigInt(order.Signature.AbiFragment.Outputs[0].Amount, 0).Div(decimal.NewFromFloat(1e18))
+		// Round UP
+		gainB := mulIn.Div(orderOut).RoundUp(6)
 		fmt.Println("gainB ", gainB.String())
 
 		// sub-add
