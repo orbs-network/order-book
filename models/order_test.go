@@ -391,7 +391,7 @@ func TestOrder_LockSide(t *testing.T) {
 				InSize:  decimal.NewFromInt(10),
 				OutSize: decimal.NewFromInt(7),
 			},
-			expectedPending: decimal.NewFromInt(10),
+			expectedPending: decimal.NewFromInt(7),
 		},
 		{
 			name: "BUY  Pending size should be in A token",
@@ -404,7 +404,7 @@ func TestOrder_LockSide(t *testing.T) {
 				InSize:  decimal.NewFromInt(10),
 				OutSize: decimal.NewFromInt(7),
 			},
-			expectedPending: decimal.NewFromInt(7),
+			expectedPending: decimal.NewFromInt(10),
 		},
 	}
 

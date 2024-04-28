@@ -17,7 +17,9 @@ func validateOrderFrag(frag models.OrderFrag, order *models.Order) bool {
 		return false
 	}
 	// order.size - (Order.filled + Order.pending) >= frag.size
-	return order.GetAvailableSize().GreaterThanOrEqual(frag.OutSize)
+	// always in A token
+	size := order.FragAtokenSize(frag)
+	return order.GetAvailableSize().GreaterThanOrEqual(size)
 }
 
 func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
@@ -26,7 +28,8 @@ func validatePendingFrag(frag models.OrderFrag, order *models.Order) bool {
 		return false
 	}
 	// order.Size pending should be greater or equal to orderFrag: (Order.sizePending + Order.pending) >= frag.size
-	return order.SizePending.GreaterThanOrEqual(frag.OutSize)
+	size := order.FragAtokenSize(frag)
+	return order.SizePending.GreaterThanOrEqual(size)
 }
 
 func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.BeginSwapRes, error) {
