@@ -34,11 +34,8 @@ func NewFill(symbol Symbol, swap Swap, frag OrderFrag, order *Order) *Fill {
 
 	// get order
 	if order != nil {
-		// fill size is dependent on the side of the order
-		fill.Size = frag.InSize
-		if order.Side == SELL {
-			fill.Size = frag.OutSize
-		}
+		fill.Size = order.FragAtokenSize(frag)
+
 		// enrich fill data
 		fill.Side = order.Side
 		fill.ClientOId = order.ClientOId

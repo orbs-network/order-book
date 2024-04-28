@@ -10,7 +10,6 @@ import (
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
-	"github.com/shopspring/decimal"
 )
 
 // update swap fields
@@ -40,11 +39,8 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 	}
 
 	var orderIds []uuid.UUID
-	orderSizes := make(map[uuid.UUID]decimal.Decimal)
-
 	for _, frag := range swap.Frags {
 		orderIds = append(orderIds, frag.OrderId)
-		orderSizes[frag.OrderId] = frag.OutSize
 	}
 
 	// get orders from frags
@@ -60,15 +56,9 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 	updatedOrders := []models.Order{}
 
 	for i, order := range orders {
-		size, found := orderSizes[order.Id]
-		if !found {
-			logctx.Error(ctx, "Failed to get order frag size", logger.String("orderId", order.Id.String()))
-			return []models.Order{}, fmt.Errorf("failed to get order frag size")
-		}
-
 		if isSuccessful {
 			// fill part of the order
-			if _, err := order.Fill(ctx, size); err != nil {
+			if _, err := order.Fill(ctx, swap.Frags[i]); err != nil {
 				logctx.Error(ctx, "Failed to mark order as filled", logger.Error(err), logger.String("orderId", order.Id.String()))
 				continue
 			}
@@ -86,7 +76,7 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 			}
 		} else {
 			// unlock orders
-			if err := order.Unlock(ctx, size); err != nil {
+			if err := order.Unlock(ctx, swap.Frags[i]); err != nil {
 				logctx.Error(ctx, "Failed to Release order locked liq", logger.Error(err), logger.String("orderId", order.Id.String()))
 				continue
 			}

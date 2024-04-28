@@ -27,6 +27,7 @@ type QuoteRes struct {
 
 type OrderFrag struct {
 	OrderId uuid.UUID
+	// from the eyes of the taker
 	OutSize decimal.Decimal
 	InSize  decimal.Decimal
 }

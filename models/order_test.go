@@ -221,7 +221,7 @@ func TestOrder_Fill(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			isFilled, err := test.order.Fill(ctx, test.fillSize)
+			isFilled, err := test.order.Fill(ctx, OrderFrag{OutSize: test.fillSize, InSize: decimal.Zero}) // BUY
 			assert.Equal(t, test.expected.Size.String(), test.order.Size.String(), "size should be equal")
 			assert.Equal(t, test.expected.SizeFilled.String(), test.order.SizeFilled.String(), "sizeFilled should be equal")
 			assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
@@ -283,7 +283,7 @@ func TestOrder_Lock(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.order.Lock(ctx, test.lockSize)
+			err := test.order.Lock(ctx, OrderFrag{OutSize: test.lockSize, InSize: decimal.Zero}) // BUY
 			if test.error == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
@@ -330,7 +330,8 @@ func TestOrder_Unlock(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.order.Unlock(ctx, test.lockSize)
+
+			err := test.order.Unlock(ctx, OrderFrag{OutSize: test.lockSize})
 			if test.error == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
@@ -367,6 +368,51 @@ func TestOrder_IsUnfilled(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			actual := test.order.IsUnfilled()
 			assert.Equal(t, test.expected, actual, "isUnfilled should be equal")
+		})
+	}
+}
+
+func TestOrder_LockSide(t *testing.T) {
+	ctx := context.Background()
+	tests := []struct {
+		name            string
+		order           Order
+		frag            OrderFrag
+		expectedPending decimal.Decimal
+	}{
+		{
+			name: "SELL Pending size should be in A token",
+			order: Order{
+				Side:  SELL,
+				Size:  decimal.NewFromInt(100),
+				Price: decimal.NewFromFloat(0.7),
+			},
+			frag: OrderFrag{
+				InSize:  decimal.NewFromInt(10),
+				OutSize: decimal.NewFromInt(7),
+			},
+			expectedPending: decimal.NewFromInt(7),
+		},
+		{
+			name: "BUY  Pending size should be in A token",
+			order: Order{
+				Side:  BUY,
+				Size:  decimal.NewFromInt(100),
+				Price: decimal.NewFromFloat(0.7),
+			},
+			frag: OrderFrag{
+				InSize:  decimal.NewFromInt(10),
+				OutSize: decimal.NewFromInt(7),
+			},
+			expectedPending: decimal.NewFromInt(10),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.order.Lock(ctx, test.frag)
+			assert.NoError(t, err)
+			assert.Equal(t, test.expectedPending, test.order.SizePending, "PendingSize should be equal")
 		})
 	}
 }
