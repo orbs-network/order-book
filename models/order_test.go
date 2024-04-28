@@ -371,3 +371,48 @@ func TestOrder_IsUnfilled(t *testing.T) {
 		})
 	}
 }
+
+func TestOrder_LockSide(t *testing.T) {
+	ctx := context.Background()
+	tests := []struct {
+		name            string
+		order           Order
+		frag            OrderFrag
+		expectedPending decimal.Decimal
+	}{
+		{
+			name: "SELL Pending size should be in A token",
+			order: Order{
+				Side:  SELL,
+				Size:  decimal.NewFromInt(100),
+				Price: decimal.NewFromFloat(0.7),
+			},
+			frag: OrderFrag{
+				InSize:  decimal.NewFromInt(10),
+				OutSize: decimal.NewFromInt(7),
+			},
+			expectedPending: decimal.NewFromInt(10),
+		},
+		{
+			name: "BUY  Pending size should be in A token",
+			order: Order{
+				Side:  BUY,
+				Size:  decimal.NewFromInt(100),
+				Price: decimal.NewFromFloat(0.7),
+			},
+			frag: OrderFrag{
+				InSize:  decimal.NewFromInt(10),
+				OutSize: decimal.NewFromInt(7),
+			},
+			expectedPending: decimal.NewFromInt(7),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.order.Lock(ctx, test.frag)
+			assert.NoError(t, err)
+			assert.Equal(t, test.expectedPending, test.order.SizePending, "PendingSize should be equal")
+		})
+	}
+}
