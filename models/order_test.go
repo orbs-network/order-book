@@ -221,7 +221,7 @@ func TestOrder_Fill(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			isFilled, err := test.order.Fill(ctx, OrderFrag{InSize: test.fillSize, OutSize: decimal.Zero})
+			isFilled, err := test.order.Fill(ctx, OrderFrag{OutSize: test.fillSize, InSize: decimal.Zero}) // BUY
 			assert.Equal(t, test.expected.Size.String(), test.order.Size.String(), "size should be equal")
 			assert.Equal(t, test.expected.SizeFilled.String(), test.order.SizeFilled.String(), "sizeFilled should be equal")
 			assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
@@ -283,7 +283,7 @@ func TestOrder_Lock(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.order.Lock(ctx, OrderFrag{InSize: test.lockSize, OutSize: decimal.Zero})
+			err := test.order.Lock(ctx, OrderFrag{OutSize: test.lockSize, InSize: decimal.Zero}) // BUY
 			if test.error == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
@@ -331,7 +331,7 @@ func TestOrder_Unlock(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 
-			err := test.order.Unlock(ctx, OrderFrag{InSize: test.lockSize})
+			err := test.order.Unlock(ctx, OrderFrag{OutSize: test.lockSize})
 			if test.error == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, test.expected.SizePending.String(), test.order.SizePending.String(), "sizePending should be equal")
