@@ -66,7 +66,8 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 	for i := 0; i < len(res.Orders); i++ {
 		// lock frag.Amount as pending per order - no STATUS_PENDING is needed
 		logctx.Debug(ctx, "Lock Fragment", logger.String("orderID", res.Orders[i].Id.String()), logger.String("OutSize", res.Fragments[i].OutSize.String()))
-		err := res.Orders[i].Lock(ctx, res.Fragments[i].OutSize)
+
+		err := res.Orders[i].Lock(ctx, res.Fragments[i])
 		if err != nil {
 			logctx.Error(ctx, "Lock order Failed", logger.Error(err))
 			return models.BeginSwapRes{}, err
@@ -128,7 +129,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 		} else {
 			// success
 			logctx.Debug(ctx, "Unlock Fragment", logger.String("orderID", frag.OrderId.String()), logger.String("OutSize", frag.OutSize.String()))
-			err = order.Unlock(ctx, frag.OutSize)
+			err = order.Unlock(ctx, frag)
 			if err != nil {
 				logctx.Error(ctx, "Unlock Failed", logger.Error(err))
 				return err
@@ -211,7 +212,7 @@ func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
 		} else {
 			// from pending to fill
 			logctx.Debug(ctx, "FillOrder", logger.String("orderID", order.Id.String()), logger.String("OutSize", frag.OutSize.String()))
-			filled, err := order.Fill(ctx, frag.OutSize)
+			filled, err := order.Fill(ctx, frag)
 			if err != nil {
 				logctx.Error(ctx, "FillOrder Failed", logger.Error(err))
 				return err

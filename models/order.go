@@ -276,7 +276,15 @@ func (o *Order) OnchainPrice(inDec, outDec int) (decimal.Decimal, error) {
 	return decimal.NewFromString(result.String())
 }
 
-func (o *Order) Fill(ctx context.Context, fillSize decimal.Decimal) (isFilled bool, err error) {
+func (o *Order) fragAtokenSize(frag OrderFrag) decimal.Decimal {
+	if o.Side == BUY {
+		return frag.OutSize
+	} else {
+		return frag.InSize
+	}
+}
+func (o *Order) Fill(ctx context.Context, frag OrderFrag) (isFilled bool, err error) {
+	fillSize := o.fragAtokenSize(frag)
 	newSizeFilled := o.SizeFilled.Add(fillSize)
 	if newSizeFilled.GreaterThan(o.Size) {
 		logctx.Error(ctx, "total size is less than requested fill size", logger.String("orderId", o.Id.String()), logger.String("orderSize", o.Size.String()), logger.String("requestedFillSize", fillSize.String()))
@@ -293,7 +301,11 @@ func (o *Order) Fill(ctx context.Context, fillSize decimal.Decimal) (isFilled bo
 	return o.IsFilled(), nil
 }
 
-func (o *Order) Lock(ctx context.Context, size decimal.Decimal) error {
+// IMPORTANT!!!
+// lock is always done in A TOKEN UNITs MATIC-USDC the lock is in MATIC and the size of the order is in MATIC
+func (o *Order) Lock(ctx context.Context, frag OrderFrag) error {
+	size := o.fragAtokenSize(frag)
+
 	// cant lock cancelled liquidity
 	if o.Cancelled {
 		logctx.Error(ctx, "order is cancelled", logger.String("orderId", o.Id.String()))
@@ -307,7 +319,9 @@ func (o *Order) Lock(ctx context.Context, size decimal.Decimal) error {
 	o.SizePending = o.SizePending.Add(size)
 	return nil
 }
-func (o *Order) Unlock(ctx context.Context, size decimal.Decimal) error {
+func (o *Order) Unlock(ctx context.Context, frag OrderFrag) error {
+	size := o.fragAtokenSize(frag)
+
 	if o.SizePending.LessThan(size) {
 		logctx.Error(ctx, "size to be unlocked is greater than sizePending", logger.String("orderId", o.Id.String()), logger.String("pendingSize", o.SizePending.String()), logger.String("requestedUnlockSize", size.String()))
 		return ErrUnexpectedSizeFilled
