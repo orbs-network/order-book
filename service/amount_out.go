@@ -10,11 +10,11 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, inDec, outDec int) (models.QuoteRes, error) {
+func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, inDec, outDec int) (models.QuoteRes, error) {
 
-	logctx.Info(ctx, "GetQuote started", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
+	logctx.Info(ctx, "GetQuote started", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("inAmount", inAmount.String()))
 	if minOutAmount != nil {
-		logctx.Info(ctx, "GetQuote minOutAmount requested", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("minOutAmount", minOutAmount.String()))
+		logctx.Info(ctx, "GetQuote minOutAmount requested", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("minOutAmount", minOutAmount.String()))
 	}
 
 	// make sure inAmount is positivr
@@ -24,20 +24,20 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 	var it models.OrderIter
 	var res models.QuoteRes
 	var err error
-	if side == models.BUY {
+	if makerSide == models.SELL {
 		it = s.orderBookStore.GetMinAsk(ctx, symbol)
 		if it == nil {
 			logctx.Error(ctx, "GetMinAsk failed")
 			return models.QuoteRes{}, models.ErrIterFail
 		}
 		if !it.HasNext() {
-			logctx.Warn(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
+			logctx.Warn(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("inAmount", inAmount.String()))
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
 
 		res, err = getOutAmountInAToken(ctx, it, inAmount, inDec, outDec)
 
-	} else { // SELL
+	} else { // BUY
 		it = s.orderBookStore.GetMaxBid(ctx, symbol)
 		if it == nil {
 			logctx.Warn(ctx, "GetMaxBid failed no orders in iterator")
@@ -63,7 +63,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, side model
 		}
 	}
 
-	logctx.Info(ctx, "GetQuote Finished OK", logger.String("symbol", symbol.String()), logger.String("side", side.String()), logger.String("inAmount", inAmount.String()))
+	logctx.Info(ctx, "GetQuote Finished OK", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("inAmount", inAmount.String()))
 
 	return res, nil
 }
@@ -81,47 +81,46 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 			logctx.Error(ctx, "order::it.Next() returned nil")
 			return models.QuoteRes{}, models.ErrUnexpectedError
 		}
-
-		// skip orders with locked funds
+		// Unexpected to get cancelled orders in price list
 		if order.Cancelled {
 			logctx.Error(ctx, "cancelled order exists in the price list (ignore and continue)", logger.String("orderId", order.Id.String()))
 			return models.QuoteRes{}, models.ErrUnexpectedError
 		}
-		// skip orders with locked funds or cancelled
-		if order.GetAvailableSize().IsPositive() && !order.Cancelled {
-			// calc onchain price to match solidity percision
-			ocPrice, err := order.OnchainPrice(inDec, outDec)
-			if err != nil {
-				logctx.Error(ctx, "Onchain price failed for order", logger.String("orderId", order.Id.String()), logger.Error(err))
-				return models.QuoteRes{}, models.ErrUnexpectedError
-			}
-			// max Spend in B token  for this order
-			orderSizeB := ocPrice.Mul(order.GetAvailableSize())
+		// skip orders with locked funds
+		if order.GetAvailableSize().IsPositive() {
+			//calc onchain price to match solidity percision
+			// ocPrice, err := order.OnchainPrice(inDec, outDec)
+			// if err != nil {
+			// 	logctx.Error(ctx, "Onchain price failed for order", logger.String("orderId", order.Id.String()), logger.Error(err))
+			// 	return models.QuoteRes{}, models.ErrUnexpectedError
+			// }
+			// // max Spend in B token for this order
+			orderSizeB := order.Price.Mul(order.GetAvailableSize())
 			// spend the min of orderSizeB/inAmountB
 			spendB := decimal.Min(orderSizeB, inAmountB)
 
-			// Gain
-			oldGainA := spendB.Div(order.Price)
-			println("oldGainA ", oldGainA.String())
+			//Gain
+			gainA := spendB.Div(order.Price)
+			println("gainA ", gainA.String())
 
-			// gain A onchain calc
+			//gain A onchain calc
 			//fill = takerIn * orderIn / orderOut
-			fmt.Println("orderIn ", order.Signature.AbiFragment.Input.Amount.String())
-			fmt.Println("orderOut ", order.Signature.AbiFragment.Outputs[0].Amount.String())
-			orderIn := decimal.NewFromBigInt(order.Signature.AbiFragment.Input.Amount, 0).Div(decimal.NewFromFloat(1e18))
-			mulIn := spendB.Mul(orderIn)
-			orderOut := decimal.NewFromBigInt(order.Signature.AbiFragment.Outputs[0].Amount, 0).Div(decimal.NewFromFloat(1e6))
-			// round up
-			gainA := mulIn.Div(orderOut).RoundUp(18)
+			// fmt.Println("orderIn ", order.Signature.AbiFragment.Input.Amount.String())
+			// fmt.Println("orderOut ", order.Signature.AbiFragment.Outputs[0].Amount.String())
+			//orderIn := decimal.NewFromBigInt(order.Signature.AbiFragment.Input.Amount, 0).Div(decimal.NewFromFloat(1e18))
+			// mulIn := spendB.Mul(orderIn)
+			// orderOut := decimal.NewFromBigInt(order.Signature.AbiFragment.Outputs[0].Amount, 0).Div(decimal.NewFromFloat(1e6))
+
+			//gainA := mulIn.Div(orderOut)
 			fmt.Println("gainA ", gainA.String())
 
-			// sub-add
+			//sub - add
 			inAmountB = inAmountB.Sub(spendB)
 			outAmountA = outAmountA.Add(gainA)
 
 			// res
 			logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
-			logctx.Debug(ctx, fmt.Sprintf("Onchain Price: %s", ocPrice.String()))
+			//logctx.Debug(ctx, fmt.Sprintf("Onchain Price: %s", ocPrice.String()))
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
 			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainA, InSize: spendB})
@@ -149,45 +148,49 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 			logctx.Error(ctx, "order::it.Next() returned nil")
 			return models.QuoteRes{}, models.ErrUnexpectedError
 		}
-
-		// Spend
-		spendA := decimal.Min(order.GetAvailableSize(), inAmountA)
-		fmt.Println("sizeA ", spendA.String())
-
-		// calc onchain price to match solidity percision
-		// replace in and out decimals to match the order's side
-		ocPrice, err := order.OnchainPrice(inDec, outDec)
-		if err != nil {
-			logctx.Error(ctx, "Onchain price failed for order", logger.String("orderId", order.Id.String()), logger.Error(err))
+		// Unexpected to get cancelled orders in price list
+		if order.Cancelled {
+			logctx.Error(ctx, "order::it.Next() returned a cencelled order", logger.String("orderId", order.Id.String()))
 			return models.QuoteRes{}, models.ErrUnexpectedError
 		}
+		// skip orders with locked funds
+		if order.GetAvailableSize().IsPositive() {
+			// Spend
+			spendA := decimal.Min(order.GetAvailableSize(), inAmountA)
+			fmt.Println("sizeA ", spendA.String())
 
-		// Gain
-		oldGainB := order.Price.Mul(spendA)
-		fmt.Println("oldGainB ", oldGainB.String())
+			// calc onchain price to match solidity percision
+			// replace in and out decimals to match the order's side
+			// ocPrice, err := order.OnchainPrice(inDec, outDec)
+			// if err != nil {
+			// 	logctx.Error(ctx, "Onchain price failed for order", logger.String("orderId", order.Id.String()), logger.Error(err))
+			// 	return models.QuoteRes{}, models.ErrUnexpectedError
+			// }
 
-		// gain B onchain calc
-		//fill = takerIn * orderIn / orderOut
-		fmt.Println("orderIn ", order.Signature.AbiFragment.Input.Amount.String())
-		fmt.Println("orderOut ", order.Signature.AbiFragment.Outputs[0].Amount.String())
-		orderIn := decimal.NewFromBigInt(order.Signature.AbiFragment.Input.Amount, 0).Div(decimal.NewFromFloat(1e6))
-		mulIn := spendA.Mul(orderIn)
-		orderOut := decimal.NewFromBigInt(order.Signature.AbiFragment.Outputs[0].Amount, 0).Div(decimal.NewFromFloat(1e18))
-		gainB := mulIn.Div(orderOut)
-		// always give + 1%
-		gainB = gainB.Mul(decimal.NewFromFloat(0.99))
-		fmt.Println("gainB ", gainB.String())
+			// Gain
+			gainB := order.Price.Mul(spendA)
+			fmt.Println("gainB ", gainB.String())
 
-		// sub-add
-		inAmountA = inAmountA.Sub(spendA)
-		outAmountB = outAmountB.Add(gainB)
+			// gain B onchain calc
+			//fill = takerIn * orderIn / orderOut
+			// fmt.Println("orderIn ", order.Signature.AbiFragment.Input.Amount.String())
+			// fmt.Println("orderOut ", order.Signature.AbiFragment.Outputs[0].Amount.String())
+			// orderIn := decimal.NewFromBigInt(order.Signature.AbiFragment.Input.Amount, 0).Div(decimal.NewFromFloat(1e6))
+			// mulIn := spendA.Mul(orderIn)
+			// orderOut := decimal.NewFromBigInt(order.Signature.AbiFragment.Outputs[0].Amount, 0).Div(decimal.NewFromFloat(1e18))
+			// gainB := mulIn.Div(orderOut)
 
-		// res
-		logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
-		logctx.Debug(ctx, fmt.Sprintf("Onchain Price: %s", ocPrice.String()))
-		logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendA: %s", spendA.String()))
-		logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainB: %s", gainB.String()))
-		frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainB, InSize: spendA})
+			// sub-add
+			inAmountA = inAmountA.Sub(spendA)
+			outAmountB = outAmountB.Add(gainB)
+
+			// res
+			logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
+			//logctx.Debug(ctx, fmt.Sprintf("Onchain Price: %s", ocPrice.String()))
+			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendA: %s", spendA.String()))
+			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainB: %s", gainB.String()))
+			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainB, InSize: spendA})
+		}
 	}
 	if inAmountA.IsPositive() {
 		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
