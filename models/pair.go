@@ -27,11 +27,11 @@ func (p *Pair) Symbol() Symbol {
 	return Symbol(p.String())
 }
 
-func (p *Pair) GetSide(inToken string) Side {
-	if inToken == p.aToken {
-		return SELL
-	} else {
+func (p *Pair) GetMakerSide(takerInToken string) Side {
+	if takerInToken == p.aToken {
 		return BUY
+	} else {
+		return SELL
 	}
 }
 
