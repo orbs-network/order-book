@@ -51,16 +51,23 @@ type QuoteRes struct {
 	Fragments []Fragment `json:"fragments"`
 }
 
-func (h *Handler) convertToTokenDec(ctx context.Context, tokenName string, amount decimal.Decimal) string {
+func (h *Handler) ToTokenBigInt(ctx context.Context, tokenName string, amount decimal.Decimal) *big.Int {
 	if token := h.supportedTokens.ByName(tokenName); token != nil {
 		dcmls := decimal.NewFromInt(10)
 		dcmls = dcmls.Pow(decimal.NewFromInt(int64(token.Decimals)))
 		mul := amount.Mul(dcmls)
+
+		// get rid of decimal point values (round down)
 		// remove after point 1.00123 decimals
-		return mul.Truncate(0).String()
+		mul = mul.Floor()
+		// convert
+		bgint := big.NewInt(0)
+		bgint.SetString(mul.String(), 10)
+
+		return bgint
 	}
 	logctx.Error(ctx, "Token is not found in supported tokens: "+tokenName)
-	return ""
+	return nil
 }
 
 func (h *Handler) convertFromTokenDec(ctx context.Context, tokenName, amountStr string) (decimal.Decimal, error) {
@@ -164,13 +171,14 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "no suppoerted pair was found for tokens", logger.String("InToken", req.InToken), logger.String("OutToken", req.OutToken))
 		return nil
 	}
-	side := pair.GetSide(req.InToken)
+	// taker's in token to maker's side
+	makerSide := pair.GetMakerSide(req.InToken)
 
 	takerOutDec := h.supportedTokens.ByName(req.OutToken).Decimals
 	takerInDec := h.supportedTokens.ByName(req.InToken).Decimals
 
 	// ALWAYS reverese decimals tp meet the makers order's side
-	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), side, inAmount, minOutAmount, takerOutDec, takerInDec)
+	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), makerSide, inAmount, minOutAmount, takerOutDec, takerInDec)
 	if err != nil {
 		if err == models.ErrMinOutAmount {
 			restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
@@ -180,14 +188,14 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		return nil
 	}
 
-	convOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, svcQuoteRes.Size)
-	if convOutAmount == "" {
+	convOutAmount := h.ToTokenBigInt(r.Context(), req.OutToken, svcQuoteRes.Size)
+	if convOutAmount == nil {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "convOutAmount return empty string")
 		return nil
 	}
 	// convert res
 	res := QuoteRes{
-		OutAmount: convOutAmount,
+		OutAmount: convOutAmount.String(),
 		OutToken:  req.OutToken,
 		InAmount:  req.InAmount,
 		InToken:   req.InToken,
@@ -198,6 +206,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	logctx.Debug(ctx, "QuoteRes", logger.String("OutAmount", res.OutAmount))
 
 	if isSwap {
+		// lock liquidity
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
 		res.SwapId = swapData.SwapId.String()
 		logctx.Debug(ctx, "BeginSwap", logger.String("swapId", res.SwapId))
@@ -213,12 +222,9 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			// Maker In Amount is Taker's OutAmount!
 
 			// conver In/Out amount to token decimals
-			takerInAmount := h.convertToTokenDec(r.Context(), req.InToken, swapData.Fragments[i].InSize)
-			takerOutAmount := h.convertToTokenDec(r.Context(), req.OutToken, swapData.Fragments[i].OutSize)
-
-			// conv to sol bigint
-			MakerInAmount := big.NewInt(0)
-			MakerInAmount.SetString(takerOutAmount, 10)
+			// convert to sol's big int and floor (reduce precision here)
+			takerInAmount := h.ToTokenBigInt(r.Context(), req.InToken, swapData.Fragments[i].InSize)
+			takerOutAmount := h.ToTokenBigInt(r.Context(), req.OutToken, swapData.Fragments[i].OutSize)
 
 			abiOrder := swapData.Orders[i].Signature.AbiFragment
 			abiOrder.ExclusivityOverrideBps = big.NewInt(0)
@@ -232,21 +238,21 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			frag := Fragment{
 				Signature:      swapData.Orders[i].Signature.Eip712Sig,
 				AbiOrder:       abiOrder,
-				TakerInAmount:  takerInAmount,
-				TakerOutAmount: takerOutAmount,
+				TakerInAmount:  takerInAmount.String(),
+				TakerOutAmount: takerOutAmount.String(),
 			}
 			res.Fragments = append(res.Fragments, frag)
 			// signed order + out amount from the maker's/order side
 			signedOrder := abi.SignedOrder{
 				OrderWithAmount: abi.OrderWithAmount{
 					Order:  abiOrder,
-					Amount: MakerInAmount, // is taker's out amount
+					Amount: takerInAmount, // is maker's out amount
 				},
 				Signature: Signature2Bytes(swapData.Orders[i].Signature.Eip712Sig),
 			}
 			signedOrders = append(signedOrders, signedOrder)
 			// MakerInAmount == takerOutAmount
-			logctx.Debug(ctx, "append swap fragment", logger.String("swapId", res.SwapId), logger.Int("fragIndex", i), logger.String("TakerInAmount", frag.TakerInAmount), logger.String("MakerInAmount", takerOutAmount))
+			logctx.Debug(ctx, "append swap fragment", logger.String("swapId", res.SwapId), logger.Int("fragIndex", i), logger.String("TakerInAmount", frag.TakerInAmount), logger.String("takerOutAmount", takerOutAmount.String()))
 		}
 		// abi encode
 		abiCall, err := abi.PackSignedOrders(ctx, signedOrders)
