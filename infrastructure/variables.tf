@@ -15,7 +15,7 @@ variable "log_level" {
   default     = "info"
 }
 
-variable "swap_contract_address" {
+variable "reactor_address" {
   type        = string
   description = "Swap reactor contract address"
 }

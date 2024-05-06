@@ -16,7 +16,7 @@ resource "heroku_app" "server" {
     "ENVIRONMENT"           = var.environment_name
     "LOG_LEVEL"             = var.log_level
     "RPC_URL"               = var.rpc_url
-    "SWAP_CONTRACT_ADDRESS" = var.swap_contract_address
+    "REACTOR_ADDRESS" =     var.reactor_address
   }
 
   lifecycle {
