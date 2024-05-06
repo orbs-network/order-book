@@ -72,7 +72,7 @@ func NewHandler(svc service.OrderBookService, r *mux.Router) (*Handler, error) {
 		pairMngr:        models.NewPairMngr(),
 		okJson:          okJson,
 		supportedTokens: st,
-		reactorAddress:  restutils.GetEnv("SWAP_CONTRACT_ADDRESS", "0x2ee46d8d20020520d5266f3cacc7c41e1aadd4c6"),
+		reactorAddress:  restutils.GetEnv("REACTOR_ADDRESS", "0x4C4B950432189b3283A5111A6963ee318109695c"),
 	}, nil
 }
 
