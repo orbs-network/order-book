@@ -89,41 +89,48 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	middlewareValidUser := middleware.ValidateUserMiddleware(getUserByApiKey)
 	mmApi.Use(middlewareValidUser)
 
+	getApi := mmApi.Methods("GET").Subrouter()
+	// Only users with write permissions can access these routes
+	createApi := mmApi.Methods("POST").Subrouter()
+	createApi.Use(middleware.CheckUserHasPermsMiddleware([]models.UserType{"MARKET_MAKER", "ADMIN"}))
+	deleteApi := mmApi.Methods("DELETE").Subrouter()
+	deleteApi.Use(middleware.CheckUserHasPermsMiddleware([]models.UserType{"MARKET_MAKER", "ADMIN"}))
+
 	// ------- CREATE -------
 	// Place multiple orders
-	mmApi.HandleFunc("/orders", h.CreateOrders).Methods("POST")
+	createApi.HandleFunc("/orders", h.CreateOrders).Methods("POST")
 	// Place a new order
-	mmApi.HandleFunc("/order", h.CreateOrder).Methods("POST")
+	createApi.HandleFunc("/order", h.CreateOrder).Methods("POST")
 
 	// ------- READ -------
 	// Get an order by client order ID
-	mmApi.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId).Methods("GET")
+	getApi.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId).Methods("GET")
 	// Get an order by ID
-	mmApi.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
+	getApi.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
 	// Get all open orders for a user
-	mmApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOpenOrdersForUser)).Methods("GET")
+	getApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOpenOrdersForUser)).Methods("GET")
 	// Legacy way to Get all filled orders for a user
-	mmApi.HandleFunc("/fills-page", middleware.PaginationMiddleware(h.GetFilledOrdersForUser)).Methods("GET")
+	getApi.HandleFunc("/fills-page", middleware.PaginationMiddleware(h.GetFilledOrdersForUser)).Methods("GET")
 	// correct way to Get fills using data in swaps
-	mmApi.HandleFunc("/fills", h.GetSwapFills).Methods("GET")
+	getApi.HandleFunc("/fills", h.GetSwapFills).Methods("GET")
 	// Get all symbols
-	mmApi.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
+	getApi.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
 	// Get market depth
-	mmApi.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
+	getApi.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
 	// Get supported tokens
-	mmApi.HandleFunc("/supported-tokens", h.GetSupportedTokens).Methods("GET")
+	getApi.HandleFunc("/supported-tokens", h.GetSupportedTokens).Methods("GET")
 
 	// ------- DELETE -------
 	// Cancel an existing order by client order ID
-	mmApi.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
+	deleteApi.HandleFunc("/order/client-order/{clientOId}", h.CancelOrderByClientOId).Methods("DELETE")
 	// Cancel an existing order by order ID
-	mmApi.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
+	deleteApi.HandleFunc("/order/{orderId}", h.CancelOrderByOrderId).Methods("DELETE")
 	// Cancel all orders for a user
-	mmApi.HandleFunc("/orders", h.CancelOrdersForUser).Methods("DELETE")
+	deleteApi.HandleFunc("/orders", h.CancelOrdersForUser).Methods("DELETE")
 
 	// ------- WEBSOCKET -------
 	// Subscribe to order events (websocket)
-	mmApi.HandleFunc("/ws/orders", websocket.WebSocketOrderHandler(h.svc, getUserByApiKey)).Methods("GET")
+	getApi.HandleFunc("/ws/orders", websocket.WebSocketOrderHandler(h.svc, getUserByApiKey)).Methods("GET")
 }
 
 // Liquidity Hub specific routes
