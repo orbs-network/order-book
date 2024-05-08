@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/orbs-network/order-book/models"
@@ -23,8 +22,6 @@ func CheckUserHasPermsMiddleware(allowedUserTypes []models.UserType) func(http.H
 				restutils.WriteJSONError(r.Context(), w, http.StatusUnauthorized, "User not found")
 				return
 			}
-			fmt.Printf("allowedUserTypes: %#v\n", allowedUserTypes)
-			fmt.Printf("user.Type: %#v\n", user.Type)
 
 			found := false
 			for _, u := range allowedUserTypes {
