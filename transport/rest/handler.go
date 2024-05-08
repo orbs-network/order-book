@@ -104,21 +104,21 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 
 	// ------- READ -------
 	// Get an order by client order ID
-	getApi.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId).Methods("GET")
+	getApi.HandleFunc("/order/client-order/{clientOId}", h.GetOrderByClientOId)
 	// Get an order by ID
-	getApi.HandleFunc("/order/{orderId}", h.GetOrderById).Methods("GET")
+	getApi.HandleFunc("/order/{orderId}", h.GetOrderById)
 	// Get all open orders for a user
-	getApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOpenOrdersForUser)).Methods("GET")
+	getApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOpenOrdersForUser))
 	// Legacy way to Get all filled orders for a user
-	getApi.HandleFunc("/fills-page", middleware.PaginationMiddleware(h.GetFilledOrdersForUser)).Methods("GET")
+	getApi.HandleFunc("/fills-page", middleware.PaginationMiddleware(h.GetFilledOrdersForUser))
 	// correct way to Get fills using data in swaps
-	getApi.HandleFunc("/fills", h.GetSwapFills).Methods("GET")
+	getApi.HandleFunc("/fills", h.GetSwapFills)
 	// Get all symbols
-	getApi.HandleFunc("/symbols", h.GetSymbols).Methods("GET")
+	getApi.HandleFunc("/symbols", h.GetSymbols)
 	// Get market depth
-	getApi.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth).Methods("GET")
+	getApi.HandleFunc("/orderbook/{symbol}", h.GetMarketDepth)
 	// Get supported tokens
-	getApi.HandleFunc("/supported-tokens", h.GetSupportedTokens).Methods("GET")
+	getApi.HandleFunc("/supported-tokens", h.GetSupportedTokens)
 
 	// ------- DELETE -------
 	// Cancel an existing order by client order ID
@@ -130,7 +130,7 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 
 	// ------- WEBSOCKET -------
 	// Subscribe to order events (websocket)
-	getApi.HandleFunc("/ws/orders", websocket.WebSocketOrderHandler(h.svc, getUserByApiKey)).Methods("GET")
+	getApi.HandleFunc("/ws/orders", websocket.WebSocketOrderHandler(h.svc, getUserByApiKey))
 }
 
 // Liquidity Hub specific routes
