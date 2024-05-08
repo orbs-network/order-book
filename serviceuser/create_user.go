@@ -11,7 +11,8 @@ import (
 )
 
 type CreateUserInput struct {
-	PubKey string
+	PubKey   string
+	UserType models.UserType
 }
 
 func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (user models.User, apiKey string, err error) {
@@ -27,7 +28,7 @@ func (s *Service) CreateUser(ctx context.Context, input CreateUserInput) (user m
 	createdUser, err := s.userStore.CreateUser(ctx, models.User{
 		Id:     userId,
 		PubKey: input.PubKey,
-		Type:   models.MARKET_MAKER,
+		Type:   input.UserType,
 		ApiKey: HashAPIKey(apiKey),
 	})
 

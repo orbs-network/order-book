@@ -18,6 +18,8 @@ import (
 )
 
 func main() {
+	fmt.Println("Creating a new read-write user...")
+
 	ctx := context.Background()
 
 	// Retrieve REDIS_URL from environment variable or prompt for it
@@ -64,7 +66,8 @@ func main() {
 
 	// Create a new user
 	user, apiKey, err := usersvc.CreateUser(ctx, serviceuser.CreateUserInput{
-		PubKey: walletAddress,
+		PubKey:   walletAddress,
+		UserType: "MARKET_MAKER",
 	})
 	if err != nil {
 		log.Fatalf("Failed to create user: %v", err)

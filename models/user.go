@@ -10,6 +10,7 @@ type UserType string
 
 const (
 	MARKET_MAKER  UserType = "MARKET_MAKER"
+	READ_ONLY     UserType = "READ_ONLY"
 	LIQUIDITY_HUB UserType = "LIQUIDITY_HUB"
 	ADMIN         UserType = "ADMIN"
 )
@@ -33,6 +34,8 @@ func StrToUserType(str string) (UserType, error) {
 	switch str {
 	case "MARKET_MAKER":
 		return MARKET_MAKER, nil
+	case "READ_ONLY":
+		return READ_ONLY, nil
 	case "LIQUIDITY_HUB":
 		return LIQUIDITY_HUB, nil
 	case "ADMIN":
