@@ -13,16 +13,24 @@ import (
 
 func (s *Service) GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
 	logctx.Debug(ctx, "getting open orders for user", logger.String("user_id", userId.String()))
-	orders, totalOrders, err = s.orderBookStore.GetOrdersForUser(ctx, userId, false)
+	orders, _, err = s.orderBookStore.GetOrdersForUser(ctx, userId, false)
 
 	if err != nil {
 		logctx.Error(ctx, "error getting open orders for user", logger.Error(err), logger.String("user_id", userId.String()))
 		return nil, 0, fmt.Errorf("error getting open orders for user: %w", err)
 	}
 
+	// filter out cancelled or fully filled orders and keep only open
+	res := []models.Order{}
+	for _, o := range orders {
+		if !o.Cancelled && !o.IsFilled() {
+			res = append(res, o)
+		}
+	}
+
 	logctx.Debug(ctx, "returning open orders for user", logger.String("user_id", userId.String()), logger.Int("orders_count", len(orders)))
 
-	return orders, totalOrders, nil
+	return res, len(res), nil
 }
 
 func (s *Service) GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
