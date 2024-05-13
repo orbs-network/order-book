@@ -88,13 +88,7 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 		}
 		// skip orders with locked funds
 		if order.GetAvailableSize().IsPositive() {
-			//calc onchain price to match solidity percision
-			// ocPrice, err := order.OnchainPrice(inDec, outDec)
-			// if err != nil {
-			// 	logctx.Error(ctx, "Onchain price failed for order", logger.String("orderId", order.Id.String()), logger.Error(err))
-			// 	return models.QuoteRes{}, models.ErrUnexpectedError
-			// }
-			// // max Spend in B token for this order
+			// max Spend in B token for this order
 			orderSizeB := order.Price.Mul(order.GetAvailableSize())
 			// spend the min of orderSizeB/inAmountB
 			spendB := decimal.Min(orderSizeB, inAmountB)
@@ -103,24 +97,12 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 			gainA := spendB.Div(order.Price)
 			println("gainA ", gainA.String())
 
-			//gain A onchain calc
-			//fill = takerIn * orderIn / orderOut
-			// fmt.Println("orderIn ", order.Signature.AbiFragment.Input.Amount.String())
-			// fmt.Println("orderOut ", order.Signature.AbiFragment.Outputs[0].Amount.String())
-			//orderIn := decimal.NewFromBigInt(order.Signature.AbiFragment.Input.Amount, 0).Div(decimal.NewFromFloat(1e18))
-			// mulIn := spendB.Mul(orderIn)
-			// orderOut := decimal.NewFromBigInt(order.Signature.AbiFragment.Outputs[0].Amount, 0).Div(decimal.NewFromFloat(1e6))
-
-			//gainA := mulIn.Div(orderOut)
-			fmt.Println("gainA ", gainA.String())
-
 			//sub - add
 			inAmountB = inAmountB.Sub(spendB)
 			outAmountA = outAmountA.Add(gainA)
 
 			// res
 			logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
-			//logctx.Debug(ctx, fmt.Sprintf("Onchain Price: %s", ocPrice.String()))
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
 			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
 			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainA, InSize: spendB})
@@ -159,26 +141,9 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 			spendA := decimal.Min(order.GetAvailableSize(), inAmountA)
 			fmt.Println("sizeA ", spendA.String())
 
-			// calc onchain price to match solidity percision
-			// replace in and out decimals to match the order's side
-			// ocPrice, err := order.OnchainPrice(inDec, outDec)
-			// if err != nil {
-			// 	logctx.Error(ctx, "Onchain price failed for order", logger.String("orderId", order.Id.String()), logger.Error(err))
-			// 	return models.QuoteRes{}, models.ErrUnexpectedError
-			// }
-
 			// Gain
 			gainB := order.Price.Mul(spendA)
 			fmt.Println("gainB ", gainB.String())
-
-			// gain B onchain calc
-			//fill = takerIn * orderIn / orderOut
-			// fmt.Println("orderIn ", order.Signature.AbiFragment.Input.Amount.String())
-			// fmt.Println("orderOut ", order.Signature.AbiFragment.Outputs[0].Amount.String())
-			// orderIn := decimal.NewFromBigInt(order.Signature.AbiFragment.Input.Amount, 0).Div(decimal.NewFromFloat(1e6))
-			// mulIn := spendA.Mul(orderIn)
-			// orderOut := decimal.NewFromBigInt(order.Signature.AbiFragment.Outputs[0].Amount, 0).Div(decimal.NewFromFloat(1e18))
-			// gainB := mulIn.Div(orderOut)
 
 			// sub-add
 			inAmountA = inAmountA.Sub(spendA)
