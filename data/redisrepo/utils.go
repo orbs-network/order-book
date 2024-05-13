@@ -84,3 +84,16 @@ func AddVal2Set(ctx context.Context, client redis.Cmdable, key, val string) erro
 	logctx.Debug(ctx, "Added element to set", logger.String("key", key), logger.String("val", val))
 	return nil
 }
+
+// key for tracking balance of a maker in a certain token
+func GetMakerTokenTrackKey(order models.Order) string {
+	if order.Signature.AbiFragment.Info.Swapper.String() == "" {
+		fmt.Println("order does not have a swapper address in ABI", logger.String("orderId", order.Id.String()))
+		return ""
+	}
+	if order.Signature.AbiFragment.Input.Token.String() == "" {
+		fmt.Println("order does not have an Inpuit token address address in ABI", logger.String("orderId", order.Id.String()))
+		return ""
+	}
+	return fmt.Sprintf("balance:%s:%s", order.Signature.AbiFragment.Input.Token.String(), order.Signature.AbiFragment.Info.Swapper.String())
+}
