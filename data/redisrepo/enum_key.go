@@ -27,3 +27,10 @@ func (r *redisRepository) EnumSubKeysOf(ctx context.Context, key string) ([]stri
 
 	return keys, nil
 }
+
+func (r *redisRepository) ReadStrKey(ctx context.Context, key string) (string, error) {
+	return "", nil
+}
+func (r *redisRepository) WriteStrKey(ctx context.Context, key, val string) error {
+	return nil
+}

@@ -74,6 +74,8 @@ type OrderBookStore interface {
 
 	// utils
 	EnumSubKeysOf(ctx context.Context, key string) ([]string, error)
+	ReadStrKey(ctx context.Context, key string) (string, error)
+	WriteStrKey(ctx context.Context, key, val string) error
 
 	// PubSub
 	PublishEvent(ctx context.Context, key string, value interface{}) error
