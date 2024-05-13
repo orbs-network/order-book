@@ -85,7 +85,7 @@ func main() {
 
 	for range ticker.C {
 		// updating maker on chain wallets per token
-		err := evmClient.UpdateMakerBalance(ctx)
+		err := evmClient.UpdateMakerBalances(ctx)
 		if err != nil {
 			log.Printf("error checking makers token balance: %v", err)
 		}

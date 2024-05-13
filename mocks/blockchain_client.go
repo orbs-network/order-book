@@ -16,6 +16,6 @@ func (m *MockBcClient) CheckPendingTxs(ctx context.Context) error {
 	return m.Error
 }
 
-func (m *MockBcClient) UpdateMakerBalance(ctx context.Context) error {
+func (m *MockBcClient) UpdateMakerBalances(ctx context.Context) error {
 	return m.Error
 }
