@@ -10,7 +10,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, inDec, outDec int) (models.QuoteRes, error) {
+func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, makerInToken string) (models.QuoteRes, error) {
 
 	logctx.Info(ctx, "GetQuote started", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("inAmount", inAmount.String()))
 	if minOutAmount != nil {
@@ -21,6 +21,9 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide 
 	if !inAmount.IsPositive() {
 		return models.QuoteRes{}, models.ErrInAmount
 	}
+
+	walletVerifier := NewWalletVerifier(makerInToken)
+
 	var it models.OrderIter
 	var res models.QuoteRes
 	var err error
@@ -34,8 +37,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide 
 			logctx.Warn(ctx, "insufficient liquidity", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("inAmount", inAmount.String()))
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
-
-		res, err = getOutAmountInAToken(ctx, it, inAmount, inDec, outDec)
+		res, err = getOutAmountInAToken(ctx, it, inAmount, walletVerifier)
 
 	} else { // BUY
 		it = s.orderBookStore.GetMaxBid(ctx, symbol)
@@ -47,7 +49,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide 
 			logctx.Warn(ctx, "GetMaxBid failed no orders in iterator")
 			return models.QuoteRes{}, models.ErrInsufficientLiquity
 		}
-		res, err = getOutAmountInBToken(ctx, it, inAmount, inDec, outDec)
+		res, err = getOutAmountInBToken(ctx, it, inAmount, walletVerifier)
 	}
 	if err != nil {
 		logctx.Error(ctx, "getQuoteResIn failed", logger.Error(err))
@@ -63,6 +65,8 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide 
 		}
 	}
 
+	// apply on-chain balance verification on maker's InToken (which is out amount)
+
 	logctx.Info(ctx, "GetQuote Finished OK", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("inAmount", inAmount.String()))
 
 	return res, nil
@@ -71,10 +75,11 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide 
 // PAIR/SYMBOL A-B (ETH-USDC)
 // amount in B token (USD)
 // amount out A token (ETH)
-func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB decimal.Decimal, inDec, outDec int) (models.QuoteRes, error) {
+func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB decimal.Decimal, verifier *WalletVerifier) (models.QuoteRes, error) {
 	outAmountA := decimal.NewFromInt(0)
 	var frags []models.OrderFrag
 	var order *models.Order
+
 	for it.HasNext() && inAmountB.IsPositive() {
 		order = it.Next(ctx)
 		if order == nil {
@@ -92,6 +97,9 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 			orderSizeB := order.Price.Mul(order.GetAvailableSize())
 			// spend the min of orderSizeB/inAmountB
 			spendB := decimal.Min(orderSizeB, inAmountB)
+
+			// to verify onChain
+			verifier.Add(order.Signature.AbiFragment.Info.Swapper.String(), spendB)
 
 			//Gain
 			gainA := spendB.Div(order.Price)
@@ -120,7 +128,7 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 // PAIR/SYMBOL A-B (ETH-USDC)
 // amount in A token (ETH)
 // amount out B token (USD)
-func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA decimal.Decimal, inDec, outDec int) (models.QuoteRes, error) {
+func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA decimal.Decimal, verifier *WalletVerifier) (models.QuoteRes, error) {
 	outAmountB := decimal.NewFromInt(0)
 	var order *models.Order
 	var frags []models.OrderFrag
@@ -140,6 +148,9 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 			// Spend
 			spendA := decimal.Min(order.GetAvailableSize(), inAmountA)
 			fmt.Println("sizeA ", spendA.String())
+
+			// to verify onChain
+			verifier.Add(order.Signature.AbiFragment.Info.Swapper.String(), spendA)
 
 			// Gain
 			gainB := order.Price.Mul(spendA)
