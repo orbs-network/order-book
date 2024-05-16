@@ -83,7 +83,7 @@ func (m *MockOrderBookService) SubscribeUserOrders(ctx context.Context, userId u
 	return m.OrderEvents, m.Error
 }
 
-func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, makerSide models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, inDec, outDec int) (models.QuoteRes, error) {
+func (m *MockOrderBookService) GetQuote(ctx context.Context, symbol models.Symbol, makerSide models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, makerInToken string) (models.QuoteRes, error) {
 	return m.QuoteRes, m.Error
 }
 

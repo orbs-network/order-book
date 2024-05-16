@@ -11,7 +11,6 @@ import (
 )
 
 func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, makerInToken string) (models.QuoteRes, error) {
-
 	logctx.Info(ctx, "GetQuote started", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("inAmount", inAmount.String()))
 	if minOutAmount != nil {
 		logctx.Info(ctx, "GetQuote minOutAmount requested", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("minOutAmount", minOutAmount.String()))
@@ -22,6 +21,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide 
 		return models.QuoteRes{}, models.ErrInAmount
 	}
 
+	// to verify onchain balance
 	walletVerifier := NewWalletVerifier(makerInToken)
 
 	var it models.OrderIter
@@ -65,8 +65,12 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide 
 		}
 	}
 
-	// apply on-chain balance verification on maker's InToken (which is out amount)
+	if !walletVerifier.CheckAll(ctx, s.orderBookStore) {
+		logctx.Error(ctx, "walletVerifier CheckAll return false", logger.String("makerInToken", makerInToken), logger.String("makerInAmount", res.Size.String()))
+		return models.QuoteRes{}, models.ErrInsufficientBalance
+	}
 
+	// apply on-chain balance verification on maker's InToken (which is out amount)
 	logctx.Info(ctx, "GetQuote Finished OK", logger.String("symbol", symbol.String()), logger.String("makerSide", makerSide.String()), logger.String("inAmount", inAmount.String()))
 
 	return res, nil
