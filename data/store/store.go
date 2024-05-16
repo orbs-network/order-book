@@ -76,6 +76,7 @@ type OrderBookStore interface {
 	EnumSubKeysOf(ctx context.Context, key string) ([]string, error)
 	ReadStrKey(ctx context.Context, key string) (string, error)
 	WriteStrKey(ctx context.Context, key, val string) error
+	GetMakerTokenBalance(ctx context.Context, token, wallet string) (decimal.Decimal, error)
 
 	// PubSub
 	PublishEvent(ctx context.Context, key string, value interface{}) error

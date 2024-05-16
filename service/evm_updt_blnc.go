@@ -22,8 +22,8 @@ func (e *EvmClient) UpdateMakerBalance(ctx context.Context, key string) {
 		return
 	}
 	// current balance
-	prvBlnc := new(big.Int)
-	prvBlnc.SetString(val, 10)
+	prvBlnc := new(big.Float)
+	prvBlnc.SetString(val)
 
 	// update onchain value
 	token := parts[1]
@@ -35,11 +35,25 @@ func (e *EvmClient) UpdateMakerBalance(ctx context.Context, key string) {
 		return
 	}
 
+	// normalize balance to size with decimals
+	dcmls, err := e.blockchainStore.TokenDecimals(ctx, token, maker)
+	if err != nil {
+		logctx.Error(ctx, "TokenDecimals failed", logger.String("token", token))
+		return
+	}
+	// Create a big.Int representing 10^exponent
+	denom := new(big.Int).Exp(big.NewInt(10), big.NewInt(dcmls), nil)
+
+	fBlnc := new(big.Float).Quo(
+		new(big.Float).SetInt(blnc),
+		new(big.Float).SetInt(denom),
+	)
+
 	// update balance if changed
-	if blnc != prvBlnc {
-		err := e.orderBookStore.WriteStrKey(ctx, key, blnc.String())
+	if fBlnc != prvBlnc {
+		err := e.orderBookStore.WriteStrKey(ctx, key, fBlnc.String())
 		if err != nil {
-			logctx.Error(ctx, "WriteStrKey failed", logger.String("key", key), logger.String("blnc", blnc.String()))
+			logctx.Error(ctx, "WriteStrKey failed", logger.String("key", key), logger.String("blnc", fBlnc.String()))
 		}
 	}
 }
