@@ -202,3 +202,14 @@ func (m *MockOrderBookStore) PublishEvent(ctx context.Context, key string, value
 func (m *MockOrderBookStore) SubscribeToEvents(ctx context.Context, channel string) (chan []byte, error) {
 	return m.EventsChan, m.Error
 }
+
+func (r *MockOrderBookStore) ReadStrKey(ctx context.Context, key string) (string, error) {
+	return "", nil
+}
+func (r *MockOrderBookStore) WriteStrKey(ctx context.Context, key, val string) error {
+	return nil
+}
+
+func (r *MockOrderBookStore) GetMakerTokenBalance(ctx context.Context, token, wallet string) (decimal.Decimal, error) {
+	return decimal.Zero, nil
+}

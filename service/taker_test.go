@@ -27,12 +27,12 @@ func TestTaker_Quote(t *testing.T) {
 		}
 		// buy
 		svc, _ := service.New(&store, evmClient)
-		res, err := svc.GetQuote(ctx, symbol, models.BUY, decimal.Zero, nil, 18, 6)
+		res, err := svc.GetQuote(ctx, symbol, models.BUY, decimal.Zero, nil, "0xTOKEN")
 		assert.Equal(t, res, models.QuoteRes{})
 		assert.Error(t, err, models.ErrInAmount)
 		// sell
 		svc, _ = service.New(&store, evmClient)
-		res, err = svc.GetQuote(ctx, symbol, models.SELL, decimal.Zero, nil, 6, 18)
+		res, err = svc.GetQuote(ctx, symbol, models.SELL, decimal.Zero, nil, "0xTOKEN")
 		assert.Equal(t, res, models.QuoteRes{})
 		assert.Error(t, err, models.ErrInAmount)
 

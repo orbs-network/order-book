@@ -47,6 +47,12 @@ func (m *MockBcBackend) CreateTx(tx *types.Transaction, shouldMine bool) (*types
 	return signedTx, nil
 }
 
+func (m *MockBcBackend) BalanceOf(ctx context.Context, token, adrs string) (*big.Int, error) {
+	return nil, nil
+}
+func (m *MockBcBackend) TokenDecimals(ctx context.Context, token, adrs string) (int64, error) {
+	return 0, nil
+}
 func NewMockBcBackend() *MockBcBackend {
 	privateKey, err := crypto.GenerateKey()
 	if err != nil {

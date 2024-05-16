@@ -84,7 +84,14 @@ func main() {
 	ctx := context.Background()
 
 	for range ticker.C {
-		err := evmClient.CheckPendingTxs(ctx)
+		// updating maker on chain wallets per token
+		err := evmClient.UpdateMakerBalances(ctx)
+		if err != nil {
+			log.Printf("error checking makers token balance: %v", err)
+		}
+
+		// check pending transactions
+		err = evmClient.CheckPendingTxs(ctx)
 		if err != nil {
 			log.Printf("error checking pending txs: %v", err)
 		}

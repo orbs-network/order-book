@@ -174,14 +174,19 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	// taker's in token to maker's side
 	makerSide := pair.GetMakerSide(req.InToken)
 
-	takerOutDec := h.supportedTokens.ByName(req.OutToken).Decimals
-	takerInDec := h.supportedTokens.ByName(req.InToken).Decimals
+	// resolve makerInAddress to verify balance on-chain
+	makerInAdrs := req.OutTokenAddress
+	if makerInAdrs == "" {
+		makerInAdrs = h.supportedTokens.ByName(req.OutToken).Address
+	}
 
 	// ALWAYS reverese decimals tp meet the makers order's side
-	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), makerSide, inAmount, minOutAmount, takerOutDec, takerInDec)
+	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), makerSide, inAmount, minOutAmount, makerInAdrs)
 	if err != nil {
 		if err == models.ErrMinOutAmount {
 			restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
+		} else if err == models.ErrInsufficientBalance {
+			restutils.WriteJSONError(ctx, w, http.StatusConflict, err.Error())
 		} else {
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 		}

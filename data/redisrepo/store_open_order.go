@@ -13,7 +13,30 @@ import (
 // These methods should be used to store UNFILLED or PARTIALLY FILLED orders in Redis.
 //
 // `StoreFilledOrders` should be used to store completely filled orders.
-//
+func (r *redisRepository) ensureMakerTokenForBalanceTracking(ctx context.Context, order models.Order) error {
+	key := Order2MakerTokenTrackKey(order)
+	if key == "" {
+		logctx.Error(ctx, "Order2MakerTokenTrackKey failed for order", logger.String("orderId", order.Id.String()))
+		return models.ErrInvalidInput
+	}
+	// chjeck if key already exists
+	exists, err := r.client.Exists(ctx, key).Result()
+	if err != nil {
+		logctx.Error(ctx, "ensureMakerTokenForBalanceTracking failed to check if key exists", logger.String("key", key), logger.Error(err))
+		return err
+	}
+
+	// If the key doesn't exist, set its value to -1.
+	if exists == 0 {
+		err := r.client.Set(ctx, key, -1, 0).Err()
+		if err != nil {
+			logctx.Error(ctx, "ensureMakerTokenForBalanceTracking failed to write new tracking key", logger.String("key", key), logger.Error(err))
+			return err
+		}
+	}
+	return nil
+}
+
 // TODO: combine `StoreOpenOrder` and `StoreFilledOrder` into a single `StoreOrder` method that checks order status and stores accordingly.
 func (r *redisRepository) StoreOpenOrder(ctx context.Context, order models.Order) error {
 
@@ -32,7 +55,9 @@ func (r *redisRepository) StoreOpenOrder(ctx context.Context, order models.Order
 	}
 
 	logctx.Debug(ctx, "stored open order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
-	return nil
+
+	// make sure the maker's wallet and the token have entries in the store for onchain balance tracking
+	return r.ensureMakerTokenForBalanceTracking(ctx, order)
 }
 
 func (r *redisRepository) StoreOpenOrders(ctx context.Context, orders []models.Order) error {
