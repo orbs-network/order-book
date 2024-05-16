@@ -209,3 +209,7 @@ func (r *MockOrderBookStore) ReadStrKey(ctx context.Context, key string) (string
 func (r *MockOrderBookStore) WriteStrKey(ctx context.Context, key, val string) error {
 	return nil
 }
+
+func (r *MockOrderBookStore) GetMakerTokenBalance(ctx context.Context, token, wallet string) (decimal.Decimal, error) {
+	return decimal.Zero, nil
+}

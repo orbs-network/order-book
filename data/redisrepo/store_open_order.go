@@ -14,9 +14,9 @@ import (
 //
 // `StoreFilledOrders` should be used to store completely filled orders.
 func (r *redisRepository) ensureMakerTokenForBalanceTracking(ctx context.Context, order models.Order) error {
-	key := GetMakerTokenTrackKey(order)
+	key := Order2MakerTokenTrackKey(order)
 	if key == "" {
-		logctx.Error(ctx, "GetMakerTokenTrackKey failed for order", logger.String("orderId", order.Id.String()))
+		logctx.Error(ctx, "Order2MakerTokenTrackKey failed for order", logger.String("orderId", order.Id.String()))
 		return models.ErrInvalidInput
 	}
 	// chjeck if key already exists
