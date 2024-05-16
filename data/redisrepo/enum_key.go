@@ -29,8 +29,8 @@ func (r *redisRepository) EnumSubKeysOf(ctx context.Context, key string) ([]stri
 }
 
 func (r *redisRepository) ReadStrKey(ctx context.Context, key string) (string, error) {
-	return "", nil
+	return r.client.Get(ctx, key).Result()
 }
 func (r *redisRepository) WriteStrKey(ctx context.Context, key, val string) error {
-	return nil
+	return r.client.Set(ctx, key, val, 0).Err()
 }
