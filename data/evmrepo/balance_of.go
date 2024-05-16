@@ -3,8 +3,8 @@ package evmrepo
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"math/big"
+	"strconv"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -27,13 +27,13 @@ func (e *evmRepository) callContract(ctx context.Context, msg ethereum.CallMsg) 
 func (e *evmRepository) BalanceOf(ctx context.Context, token, adrs string) (*big.Int, error) {
 	tokAdrs := common.HexToAddress(token)
 	mkrAdrs := common.HexToAddress(adrs)
-	fmt.Printf(tokAdrs.String(), mkrAdrs.String())
 
 	packed, err := e.tokenABI.Pack("balanceOf", mkrAdrs)
 	if err != nil {
 		return nil, err
 	}
 
+	// get balance
 	callMsg := ethereum.CallMsg{
 		To:   &tokAdrs,
 		Data: packed,
@@ -55,4 +55,33 @@ func (e *evmRepository) BalanceOf(ctx context.Context, token, adrs string) (*big
 	}
 
 	return balance, nil
+}
+
+func (e *evmRepository) TokenDecimals(ctx context.Context, token, adrs string) (int64, error) {
+	tokAdrs := common.HexToAddress(token)
+
+	packed, err := e.tokenABI.Pack("decimals")
+	if err != nil {
+		return -1, err
+	}
+
+	// get balance
+	callMsg := ethereum.CallMsg{
+		To:   &tokAdrs,
+		Data: packed,
+	}
+
+	hex, err := e.callContract(ctx, callMsg)
+	if err != nil {
+		logctx.Error(ctx, "callContract failed on TokenDecimals", logger.String("tokAdrs", token))
+		return -1, err
+	}
+
+	dcmls, err := strconv.ParseInt(hex, 16, 64)
+	if err != nil {
+		logctx.Error(ctx, "strconv.ParseInt failed", logger.String("tokAdrs", token))
+		return -1, err
+	}
+
+	return dcmls, nil
 }
