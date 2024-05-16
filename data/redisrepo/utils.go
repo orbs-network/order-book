@@ -3,6 +3,7 @@ package redisrepo
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -85,8 +86,12 @@ func AddVal2Set(ctx context.Context, client redis.Cmdable, key, val string) erro
 	return nil
 }
 
+func GetMakerTokenTrackKey(token, wallet string) string {
+	return fmt.Sprintf("balance:%s:%s", strings.ToUpper(token), strings.ToUpper(wallet))
+}
+
 // key for tracking balance of a maker in a certain token
-func GetMakerTokenTrackKey(order models.Order) string {
+func Order2MakerTokenTrackKey(order models.Order) string {
 	if order.Signature.AbiFragment.Info.Swapper.String() == "" {
 		fmt.Println("order does not have a swapper address in ABI", logger.String("orderId", order.Id.String()))
 		return ""
@@ -95,5 +100,5 @@ func GetMakerTokenTrackKey(order models.Order) string {
 		fmt.Println("order does not have an Inpuit token address address in ABI", logger.String("orderId", order.Id.String()))
 		return ""
 	}
-	return fmt.Sprintf("balance:%s:%s", order.Signature.AbiFragment.Input.Token.String(), order.Signature.AbiFragment.Info.Swapper.String())
+	return GetMakerTokenTrackKey(order.Signature.AbiFragment.Input.Token.String(), order.Signature.AbiFragment.Info.Swapper.String())
 }
