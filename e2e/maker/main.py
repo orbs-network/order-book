@@ -46,7 +46,7 @@ class Client:
                 return
         print("Cancelled all orders")
 
-        factor = Decimal("1.001")
+        factor = Decimal("1.00005")
         cur_price = price
         print("------ Market Price: ", price)
 
@@ -87,7 +87,7 @@ class Client:
         print("\n")
 
         # BIDS
-        factor = Decimal("0.999")
+        factor = Decimal("0.99995")
         cur_price = price
         for i in range(int(DEPTH_SIZE)):
             cur_price *= factor
