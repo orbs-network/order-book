@@ -79,7 +79,6 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logctx.Debug(ctx, "user trying to create order", logger.String("userId", user.Id.String()), logger.String("price", parsedFields.roundedDecPrice.String()), logger.String("size", parsedFields.decSize.String()), logger.String("clientOrderId", parsedFields.clientOrderId.String()))
 	order, err := h.svc.CreateOrder(ctx, service.CreateOrderInput{
 		UserId:        user.Id,
 		Price:         parsedFields.roundedDecPrice,
@@ -90,6 +89,12 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		Eip712Sig:     args.Eip712Sig,
 		AbiFragment:   abiFragment,
 	})
+
+	if err == models.ErrCrossTrade {
+		logctx.Warn(ctx, "Price CrossTrade order", logger.String("userId", user.Id.String()), logger.String("orderId", parsedFields.clientOrderId.String()), logger.String("Price", parsedFields.roundedDecPrice.String()))
+		restutils.WriteJSONError(ctx, w, http.StatusConflict, err.Error())
+		return
+	}
 
 	if err == models.ErrClashingOrderId {
 		logctx.Warn(ctx, "clashing order ID", logger.String("userId", user.Id.String()), logger.String("orderId", parsedFields.clientOrderId.String()))

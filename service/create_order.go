@@ -58,11 +58,34 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 
 	logctx.Debug(ctx, "creating new order", logger.String("orderId", orderId.String()), logger.String("clientOrderId", input.ClientOrderID.String()))
 
+	// validate price
 	if input.Price.IsZero() || input.Price.IsNegative() {
 		logctx.Warn(ctx, "price has to be positive", logger.String("orderId", orderId.String()), logger.String("price", input.Price.String()))
 		return models.Order{}, models.ErrInvalidInput
 	}
+	// validate cross trade
+	depth, err := s.GetMarketDepth(ctx, input.Symbol, 1)
+	if err != nil {
+		logctx.Warn(ctx, "market depth failed", logger.String("orderId", orderId.String()), logger.String("price", input.Price.String()))
+	}
+	if len(depth.Asks) > 0 {
+		minAsk := depth.Asks[0][0]
+		if input.Side == models.BUY && input.Price.GreaterThanOrEqual(minAsk) {
+			logctx.Warn(ctx, "CrossTrade order rejected. bid price is higher than minAsk", logger.String("orderId", orderId.String()), logger.String("price", input.Price.String()), logger.String("min_ask", minAsk.String()))
+			return models.Order{}, models.ErrCrossTrade
+		}
+	}
 
+	szBids := len(depth.Bids)
+	if szBids > 0 {
+		maxBid := depth.Bids[0][szBids-1]
+		if input.Side == models.SELL && input.Price.LessThanOrEqual(maxBid) {
+			logctx.Warn(ctx, "CrossTrade order rejected. bid price is higher than minAsk", logger.String("orderId", orderId.String()), logger.String("price", input.Price.String()), logger.String("maxBid", maxBid.String()))
+			return models.Order{}, models.ErrCrossTrade
+		}
+	}
+
+	// validate size
 	if input.Size.IsZero() || input.Size.IsNegative() {
 		logctx.Warn(ctx, "size has to be positive", logger.String("orderId", orderId.String()), logger.String("size", input.Size.String()))
 		return models.Order{}, models.ErrInvalidInput
