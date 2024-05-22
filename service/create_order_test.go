@@ -107,4 +107,52 @@ func TestService_CreateOrder(t *testing.T) {
 		assert.ErrorIs(t, err, models.ErrClashingClientOrderId)
 		assert.Equal(t, models.Order{}, order)
 	})
+
+	t.Run("cross trade - bid higher than minAsk or ask lower than maxBid should fail", func(t *testing.T) {
+		input := service.CreateOrderInput{
+			UserId:      userId,
+			Price:       price,
+			Symbol:      symbol,
+			Size:        size,
+			Side:        models.BUY,
+			Eip712Sig:   "mock-sig",
+			AbiFragment: mocks.AbiFragment,
+		}
+
+		// create Bid
+		size = decimal.NewFromInt(100)
+
+		depth := models.MarketDepth{
+			Asks: [][]decimal.Decimal{{decimal.NewFromFloat(0.11), size}},
+			Bids: [][]decimal.Decimal{{decimal.NewFromFloat(0.9), size}},
+		}
+		svc, _ := service.New(&mocks.MockOrderBookStore{User: &user, MarketDepth: depth}, mockBcClient)
+
+		// create Lower Ask should fail
+		input.Side = models.SELL
+
+		// above should work
+		input.Price = decimal.NewFromFloat(0.95)
+		_, err := svc.CreateOrder(ctx, input)
+		assert.NoError(t, err)
+
+		// below should fail
+		input.Price = decimal.NewFromFloat(0.8)
+		_, err = svc.CreateOrder(ctx, input)
+		assert.ErrorIs(t, err, models.ErrCrossTrade)
+
+		// create Higher Bid should fail
+		input.Side = models.BUY
+
+		// below should work
+		input.Price = decimal.NewFromFloat(0.10)
+		_, err = svc.CreateOrder(ctx, input)
+		assert.NoError(t, err)
+
+		// above should fail
+		input.Price = decimal.NewFromFloat(0.12)
+		_, err = svc.CreateOrder(ctx, input)
+		assert.ErrorIs(t, err, models.ErrCrossTrade)
+
+	})
 }
