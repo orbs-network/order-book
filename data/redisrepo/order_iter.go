@@ -35,7 +35,7 @@ func (i *OrderIter) Next(ctx context.Context) *models.Order {
 			}
 		}
 	}
-	logctx.Error(ctx, "Error iterator reached last element")
+	logctx.Warn(ctx, "Error iterator reached last element")
 	return nil
 }
 
