@@ -17,26 +17,26 @@ type OrderIter struct {
 }
 
 func (i *OrderIter) Next(ctx context.Context) *models.Order {
-	if i.index >= len(i.ids) {
-		logctx.Error(ctx, "Error iterator reached last element")
-		return nil
+	// skip deleted/cancelled or filled orders
+	for i.index < len(i.ids)-1 {
+		// increment index - first one is -1
+		i.index = i.index + 1
+		// get order
+		orderId, err := uuid.Parse(i.ids[i.index])
+		if err != nil {
+			logctx.Error(ctx, "Error parsing order id", logger.Error(err))
+		} else {
+			order, err := i.redis.FindOrderById(ctx, orderId, false)
+			if err != nil {
+				logctx.Warn(ctx, "Order not found, perhaps deleted, go next", logger.String("orderId", orderId.String()), logger.Error(err))
+			} else {
+				// success
+				return order
+			}
+		}
 	}
-
-	// increment index
-	i.index = i.index + 1
-	// get order
-	orderId, err := uuid.Parse(i.ids[i.index])
-	if err != nil {
-		logctx.Error(ctx, "Error parsing bid order id", logger.Error(err))
-		return nil
-	}
-	order, err := i.redis.FindOrderById(ctx, orderId, false)
-	if err != nil {
-		logctx.Error(ctx, "Error fetching order", logger.String("orderId", orderId.String()), logger.Error(err))
-		return nil
-	}
-
-	return order
+	logctx.Error(ctx, "Error iterator reached last element")
+	return nil
 }
 
 func (i *OrderIter) HasNext() bool {
