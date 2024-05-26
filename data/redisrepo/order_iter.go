@@ -17,7 +17,7 @@ type OrderIter struct {
 }
 
 func (i *OrderIter) Next(ctx context.Context) *models.Order {
-	// skip deleted/cancelled or filled orders
+	// continue iterating even if error occured, next order may be healthy
 	for i.index < len(i.ids)-1 {
 		// increment index - first one is -1
 		i.index = i.index + 1
