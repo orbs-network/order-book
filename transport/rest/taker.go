@@ -148,7 +148,6 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 
 	inAmount, err := h.convertFromTokenDec(ctx, req.InToken, req.InAmount)
-	print("inAmount: ", inAmount.String())
 
 	if err != nil {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InToken", req.InToken), logger.Error(models.ErrTokenNotsupported))
