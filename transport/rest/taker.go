@@ -134,6 +134,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	ctx := r.Context()
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
+		logctx.Warn(ctx, "handleQuote Failed to decode json", logger.Error(err))
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return nil
 	}
@@ -143,6 +144,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
 	if err != nil {
+		logctx.Warn(ctx, "handleQuote Failed to resolveQuoteTokenNames", logger.Error(err))
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InTokenAddress", req.InTokenAddress), logger.String("OutTokenAddress", req.OutTokenAddress))
 		return nil
 	}
@@ -150,6 +152,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	inAmount, err := h.convertFromTokenDec(ctx, req.InToken, req.InAmount)
 
 	if err != nil {
+		logctx.Warn(ctx, "handleQuote Failed to convertFromTokenDec", logger.Error(err))
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InToken", req.InToken), logger.Error(models.ErrTokenNotsupported))
 		return nil
 	}
