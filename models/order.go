@@ -261,9 +261,8 @@ func (o *Order) OnchainPrice(inDec, outDec int) (decimal.Decimal, error) {
 		return o.Price, nil
 	}
 	in := BigInt2Dcml(o.Signature.AbiFragment.Input.Amount, int64(inDec))
-	fmt.Println("inAmount", in.String())
 	out := BigInt2Dcml(o.Signature.AbiFragment.Outputs[0].Amount, int64(outDec))
-	fmt.Println("outAmount", out.String())
+
 	var result decimal.Decimal
 	if o.Side == BUY {
 		result = in.Div(out)

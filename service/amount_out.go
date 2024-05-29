@@ -78,12 +78,12 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide 
 
 func validateOrder(ctx context.Context, order *models.Order) bool {
 	if order == nil {
-		logctx.Error(ctx, "order::it.Next() returned nil")
+		logctx.Error(ctx, "iter_Next returned nil")
 		return false
 	}
 	// Unexpected to get cancelled orders in price list
 	if order.Cancelled {
-		logctx.Warn(ctx, "cancelled order exists in the price list (ignore and continue)", logger.String("orderId", order.Id.String()))
+		logctx.Error(ctx, "cancelled order exists in the price list", logger.String("orderId", order.Id.String()))
 		return false
 	}
 	// skip orders with locked funds
@@ -111,7 +111,6 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 
 			//Gain
 			gainA := spendB.Div(order.Price)
-			println("gainA ", gainA.String())
 
 			//sub - add
 			inAmountB = inAmountB.Sub(spendB)
@@ -145,14 +144,12 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 		if validateOrder(ctx, order) {
 			// Spend
 			spendA := decimal.Min(order.GetAvailableSize(), inAmountA)
-			fmt.Println("sizeA ", spendA.String())
 
 			// to verify onChain
 			verifier.Add(order.Signature.AbiFragment.Info.Swapper.String(), spendA)
 
 			// Gain
 			gainB := order.Price.Mul(spendA)
-			fmt.Println("gainB ", gainB.String())
 
 			// sub-add
 			inAmountA = inAmountA.Sub(spendA)

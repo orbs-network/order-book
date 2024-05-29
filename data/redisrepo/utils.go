@@ -97,7 +97,7 @@ func Order2MakerTokenTrackKey(order models.Order) string {
 		return ""
 	}
 	if order.Signature.AbiFragment.Input.Token.String() == "" {
-		fmt.Println("order does not have an Inpuit token address address in ABI", logger.String("orderId", order.Id.String()))
+		fmt.Println("order does not have an Input token address address in ABI", logger.String("orderId", order.Id.String()))
 		return ""
 	}
 	return GetMakerTokenTrackKey(order.Signature.AbiFragment.Input.Token.String(), order.Signature.AbiFragment.Info.Swapper.String())
