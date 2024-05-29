@@ -44,10 +44,6 @@ func (m *MockOrderBookStore) StoreFilledOrders(ctx context.Context, orders []mod
 	return m.Error
 }
 
-func (m *MockOrderBookStore) CancelUnfilledOrder(ctx context.Context, order models.Order) error {
-	return m.Error
-}
-
 func (m *MockOrderBookStore) CancelPartialFilledOrder(ctx context.Context, order models.Order) error {
 	return m.Error
 }
@@ -97,13 +93,6 @@ func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.U
 }
 
 func (m *MockOrderBookStore) GetOpenOrderIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
-	var orderIds []uuid.UUID
-	for _, order := range m.Orders {
-		orderIds = append(orderIds, order.Id)
-	}
-	return orderIds, m.Error
-}
-func (m *MockOrderBookStore) CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
 	var orderIds []uuid.UUID
 	for _, order := range m.Orders {
 		orderIds = append(orderIds, order.Id)
@@ -189,10 +178,6 @@ func (m *MockOrderBookStore) GetUserResolvedSwapIds(ctx context.Context, userId 
 
 func (m *MockOrderBookStore) EnumSubKeysOf(tx context.Context, key string) ([]string, error) {
 	return []string{key + "111", key + "222"}, m.Error
-}
-
-func (m *MockOrderBookStore) CancelPendingOrder(ctx context.Context, order models.Order) error {
-	return m.Error
 }
 
 func (m *MockOrderBookStore) PublishEvent(ctx context.Context, key string, value interface{}) error {

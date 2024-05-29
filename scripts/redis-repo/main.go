@@ -12,7 +12,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/data/redisrepo"
 	"github.com/orbs-network/order-book/data/storeuser"
+	"github.com/orbs-network/order-book/mocks"
 	"github.com/orbs-network/order-book/models"
+	"github.com/orbs-network/order-book/service"
 	"github.com/orbs-network/order-book/serviceuser"
 	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
@@ -297,9 +299,31 @@ func removeOrders() {
 		log.Fatalf("error creating repository: %v", err)
 	}
 
-	cancelledOrderIds, err := repository.CancelOrdersForUser(ctx, userId)
+	mockBcClient := &mocks.MockBcClient{}
+
+	svc, err := service.New(repository, mockBcClient)
 	if err != nil {
-		log.Fatalf("error removing orders: %v", err)
+		log.Fatalf("error creating service: %v", err)
+	}
+
+	// NOTE: This ignores pagination
+	orders, _, err := repository.GetOrdersForUser(ctx, userId, false)
+	if err != nil {
+		log.Fatalf("error getting orders: %v", err)
+	}
+
+	var cancelledOrderIds []uuid.UUID
+
+	for _, order := range orders {
+		_, err = svc.CancelOrder(ctx, service.CancelOrderInput{
+			Id:          order.Id,
+			IsClientOId: false,
+			UserId:      order.UserId,
+		})
+		if err != nil {
+			log.Fatalf("error cancelling order: %v", err)
+		}
+		cancelledOrderIds = append(cancelledOrderIds, order.Id)
 	}
 
 	log.Print("--------------------------")
