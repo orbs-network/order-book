@@ -14,32 +14,19 @@ type OrderWithSize struct {
 }
 
 type OrderBookStore interface {
-	// MM side
+	// --- MM side ---
+
+	// DEPRECATED - Use TxModify__ methods instead
 	StoreOpenOrder(ctx context.Context, order models.Order) error
-	// store multiple orders in a single redis tx in every state unfilled/pending/partial
+	// DEPRECATED - Use TxModify__ methods instead
 	StoreOpenOrders(ctx context.Context, orders []models.Order) error
-	// store multiple FILLED orders in a single redis tx
-	// adds to user's filled orders USERID:filledOrders
-	// removes orders from price list, removes from user's open orders and
+	// DEPRECATED - Use TxModify__ methods instead
 	StoreFilledOrders(ctx context.Context, orders []models.Order) error
-	// Order is completely removed from DB
-	// Order is removed from the prices sorted set, user's open order set and order hash is removed
-	// May only be called if order is not pending and completely unfilled
-	CancelUnfilledOrder(ctx context.Context, order models.Order) error
-	// Order remains in DB, but is marked as cancelled
-	// Order is removed from the prices sorted set, user's order set and order hash is updated to cancelled
-	// May only be called if order is not pending and partially filled
-	CancelPartialFilledOrder(ctx context.Context, order models.Order) error
-	// Order remains in DB, but is marked as cancelled
-	// Order is removed from the prices sorted set, user's order set and order hash is updated to cancelled
-	// Upon swap resolve false -> should be removed
-	CancelPendingOrder(ctx context.Context, order models.Order) error
 	FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error)
 	FindOrdersByIds(ctx context.Context, ids []uuid.UUID, onlyOpen bool) ([]models.Order, error)
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	GetOrdersForUser(ctx context.Context, userId uuid.UUID, isFilledOrders bool) (orders []models.Order, totalOrders int, err error)
-	CancelOrdersForUser(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
 	// ------------------------------
 	// Generic getters
 	//GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]models.Order, error)

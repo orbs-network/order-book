@@ -344,3 +344,37 @@ func OrderIdsToStrings(ctx context.Context, orders *[]Order) []string {
 	}
 	return orderIds
 }
+
+// LogOrderDetails logs all the details of an order with the given message and log level
+func LogOrderDetails(ctx context.Context, order *Order, msg string, level logctx.Level, err error, extraFields ...logger.Field) {
+	fields := []logger.Field{
+		logger.String("orderId", order.Id.String()),
+		logger.String("clientOrderId", order.ClientOId.String()),
+		logger.String("userId", order.UserId.String()),
+		logger.String("symbol", string(order.Symbol)),
+		logger.String("side", string(order.Side)),
+		logger.String("price", order.Price.String()),
+		logger.String("size", order.Size.String()),
+		logger.String("sizePending", order.SizePending.String()),
+		logger.String("sizeFilled", order.SizeFilled.String()),
+		logger.String("timestamp", order.Timestamp.Format(time.RFC3339)),
+		logger.String("cancelled", fmt.Sprintf("%t", order.Cancelled)),
+	}
+
+	if err != nil {
+		fields = append(fields, logger.Error(err))
+	}
+
+	fields = append(fields, extraFields...)
+
+	switch level {
+	case logctx.DEBUG:
+		logctx.Debug(ctx, msg, fields...)
+	case logctx.INFO:
+		logctx.Info(ctx, msg, fields...)
+	case logctx.WARN:
+		logctx.Warn(ctx, msg, fields...)
+	case logctx.ERROR:
+		logctx.Error(ctx, msg, fields...)
+	}
+}

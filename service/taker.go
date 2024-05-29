@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -168,26 +169,17 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 // partially filled - keep in userId:filled
 func (s *Service) cancelUnlockedOrders(ctx context.Context, orders []models.Order) error {
 	for _, order := range orders {
-		if order.IsUnfilled() {
-			err := s.orderBookStore.CancelUnfilledOrder(ctx, order)
-			if err != nil {
-				logctx.Error(ctx, "error CancelUnfilledOrder", logger.Error(err))
-				return err
-			}
-
-			logctx.Debug(ctx, "unfilled order removed", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
-
-		} else {
-			err := s.orderBookStore.CancelPartialFilledOrder(ctx, order)
-			if err != nil {
-				logctx.Error(ctx, "error occured when cancelling partial order", logger.Error(err))
-				return err
-			}
-
-			logctx.Debug(ctx, "partial filled order cancelled", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.String("size", order.Size.String()), logger.String("sizeFilled", order.SizeFilled.String()), logger.String("sizePending", order.SizePending.String()))
-
+		if _, err := s.CancelOrder(ctx, CancelOrderInput{
+			Id:          order.Id,
+			IsClientOId: false,
+			UserId:      order.UserId,
+		}); err != nil {
+			models.LogOrderDetails(ctx, &order, "Failed to cancel unlocked order", logctx.ERROR, err)
+			return fmt.Errorf("failed to cancel unlocked order: %w", err)
 		}
+		models.LogOrderDetails(ctx, &order, "Cancelled unlocked order", logctx.INFO, nil)
 	}
+	logctx.Debug(ctx, "Cancelled unlocked orders", logger.Int("orders", len(orders)))
 	return nil
 }
 
