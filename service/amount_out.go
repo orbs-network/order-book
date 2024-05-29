@@ -111,7 +111,6 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 
 			//Gain
 			gainA := spendB.Div(order.Price)
-			println("gainA ", gainA.String())
 
 			//sub - add
 			inAmountB = inAmountB.Sub(spendB)
@@ -145,14 +144,12 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 		if validateOrder(ctx, order) {
 			// Spend
 			spendA := decimal.Min(order.GetAvailableSize(), inAmountA)
-			fmt.Println("sizeA ", spendA.String())
 
 			// to verify onChain
 			verifier.Add(order.Signature.AbiFragment.Info.Swapper.String(), spendA)
 
 			// Gain
 			gainB := order.Price.Mul(spendA)
-			fmt.Println("gainB ", gainB.String())
 
 			// sub-add
 			inAmountA = inAmountA.Sub(spendA)
