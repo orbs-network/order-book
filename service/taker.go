@@ -120,7 +120,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 	}
 
 	orders := []models.Order{}
-	cancelled := []models.Order{}
+	ordersToCancel := []models.Order{}
 	// validate all pending orders fragments of auction
 	for _, frag := range swap.Frags {
 		// get order by ID
@@ -142,8 +142,8 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 			orders = append(orders, *order)
 		}
 		// cancelled orders
-		if order != nil && order.Cancelled {
-			cancelled = append(cancelled, *order)
+		if order != nil && !order.Cancelled {
+			ordersToCancel = append(ordersToCancel, *order)
 		}
 	}
 	// store orders
@@ -153,7 +153,7 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 		return err
 	}
 	// remove cancelled orders
-	err = s.cancelUnlockedOrders(ctx, cancelled)
+	err = s.cancelUnlockedOrders(ctx, ordersToCancel)
 	if err != nil {
 		logctx.Error(ctx, "cancelUnlockedOrders Failed", logger.Error(err), logger.String("swapId", swapId.String()))
 		return err
