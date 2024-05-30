@@ -335,6 +335,8 @@ func (h *Handler) swapStarted(w http.ResponseWriter, r *http.Request) {
 
 // POST
 func (h *Handler) abortSwap(w http.ResponseWriter, r *http.Request) {
+	logctx.Info(r.Context(), "abortSwap called from POST")
+
 	swapId := handleSwapId(w, r)
 	if swapId == nil {
 		return
