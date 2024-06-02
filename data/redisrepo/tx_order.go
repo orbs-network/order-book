@@ -48,8 +48,12 @@ func (r *redisRepository) TxModifyOrder(ctx context.Context, txid uint, operatio
 		// Store order details by order ID
 		orderIDKey := CreateOrderIDKey(order.Id)
 		orderMap := order.OrderToMap()
-		tx.HSet(ctx, orderIDKey, orderMap)
-		logctx.Debug(ctx, "TxModifyOrder add", logger.String("orderId", order.Id.String()), logger.String("orderMap", fmt.Sprintf("%v", orderMap)))
+		err := tx.HSet(ctx, orderIDKey, orderMap).Err()
+		if err != nil {
+			logctx.Error(ctx, "TxModifyOrder failed to add/update order", logger.Error(err), logger.String("orderId", order.Id.String()))
+			return err
+		}
+		logctx.Debug(ctx, "TxModifyOrder add/update", logger.String("orderId", order.Id.String()), logger.String("orderMap", fmt.Sprintf("%v", orderMap)))
 	case models.Remove:
 		orderIDKey := CreateOrderIDKey(order.Id)
 		tx.Del(ctx, orderIDKey)
@@ -96,10 +100,19 @@ func (r *redisRepository) TxModifyPrices(ctx context.Context, txid uint, operati
 	case models.Remove:
 		if order.Side == models.BUY {
 			buyPricesKey := CreateBuySidePricesKey(order.Symbol)
-			tx.ZRem(ctx, buyPricesKey, order.Id.String())
+			err := tx.ZRem(ctx, buyPricesKey, order.Id.String()).Err()
+			if err != nil {
+				logctx.Error(ctx, "TxModifyPrices ZRem BUY failed", logger.Error(err), logger.String("orderId", order.Id.String()))
+				return err
+			}
 		} else {
 			sellPricesKey := CreateSellSidePricesKey(order.Symbol)
-			tx.ZRem(ctx, sellPricesKey, order.Id.String())
+			err := tx.ZRem(ctx, sellPricesKey, order.Id.String()).Err()
+			if err != nil {
+				logctx.Error(ctx, "TxModifyPrices ZRem SELL failed", logger.Error(err), logger.String("orderId", order.Id.String()))
+				return err
+			}
+
 		}
 		logctx.Debug(ctx, "TxModifyPrices remove", logger.String("orderId", order.Id.String()), logger.String("symbol", order.Symbol.String()), logger.String("side", order.Side.String()))
 	default:
