@@ -206,6 +206,25 @@ func (r *redisRepository) TxModifyUserFilledOrders(ctx context.Context, txid uin
 	return nil
 }
 
+func (r *redisRepository) TxRemoveOrder(ctx context.Context, txid uint, order models.Order) error {
+	// remove from client OID
+	if err := r.TxModifyClientOId(ctx, txid, models.Remove, order); err != nil {
+		logctx.Error(ctx, "Failed removing order from ClientOID", logger.String("id", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
+		return fmt.Errorf("failed removing order from user open orders: %w", err)
+	}
+	// remove from user's open orders
+	if err := r.TxModifyUserOpenOrders(ctx, txid, models.Remove, order); err != nil {
+		logctx.Error(ctx, "Failed removing order from user open orders", logger.String("id", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
+		return fmt.Errorf("failed removing order from user open orders: %w", err)
+	}
+	// remove entirely
+	if err := r.TxModifyOrder(ctx, txid, models.Remove, order); err != nil {
+		logctx.Error(ctx, "Failed remove cancelled order", logger.Error(err), logger.String("orderId", order.Id.String()))
+		return fmt.Errorf("failed remove cancelled order: %w", err)
+	}
+	return nil
+}
+
 // Create a new transaction and return the transaction ID
 func (r *redisRepository) txStart(ctx context.Context) uint {
 	tx := r.client.TxPipeline()

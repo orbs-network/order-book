@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/orbs-network/order-book/models"
@@ -156,43 +155,16 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 				logctx.Error(ctx, "AbortSwap Failed updating unlocked order", logger.Error(err), logger.String("orderId", order.Id.String()))
 			}
 		}
-
+		// remove order from all entries
 		for _, order := range ordersToRemove {
-			// remove from user's open orders
-			if err = s.orderBookStore.TxModifyUserOpenOrders(ctx, txid, models.Remove, order); err != nil {
-				logctx.Error(ctx, "AbortSwap Failed removing order from user open orders", logger.String("id", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
-				return fmt.Errorf("failed removing order from user open orders: %w", err)
-			}
-			// remove entirely
-			if err = s.orderBookStore.TxModifyOrder(ctx, txid, models.Remove, order); err != nil {
-				logctx.Error(ctx, "AbortSwap Failed remove cancelled order", logger.Error(err), logger.String("orderId", order.Id.String()))
+			if err := s.orderBookStore.TxRemoveOrder(ctx, txid, order); err != nil {
+				logctx.Error(ctx, "TxRemoveOrder Failed", logger.Error(err), logger.String("id", order.Id.String()))
 			}
 		}
 		return nil
 	})
 
 	return s.orderBookStore.RemoveSwap(ctx, swapId)
-}
-
-// private impl
-// handle orders whichg were cancelled while they were pending
-// already marked as cancelled
-// unfilled - completely remove
-// partially filled - keep in userId:filled
-func (s *Service) cancelUnlockedOrders(ctx context.Context, orders []models.Order) error {
-	for _, order := range orders {
-		if _, err := s.CancelOrder(ctx, CancelOrderInput{
-			Id:          order.Id,
-			IsClientOId: false,
-			UserId:      order.UserId,
-		}); err != nil {
-			models.LogOrderDetails(ctx, &order, "Failed to cancel unlocked order", logctx.ERROR, err)
-			return fmt.Errorf("failed to cancel unlocked order: %w", err)
-		}
-		models.LogOrderDetails(ctx, &order, "Cancelled unlocked order", logctx.INFO, nil)
-	}
-	logctx.Debug(ctx, "Cancelled unlocked orders", logger.Int("orders", len(orders)))
-	return nil
 }
 
 func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
