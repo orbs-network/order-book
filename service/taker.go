@@ -119,8 +119,8 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 		return err
 	}
 
-	orders := []models.Order{}
-	ordersToCancel := []models.Order{}
+	unlockedOrders := []models.Order{}
+	ordersToRemove := []models.Order{}
 	// validate all pending orders fragments of auction
 	for _, frag := range swap.Frags {
 		// get order by ID
@@ -131,33 +131,45 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 		} else if !validatePendingFrag(frag, order) {
 			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
 		} else {
-			// success
-			logctx.Debug(ctx, "Unlock Fragment", logger.String("orderID", frag.OrderId.String()), logger.String("OutSize", frag.OutSize.String()))
-			err = order.Unlock(ctx, frag)
-			if err != nil {
-				logctx.Error(ctx, "Unlock Failed", logger.Error(err))
-				return err
+			// success - Ulock an order only if its still open
+			if !order.Cancelled {
+				logctx.Debug(ctx, "Unlock Fragment", logger.String("orderID", frag.OrderId.String()), logger.String("OutSize", frag.OutSize.String()))
+				err = order.Unlock(ctx, frag)
+				if err != nil {
+					logctx.Error(ctx, "Unlock Failed", logger.Error(err))
+					return err
+				}
+				s.publishOrderEvent(ctx, order)
+				// save to modify/update new pending state in db
+				unlockedOrders = append(unlockedOrders, *order)
 			}
-			s.publishOrderEvent(ctx, order)
-			orders = append(orders, *order)
 		}
-		// cancelled orders
-		if order != nil && !order.Cancelled {
-			ordersToCancel = append(ordersToCancel, *order)
+		// remove cancelled unfilled non pending unlocked orders
+		if order != nil && order.Cancelled && !order.IsPartialFilled() && !order.IsPending() {
+			ordersToRemove = append(ordersToRemove, *order)
 		}
 	}
-	// store orders
-	err = s.orderBookStore.StoreOpenOrders(ctx, orders)
-	if err != nil {
-		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
-		return err
-	}
-	// remove cancelled orders
-	err = s.cancelUnlockedOrders(ctx, ordersToCancel)
-	if err != nil {
-		logctx.Error(ctx, "cancelUnlockedOrders Failed", logger.Error(err), logger.String("swapId", swapId.String()))
-		return err
-	}
+	err = s.orderBookStore.PerformTx(ctx, func(txid uint) error {
+		// update unlocked orders
+		for _, order := range unlockedOrders {
+			if err = s.orderBookStore.TxModifyOrder(ctx, txid, models.Update, order); err != nil {
+				logctx.Error(ctx, "AbortSwap Failed updating unlocked order", logger.Error(err), logger.String("orderId", order.Id.String()))
+			}
+		}
+
+		for _, order := range ordersToRemove {
+			// remove from user's open orders
+			if err = s.orderBookStore.TxModifyUserOpenOrders(ctx, txid, models.Remove, order); err != nil {
+				logctx.Error(ctx, "AbortSwap Failed removing order from user open orders", logger.String("id", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
+				return fmt.Errorf("failed removing order from user open orders: %w", err)
+			}
+			// remove entirely
+			if err = s.orderBookStore.TxModifyOrder(ctx, txid, models.Remove, order); err != nil {
+				logctx.Error(ctx, "AbortSwap Failed remove cancelled order", logger.Error(err), logger.String("orderId", order.Id.String()))
+			}
+		}
+		return nil
+	})
 
 	return s.orderBookStore.RemoveSwap(ctx, swapId)
 }
