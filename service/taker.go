@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/orbs-network/order-book/data/store"
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
 	"github.com/orbs-network/order-book/utils/logger/logctx"
@@ -109,36 +110,32 @@ func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash stri
 	return err
 }
 
-func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
-	logctx.Debug(ctx, "AbortSwap", logger.String("swapId", swapId.String()))
-	// get swap from store
-	swap, err := s.orderBookStore.GetSwap(ctx, swapId, true)
-	if err != nil {
-		logctx.Warn(ctx, "GetSwap Failed", logger.Error(err))
-		return err
-	}
-
+// to be reused by resolveSwap
+func unlockSwapAndHandleCancelledOrders(ctx context.Context, svc *Service, store store.OrderBookStore, swap *models.Swap) error {
 	unlockedOrders := []models.Order{}
 	ordersToRemove := []models.Order{}
 	// validate all pending orders fragments of auction
 	for _, frag := range swap.Frags {
 		// get order by ID
-		order, err := s.orderBookStore.FindOrderById(ctx, frag.OrderId, false)
+		order, err := store.FindOrderById(ctx, frag.OrderId, false)
 		// no return during erros as what can be revert, should
 		if err != nil {
 			logctx.Error(ctx, "order not found while reverting a swap", logger.Error(err))
 		} else if !validatePendingFrag(frag, order) {
 			logctx.Error(ctx, "Swap fragments should be valid during a revert request", logger.Error(err))
 		} else {
-			// success - Ulock an order only if its still open
+			// success - Ulock an order even if cancelled so the condition IsPending below would be False and the order will be removed
+			logctx.Debug(ctx, "Unlock Fragment", logger.String("orderID", frag.OrderId.String()), logger.String("OutSize", frag.OutSize.String()))
+			err = order.Unlock(ctx, frag)
+			if err != nil {
+				logctx.Error(ctx, "Unlock Failed", logger.Error(err))
+				return err
+			}
+			// no need to publish nor update cancelled order
 			if !order.Cancelled {
-				logctx.Debug(ctx, "Unlock Fragment", logger.String("orderID", frag.OrderId.String()), logger.String("OutSize", frag.OutSize.String()))
-				err = order.Unlock(ctx, frag)
-				if err != nil {
-					logctx.Error(ctx, "Unlock Failed", logger.Error(err))
-					return err
+				if svc != nil {
+					svc.publishOrderEvent(ctx, order)
 				}
-				s.publishOrderEvent(ctx, order)
 				// save to modify/update new pending state in db
 				unlockedOrders = append(unlockedOrders, *order)
 			}
@@ -148,21 +145,43 @@ func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
 			ordersToRemove = append(ordersToRemove, *order)
 		}
 	}
-	err = s.orderBookStore.PerformTx(ctx, func(txid uint) error {
+	err := store.PerformTx(ctx, func(txid uint) error {
 		// update unlocked orders
 		for _, order := range unlockedOrders {
-			if err = s.orderBookStore.TxModifyOrder(ctx, txid, models.Update, order); err != nil {
+			if err := store.TxModifyOrder(ctx, txid, models.Update, order); err != nil {
 				logctx.Error(ctx, "AbortSwap Failed updating unlocked order", logger.Error(err), logger.String("orderId", order.Id.String()))
+				return err
 			}
 		}
 		// remove order from all entries
 		for _, order := range ordersToRemove {
-			if err := s.orderBookStore.TxRemoveOrder(ctx, txid, order); err != nil {
+			if err := store.TxRemoveOrder(ctx, txid, order); err != nil {
 				logctx.Error(ctx, "TxRemoveOrder Failed", logger.Error(err), logger.String("id", order.Id.String()))
+				return err
 			}
 		}
 		return nil
 	})
+	return err
+
+}
+
+func (s *Service) AbortSwap(ctx context.Context, swapId uuid.UUID) error {
+	logctx.Debug(ctx, "AbortSwap", logger.String("swapId", swapId.String()))
+	// get swap from store
+	swap, err := s.orderBookStore.GetSwap(ctx, swapId, true)
+
+	if err != nil {
+		logctx.Warn(ctx, "GetSwap Failed", logger.Error(err))
+		return err
+	}
+
+	// mutual impl for ABORT and RESOLVE(false) swap
+	err = unlockSwapAndHandleCancelledOrders(ctx, s, s.orderBookStore, swap)
+	if err != nil {
+		logctx.Warn(ctx, "unlockSwapAndHandleCancelledOrders Failed", logger.Error(err))
+		return err
+	}
 
 	return s.orderBookStore.RemoveSwap(ctx, swapId)
 }
