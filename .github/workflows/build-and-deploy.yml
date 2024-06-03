@@ -9,9 +9,12 @@ on:
     branches: ["main"]
     paths:
       - "**"
+  workflow_dispatch: # Allow manual deployment to development 
+
 jobs:
   build-server:
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v3
@@ -25,6 +28,7 @@ jobs:
 
   build-swaps-tracker:
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v3
@@ -39,6 +43,7 @@ jobs:
   build-maker-mock:
     runs-on: ubuntu-latest
     needs: [build-server, build-swaps-tracker]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v3
@@ -63,6 +68,7 @@ jobs:
   deploy-development:
     runs-on: ubuntu-latest
     needs: [build-server, build-swaps-tracker, build-maker-mock]
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     environment: development
 
     steps:
@@ -86,6 +92,7 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     needs: deploy-development
+    if: github.ref == 'refs/heads/main'
     environment: staging
 
     steps:
@@ -115,6 +122,7 @@ jobs:
   deploy-production:
     runs-on: ubuntu-latest
     needs: [deploy-development, deploy-staging]
+    if: github.ref == 'refs/heads/main'
     environment: production
 
     steps:
