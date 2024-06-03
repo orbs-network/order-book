@@ -236,6 +236,10 @@ func (o *Order) IsPending() bool {
 	return o.SizePending.GreaterThan(decimal.Zero)
 }
 
+func (o *Order) IsOpen() bool {
+	return !o.Cancelled && !o.IsFilled()
+}
+
 // Status returns the status of the order
 func (o *Order) Status() string {
 	if o.IsFilled() {
