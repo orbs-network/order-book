@@ -119,10 +119,11 @@ func TestRedisRepository_FindOrdersByIds(t *testing.T) {
 
 func TestFindOrdersByIds_OnlyOpenFlag(t *testing.T) {
 	type test struct {
-		name       string
-		orders     []models.Order
-		onlyOpen   bool
-		expectedID uuid.UUID
+		name              string
+		orders            []models.Order
+		onlyOpen          bool
+		expectedID        uuid.UUID
+		expectedNumOrders int
 	}
 
 	tests := []test{
@@ -137,8 +138,9 @@ func TestFindOrdersByIds_OnlyOpenFlag(t *testing.T) {
 				Side:        mocks.Order.Side,
 				Timestamp:   mocks.Order.Timestamp,
 			}},
-			onlyOpen:   true,
-			expectedID: mocks.Order.Id,
+			onlyOpen:          true,
+			expectedID:        mocks.Order.Id,
+			expectedNumOrders: 2,
 		},
 		{
 			name: "open order and filled order",
@@ -151,8 +153,9 @@ func TestFindOrdersByIds_OnlyOpenFlag(t *testing.T) {
 				Side:       mocks.Order.Side,
 				Timestamp:  mocks.Order.Timestamp,
 			}},
-			onlyOpen:   true,
-			expectedID: mocks.Order.Id,
+			onlyOpen:          true,
+			expectedID:        mocks.Order.Id,
+			expectedNumOrders: 1,
 		},
 		{
 			name: "open order, pending order, filled order",
@@ -173,8 +176,9 @@ func TestFindOrdersByIds_OnlyOpenFlag(t *testing.T) {
 				Side:       mocks.Order.Side,
 				Timestamp:  mocks.Order.Timestamp,
 			}},
-			onlyOpen:   true,
-			expectedID: mocks.Order.Id,
+			onlyOpen:          true,
+			expectedID:        mocks.Order.Id,
+			expectedNumOrders: 2,
 		},
 	}
 
@@ -193,7 +197,7 @@ func TestFindOrdersByIds_OnlyOpenFlag(t *testing.T) {
 			orders, err := repo.FindOrdersByIds(ctx, ids, tc.onlyOpen)
 
 			assert.NoError(t, err)
-			assert.Len(t, orders, 1)
+			assert.Len(t, orders, tc.expectedNumOrders)
 			assert.Equal(t, tc.expectedID, orders[0].Id)
 		})
 	}
