@@ -59,7 +59,7 @@ func (r *redisRepository) FindOrdersByIds(ctx context.Context, ids []uuid.UUID, 
 		}
 
 		if onlyOpen {
-			if !order.IsPending() && !order.IsFilled() {
+			if order.IsOpen() {
 				orders = append(orders, order)
 			}
 		} else {

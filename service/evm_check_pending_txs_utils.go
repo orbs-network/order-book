@@ -19,7 +19,7 @@ import (
 // update orders state
 //
 // save swap to the users involved
-func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccessful bool, mu *sync.Mutex) ([]models.Order, error) {
+func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccessful bool, mu *sync.Mutex) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -32,12 +32,24 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 	// save to "swapResolved" key
 	// remove from active "swapId"
 	err := e.orderBookStore.ResolveSwap(ctx, swap)
-
 	if err != nil {
 		logctx.Error(ctx, "Failed to ResolveSwap in store", logger.Error(err), logger.String("swapId", swap.Id.String()))
-		return []models.Order{}, err
+		return err
 	}
 
+	// Failed     ===========================================================
+	// same impl as abort swap
+	if !isSuccessful {
+		// unlock orders
+		// mutual impl for ABORT and RESOLVE(false) swap
+		err := unlockSwapAndHandleCancelledOrders(ctx, nil, e.orderBookStore, &swap)
+		if err != nil {
+			logctx.Error(ctx, "Failed unlockSwapAndHandleCancelledOrders", logger.Error(err), logger.String("swapId", swap.Id.String()))
+		}
+		return err
+	}
+
+	// successful ===========================================================
 	var orderIds []uuid.UUID
 	for _, frag := range swap.Frags {
 		orderIds = append(orderIds, frag.OrderId)
@@ -47,7 +59,7 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 	orders, err := e.orderBookStore.FindOrdersByIds(ctx, orderIds, false)
 	if err != nil {
 		logctx.Error(ctx, "Failed to get orders", logger.Error(err), logger.String("swapId", swap.Id.String()))
-		return []models.Order{}, fmt.Errorf("failed to get orders: %w", err)
+		return fmt.Errorf("failed to get orders: %w", err)
 	}
 
 	// get users from orders
@@ -56,30 +68,21 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 	updatedOrders := []models.Order{}
 
 	for i, order := range orders {
-		if isSuccessful {
-			// fill part of the order
-			if _, err := order.Fill(ctx, swap.Frags[i]); err != nil {
-				logctx.Error(ctx, "Failed to mark order as filled", logger.Error(err), logger.String("orderId", order.Id.String()))
-				continue
-			}
+		// fill part of the order
+		if _, err := order.Fill(ctx, swap.Frags[i]); err != nil {
+			logctx.Error(ctx, "Failed to mark order as filled", logger.Error(err), logger.String("orderId", order.Id.String()))
+			continue
+		}
 
-			// publish Fill Event
-			fill := models.NewFill(order.Symbol, swap, swap.Frags[i], &order)
-			e.publishFillEvent(ctx, order.UserId, *fill)
+		// publish Fill Event
+		fill := models.NewFill(order.Symbol, swap, swap.Frags[i], &order)
+		e.publishFillEvent(ctx, order.UserId, *fill)
 
-			if order.IsFilled() {
-				// add to filled orders if completely filled
-				filledOrders = append(filledOrders, order)
-			} else {
-				// update fill status
-				updatedOrders = append(updatedOrders, order)
-			}
+		if order.IsFilled() {
+			// add to filled orders if completely filled
+			filledOrders = append(filledOrders, order)
 		} else {
-			// unlock orders
-			if err := order.Unlock(ctx, swap.Frags[i]); err != nil {
-				logctx.Error(ctx, "Failed to Release order locked liq", logger.Error(err), logger.String("orderId", order.Id.String()))
-				continue
-			}
+			// update fill status
 			updatedOrders = append(updatedOrders, order)
 		}
 
@@ -109,5 +112,5 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 	}
 
 	logctx.Debug(ctx, "Resolved swap", logger.String("swapId", swap.Id.String()), logger.Bool("isSuccessful", isSuccessful), logger.String("created", swap.Created.String()), logger.String("resolved", swap.Resolved.String()), logger.String("txHash", swap.TxHash))
-	return orders, nil
+	return nil
 }
