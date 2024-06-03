@@ -12,7 +12,7 @@ services:
       - REDIS_URL=redis://db:6379/0
       - PORT=8080
       - RPC_URL=${RPC_URL}
-      - LOG_LEVEL=debug
+      - LOG_LEVEL=info
     depends_on:
       - db
     develop:
@@ -22,6 +22,11 @@ services:
             - ./**/*.go
             - ./go.mod
             - ./go.sum
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   db:
     image: redis:7.2.1-alpine
