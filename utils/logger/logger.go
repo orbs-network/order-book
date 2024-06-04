@@ -3,6 +3,7 @@ package logger
 
 import (
 	"errors"
+	"os"
 	"syscall"
 
 	"go.uber.org/zap"
@@ -19,8 +20,11 @@ type Logger struct {
 func New(opts ...Option) Logger {
 	cfg := getConfig(opts)
 
+	commitSha := os.Getenv("COMMIT_SHA")
+
 	defaultFields := map[string]Field{
-		"service": String("service", "orderbook"),
+		"service":    String("service", "orderbook"),
+		"commit_sha": String("commit_sha", commitSha),
 	}
 
 	return Logger{
