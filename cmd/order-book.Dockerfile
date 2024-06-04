@@ -9,6 +9,9 @@ COPY . ./
 RUN find . -type f ! -name "*.go" ! -name "go.mod" ! -name "go.sum" ! -name "supportedTokens.json" -delete
 
 ARG APP_PATH
+ARG COMMIT_SHA
+
+ENV COMMIT_SHA=$COMMIT_SHA
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /order-book $APP_PATH
 
