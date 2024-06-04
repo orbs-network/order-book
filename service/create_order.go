@@ -111,8 +111,6 @@ func (s *Service) createNewOrder(ctx context.Context, input CreateOrderInput, us
 		return models.Order{}, err
 	}
 
-	logctx.Debug(ctx, "new order created", logger.String("ID", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()))
-
 	s.publishOrderEvent(ctx, &order)
 
 	return order, nil

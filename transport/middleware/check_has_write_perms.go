@@ -37,7 +37,6 @@ func CheckUserHasPermsMiddleware(allowedUserTypes []models.UserType) func(http.H
 				return
 			}
 
-			logctx.Debug(r.Context(), "user has correct permissions", logger.String("userType", user.Type.String()), logger.String("userId", user.Id.String()))
 			next.ServeHTTP(w, r)
 		})
 	}

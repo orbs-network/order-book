@@ -131,8 +131,6 @@ func (h *Handler) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		logctx.Error(ctx, "failed to write response", logger.Error(err), logger.String("orderId", parsedFields.clientOrderId.String()))
 		restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "Error creating order. Try again later")
 	}
-
-	logctx.Debug(ctx, "order created", logger.String("userId", user.Id.String()), logger.String("orderId", order.Id.String()), logger.String("price", parsedFields.roundedDecPrice.String()), logger.String("size", parsedFields.decSize.String()), logger.String("side", parsedFields.side.String()))
 }
 
 type hVRFArgs struct {

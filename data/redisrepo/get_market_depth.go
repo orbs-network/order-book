@@ -111,6 +111,5 @@ func (r *redisRepository) fetchOrderIds(ctx context.Context, key string, depth i
 		orderIds[i] = orderId
 	}
 
-	logctx.Debug(ctx, "fetched order IDs", logger.String("key", key), logger.Int("depth", depth), logger.Int("numOrders", len(orderIds)))
 	return orderIds, nil
 }
