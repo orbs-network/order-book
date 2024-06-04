@@ -16,8 +16,6 @@ func (r *redisRepository) PublishEvent(ctx context.Context, key string, value in
 		logctx.Error(ctx, "failed to publish redis event", logger.Error(err), logger.String("key", key))
 		return fmt.Errorf("failed to publish redis event: %v", err)
 	}
-
-	logctx.Debug(ctx, "published redis event", logger.String("key", key))
 	return nil
 }
 

@@ -29,7 +29,6 @@ func (s *Service) periodicCheck(ctx context.Context) {
 	sec, _ := strconv.Atoi(secSwapStarted)
 
 	if sec > 0 { // USE ZERO as Turn Off feature flag
-		logctx.Debug(ctx, "SEC_SWAP_STARTED", logger.Int("sec_interval", sec))
 		err := s.checkNonStartedSwaps(ctx, int64(sec))
 		if err != nil {
 			logctx.Error(ctx, "Error in peridic checks", logger.Error(err))

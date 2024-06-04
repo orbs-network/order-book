@@ -248,7 +248,7 @@ func (r *redisRepository) txEnd(ctx context.Context, txid uint) error {
 	cmderList, err := tx.Exec(ctx)
 
 	for _, cmder := range cmderList {
-		logctx.Debug(ctx, "Command executed in transaction", logger.String("command", cmder.String()))
+		logctx.Debug(ctx, "Command executed in transaction", logger.Int("txid", int(txid)), logger.String("command", cmder.String()))
 	}
 
 	if err != nil {

@@ -43,8 +43,6 @@ func (r *redisRepository) GetUserByApiKey(ctx context.Context, apiKey string) (*
 		return nil, fmt.Errorf("api key mismatch")
 	}
 
-	logctx.Debug(ctx, "user found", logger.String("userId", userId.String()))
-
 	return &models.User{
 		Id:     userId,
 		PubKey: fields["pubKey"],
