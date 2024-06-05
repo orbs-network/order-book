@@ -302,6 +302,7 @@ func (o *Order) Fill(ctx context.Context, frag OrderFrag) (isFilled bool, err er
 	}
 
 	o.SizeFilled = o.SizeFilled.Add(fillSize)
+	// unlock liquiduty
 	o.SizePending = o.SizePending.Sub(fillSize)
 	return o.IsFilled(), nil
 }
