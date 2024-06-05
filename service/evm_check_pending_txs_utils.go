@@ -73,16 +73,14 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 				continue
 			}
 
-			// publish Fill Event
-			fill := models.NewFill(order.Symbol, swap, swap.Frags[i], &order)
-
 			// update db
 			if err := e.orderBookStore.TxModifyOrder(ctx, txid, models.Update, order); err != nil {
 				logctx.Error(ctx, "ResolveSwap:true Failed updating filled order", logger.Error(err), logger.String("orderId", order.Id.String()))
 				return err
 			}
 
-			// publish a change in order's state
+			// publish Fill Event
+			fill := models.NewFill(order.Symbol, swap, swap.Frags[i], &order)
 			e.publishFillEvent(ctx, order.UserId, *fill)
 
 			// close fully filled orders
