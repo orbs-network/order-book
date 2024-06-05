@@ -60,10 +60,6 @@ func (s *Service) CancelOrder(ctx context.Context, input CancelOrderInput) (*uui
 		// ORDER IS PARTIALLY FILLED AND NOT PENDING
 		case !order.IsUnfilled() && !order.IsPending():
 			logctx.Debug(ctx, "cancelling partially filled and not pending order", logger.String("orderId", order.Id.String()))
-			if err := s.orderBookStore.TxModifyUserFilledOrders(ctx, txid, models.Add, *order); err != nil {
-				logctx.Error(ctx, "Failed adding order to user filled orders", logger.String("id", input.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
-				return fmt.Errorf("failed adding order to user filled orders: %w", err)
-			}
 			if err = s.orderBookStore.TxModifyOrder(ctx, txid, models.Update, *order); err != nil {
 				logctx.Error(ctx, "Failed updating order to cancelled", logger.String("id", input.Id.String()), logger.Error(err))
 				return fmt.Errorf("failed updating order to cancelled: %w", err)
