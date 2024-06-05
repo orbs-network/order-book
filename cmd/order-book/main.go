@@ -23,7 +23,7 @@ func main() {
 }
 
 func setup() {
-	log.Printf("Starting server...")
+	log.Printf("Starting server. Using commit hash: %s", os.Getenv("COMMIT_SHA"))
 
 	redisAddress, found := os.LookupEnv("REDIS_URL")
 	if !found {

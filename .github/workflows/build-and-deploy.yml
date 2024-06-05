@@ -4,6 +4,7 @@ env:
   terraform_state_s3_key_prefix: "order-book"
   terraform_state_dynamodb_table: "orbs-terraform-locks"
   build_path: "."
+  commit_sha: ${{ github.sha }}
 on:
   push:
     branches: ["main"]
@@ -25,6 +26,7 @@ jobs:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_app_name: "ob-server-development"
           heroku_app_type: "web"
+          commit_sha: ${{ env.commit_sha }}
 
   build-swaps-tracker:
     runs-on: ubuntu-latest
@@ -39,6 +41,7 @@ jobs:
           heroku_api_key: ${{ secrets.HEROKU_API_KEY }}
           heroku_app_name: "ob-swaps-tracker-development"
           heroku_app_type: "worker"
+          commit_sha: ${{ env.commit_sha }}
 
   build-maker-mock:
     runs-on: ubuntu-latest

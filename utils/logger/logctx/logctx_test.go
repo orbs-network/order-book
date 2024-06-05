@@ -53,13 +53,13 @@ func TestFrom(t *testing.T) {
 		require.NotZero(t, m1.Len())
 		e1 := m1.TakeAll()[0]
 		assert.Equal(t, zapcore.InfoLevel, e1.Level)
-		assert.ElementsMatch(t, []zap.Field{zap.Bool("first_bool", true), zap.String("first_string", "A"), zap.String("service", "orderbook")}, e1.Context)
+		assert.ElementsMatch(t, []zap.Field{zap.Bool("first_bool", true), zap.String("first_string", "A"), zap.String("service", "orderbook"), zap.String("commit_sha", "")}, e1.Context)
 
 		m2 := o2.FilterMessage(secondMessage)
 		require.NotZero(t, m2.Len())
 		e2 := m2.TakeAll()[0]
 		assert.Equal(t, zapcore.InfoLevel, e2.Level)
-		assert.ElementsMatch(t, []zap.Field{zap.Bool("second_bool", false), zap.String("second_string", "B"), zap.String("service", "orderbook")}, e2.Context)
+		assert.ElementsMatch(t, []zap.Field{zap.Bool("second_bool", false), zap.String("second_string", "B"), zap.String("service", "orderbook"), zap.String("commit_sha", "")}, e2.Context)
 	})
 }
 
