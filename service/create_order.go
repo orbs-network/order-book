@@ -34,7 +34,6 @@ func (s *Service) CreateOrder(ctx context.Context, input CreateOrderInput) (mode
 	}
 
 	if existingOrder == nil {
-		logctx.Debug(ctx, "no existing order with same orderId. Trying to create new order", logger.String("clientOrderId", input.ClientOrderID.String()))
 		return s.createNewOrder(ctx, input, input.UserId)
 	}
 

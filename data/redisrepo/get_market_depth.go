@@ -89,7 +89,6 @@ func (r *redisRepository) GetMarketDepth(ctx context.Context, symbol models.Symb
 		}
 	}
 
-	logctx.Debug(ctx, "fetched market depth", logger.String("symbol", symbol.String()), logger.Int("depth", depth), logger.Int("numAsks", len(marketDepth.Asks)), logger.Int("numBids", len(marketDepth.Bids)))
 	return marketDepth, nil
 }
 

@@ -41,9 +41,6 @@ func ValidateUserMiddleware(getUserByApiKey GetUserByApiKeyFunc) func(http.Handl
 			}
 
 			ctx := utils.WithUserCtx(r.Context(), user)
-
-			logctx.Debug(ctx, "found user by api key", logger.String("userId", user.Id.String()))
-
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
