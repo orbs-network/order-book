@@ -186,9 +186,9 @@ func (r *redisRepository) TxModifyUserFilledOrders(ctx context.Context, txid uin
 		return models.ErrNotFound
 	}
 
+	userFilledOrdersKey := CreateUserFilledOrdersKey(order.UserId)
 	switch operation {
 	case models.Add:
-		userFilledOrdersKey := CreateUserFilledOrdersKey(order.UserId)
 		userFilledOrdersScore := float64(order.Timestamp.UTC().UnixNano())
 		tx.ZAdd(ctx, userFilledOrdersKey, redis.Z{
 			Score:  userFilledOrdersScore,
@@ -196,7 +196,6 @@ func (r *redisRepository) TxModifyUserFilledOrders(ctx context.Context, txid uin
 		})
 		logctx.Debug(ctx, "ModifyUserFilledOrders add", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
 	case models.Remove:
-		userFilledOrdersKey := CreateUserFilledOrdersKey(order.UserId)
 		tx.ZRem(ctx, userFilledOrdersKey, order.Id.String())
 		logctx.Debug(ctx, "ModifyUserFilledOrders remove", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
 	default:
@@ -221,6 +220,29 @@ func (r *redisRepository) TxRemoveOrder(ctx context.Context, txid uint, order mo
 	if err := r.TxModifyOrder(ctx, txid, models.Remove, order); err != nil {
 		logctx.Error(ctx, "Failed remove cancelled order", logger.Error(err), logger.String("orderId", order.Id.String()))
 		return fmt.Errorf("failed remove cancelled order: %w", err)
+	}
+	return nil
+}
+
+// close order
+// 1. remove from price (if not cancelled - as cancelled should have removed it)
+// 2. remove from userID:openOrders
+func (r *redisRepository) TxCloseOrder(ctx context.Context, txid uint, order models.Order) error {
+	// confirm not pending
+	if !order.IsPending() {
+		logctx.Error(ctx, "TxCloseOrder Unexpected, try to close a still pending order", logger.Int("txid", int(txid)), logger.String("orderId", order.Id.String()))
+	}
+	// remove from price if not cancelled already
+	if !order.Cancelled {
+		err := r.TxModifyPrices(ctx, txid, models.Remove, order)
+		if err != nil {
+			return err
+		}
+	}
+	// remove from user's open orders
+	if err := r.TxModifyUserOpenOrders(ctx, txid, models.Remove, order); err != nil {
+		logctx.Error(ctx, "TxCloseOrder Failed removing order from user open orders", logger.String("id", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
+		return err
 	}
 	return nil
 }

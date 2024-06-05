@@ -20,7 +20,7 @@ func (e *evmRepository) callContract(ctx context.Context, msg ethereum.CallMsg) 
 	}
 
 	ret := hex.EncodeToString(res)
-	logctx.Debug(ctx, "Owner: %s", logger.String("ret", ret))
+	logctx.Debug(ctx, "CallContract ", logger.String("ret", ret))
 	return ret, nil
 }
 

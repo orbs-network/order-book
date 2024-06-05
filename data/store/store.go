@@ -41,6 +41,7 @@ type OrderBookStore interface {
 	TxModifyClientOId(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
 	TxModifyUserOpenOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
 	TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
+	TxCloseOrder(ctx context.Context, txid uint, order models.Order) error
 	TxRemoveOrder(ctx context.Context, txid uint, order models.Order) error
 	// ------------------------------
 	// LH side

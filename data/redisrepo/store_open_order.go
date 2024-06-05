@@ -54,8 +54,6 @@ func (r *redisRepository) StoreOpenOrder(ctx context.Context, order models.Order
 		return fmt.Errorf("failed to stores open order in Redis: %v", err)
 	}
 
-	logctx.Debug(ctx, "stored open order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
-
 	// make sure the maker's wallet and the token have entries in the store for onchain balance tracking
 	return r.ensureMakerTokenForBalanceTracking(ctx, order)
 }
@@ -79,7 +77,6 @@ func (r *redisRepository) StoreOpenOrders(ctx context.Context, orders []models.O
 		return fmt.Errorf("failed to stores open order in Redis: %v", err)
 	}
 
-	logctx.Debug(ctx, "stored open orders in Redis", logger.Strings("orderIds", models.OrderIdsToStrings(ctx, &orders)))
 	return nil
 }
 

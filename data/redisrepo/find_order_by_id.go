@@ -51,6 +51,5 @@ func (r *redisRepository) FindOrderById(ctx context.Context, id uuid.UUID, isCli
 		return nil, err
 	}
 
-	logctx.Debug(ctx, "found order", logger.String("orderId", order.Id.String()))
 	return order, nil
 }

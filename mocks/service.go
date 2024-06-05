@@ -129,6 +129,10 @@ func (m *MockOrderBookStore) TxRemoveOrder(ctx context.Context, txid uint, order
 	return m.Error
 }
 
+func (m *MockOrderBookStore) TxCloseOrder(ctx context.Context, txid uint, order models.Order) error {
+	return m.Error
+}
+
 func (m *MockOrderBookStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*models.User, error) {
 	if m.Error != nil {
 		return nil, m.Error
