@@ -65,7 +65,6 @@ func (r *redisRepository) GetSwap(ctx context.Context, swapId uuid.UUID, open bo
 		return nil, models.ErrMarshalError
 	}
 
-	logctx.Debug(ctx, "got swap", logger.String("swapId", swapId.String()))
 	return &swap, nil
 }
 

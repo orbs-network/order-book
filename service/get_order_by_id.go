@@ -22,6 +22,5 @@ func (s *Service) GetOrderById(ctx context.Context, orderId uuid.UUID) (*models.
 		return nil, err
 	}
 
-	logctx.Debug(ctx, "order found for orderId", logger.String("orderId", orderId.String()))
 	return order, nil
 }
