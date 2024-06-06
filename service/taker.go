@@ -79,11 +79,19 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 		s.publishOrderEvent(ctx, &res.Orders[i])
 	}
 
-	// save
-	err := s.orderBookStore.StoreOpenOrders(ctx, res.Orders)
+	// update db
+	err := s.orderBookStore.PerformTx(ctx, func(txid uint) error {
+		for _, order := range res.Orders {
+			// update db
+			if err := s.orderBookStore.TxModifyOrder(ctx, txid, models.Update, order); err != nil {
+				logctx.Error(ctx, "BeginSwap Failed updating locked order", logger.Error(err), logger.String("orderId", order.Id.String()))
+				return err
+			}
+		}
+		return nil
+	})
 	if err != nil {
-		logctx.Error(ctx, "StoreOrders Failed", logger.Error(err))
-		return models.BeginSwapRes{}, err
+		logctx.Error(ctx, "BeginSwap Failed store:PerformTX", logger.Error(err))
 	}
 
 	err = s.orderBookStore.StoreSwap(ctx, swapId, res.Fragments)
@@ -226,13 +234,22 @@ func (s *Service) FillSwap(ctx context.Context, swapId uuid.UUID) error {
 			}
 		}
 	}
-	// store partial orders
-	err = s.orderBookStore.StoreOpenOrders(ctx, openOrders)
+	// update db
+	err = s.orderBookStore.PerformTx(ctx, func(txid uint) error {
+		for _, order := range openOrders {
+			// update db
+			if err := s.orderBookStore.TxModifyOrder(ctx, txid, models.Update, order); err != nil {
+				logctx.Error(ctx, "FillSwap Failed updating open order", logger.Error(err), logger.String("orderId", order.Id.String()))
+				return err
+			}
+		}
+		return nil
+	})
 	if err != nil {
-		logctx.Warn(ctx, "StoreOrders Failed", logger.Error(err))
-		return err
+		logctx.Error(ctx, "BeginSwap Failed store:PerformTX", logger.Error(err))
 	}
 	// store filled orders
+	// NEED TO DEPRECATE THIS AS WELL
 	err = s.orderBookStore.StoreFilledOrders(ctx, filledOrders)
 	if err != nil {
 		logctx.Warn(ctx, "StoreFilledOrders Failed", logger.Error(err))
