@@ -67,8 +67,9 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 
 	err = e.orderBookStore.PerformTx(ctx, func(txid uint) error {
 		for i, order := range orders {
-			// fill part of the order
-			if _, err := order.Fill(ctx, swap.Frags[i]); err != nil {
+			// fill part/whole of the order
+			isFullyFilled, err := order.Fill(ctx, swap.Frags[i])
+			if err != nil {
 				logctx.Error(ctx, "Failed to mark order as filled", logger.Error(err), logger.String("orderId", order.Id.String()))
 				continue
 			}
@@ -84,7 +85,7 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 			e.publishFillEvent(ctx, order.UserId, *fill)
 
 			// close fully filled orders
-			if order.IsFilled() {
+			if isFullyFilled {
 				// add to user:filledOrders
 				if err := e.orderBookStore.TxModifyUserFilledOrders(ctx, txid, models.Add, order); err != nil {
 					logctx.Error(ctx, "ResolveSwap:true Failed adding order to user filled orders", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
@@ -109,10 +110,6 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 	if err != nil {
 		logctx.Error(ctx, "ResilvedSwap:true PerformTx failed", logger.Error(err), logger.String("swapId", swap.Id.String()))
 	}
-
-	// 1. update
-	// 2. close
-	//		- remove from user open orders
 
 	// update user(s) keys
 	for userId := range userIds {
