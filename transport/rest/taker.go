@@ -210,7 +210,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		Fragments: []Fragment{},
 	}
 
-	logctx.Debug(ctx, "QuoteRes", logger.String("OutAmount", res.OutAmount))
+	logctx.Debug(ctx, "QuoteRes OK", logger.String("OutAmount", res.OutAmount))
 
 	if isSwap {
 		// lock liquidity
@@ -253,7 +253,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			signedOrder := abi.SignedOrder{
 				OrderWithAmount: abi.OrderWithAmount{
 					Order:  abiOrder,
-					Amount: takerInAmount, // is maker's out amount
+					Amount: takerInAmount, // is what the taker requested to swap for this frag
 				},
 				Signature: Signature2Bytes(swapData.Orders[i].Signature.Eip712Sig),
 			}
