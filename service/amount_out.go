@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
@@ -116,11 +115,9 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 			inAmountB = inAmountB.Sub(spendB)
 			outAmountA = outAmountA.Add(gainA)
 
-			// res
-			logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
-			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainA: %s", gainA.String()))
-			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendB: %s", spendB.String()))
+			// append
 			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainA, InSize: spendB})
+			logctx.Debug(ctx, "getOutAmountInAToken - append order frag", logger.String("gainA", gainA.String()), logger.String("spendB", spendB.String()))
 		}
 	}
 	// not all is Spent - error
@@ -128,7 +125,7 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
 		return models.QuoteRes{}, models.ErrInsufficientLiquity
 	}
-	logctx.Debug(ctx, fmt.Sprintf("append OrderFrag outAmountA: %s", outAmountA.String()))
+	logctx.Debug(ctx, "getOutAmountInAToken total", logger.String("inAmountB", inAmountB.String()), logger.String("outAmountA", outAmountA.String()))
 	return models.QuoteRes{Size: outAmountA, OrderFrags: frags}, nil
 }
 
@@ -156,17 +153,14 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 			outAmountB = outAmountB.Add(gainB)
 
 			// res
-			logctx.Debug(ctx, fmt.Sprintf("Price: %s", order.Price.String()))
-			//logctx.Debug(ctx, fmt.Sprintf("Onchain Price: %s", ocPrice.String()))
-			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag spendA: %s", spendA.String()))
-			logctx.Debug(ctx, fmt.Sprintf("append OrderFrag gainB: %s", gainB.String()))
 			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainB, InSize: spendA})
+			logctx.Debug(ctx, "getOutAmountInBToken append order frag", logger.String("gainB", gainB.String()), logger.String("spendA", spendA.String()))
 		}
 	}
 	if inAmountA.IsPositive() {
 		logctx.Warn(ctx, models.ErrInsufficientLiquity.Error())
 		return models.QuoteRes{}, models.ErrInsufficientLiquity
 	}
-	logctx.Debug(ctx, fmt.Sprintf("append OrderFrag outAmountB: %s", outAmountB.String()))
+	logctx.Debug(ctx, "getOutAmountInBToken total", logger.String("inAmountA", inAmountA.String()), logger.String("outAmountB", outAmountB.String()))
 	return models.QuoteRes{Size: outAmountB, OrderFrags: frags}, nil
 }
