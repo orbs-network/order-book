@@ -14,12 +14,9 @@ type OrderWithSize struct {
 }
 
 type OrderBookStore interface {
-	// --- MM side ---
-
-	// DEPRECATED - Use TxModify__ methods instead
 	StoreOpenOrder(ctx context.Context, order models.Order) error
-	// DEPRECATED - Use TxModify__ methods instead
 	StoreOpenOrders(ctx context.Context, orders []models.Order) error
+	// --- MM side ---
 	// DEPRECATED - Use TxModify__ methods instead
 	StoreFilledOrders(ctx context.Context, orders []models.Order) error
 	FindOrderById(ctx context.Context, id uuid.UUID, isClientOId bool) (*models.Order, error)

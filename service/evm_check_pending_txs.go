@@ -57,7 +57,7 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 			tx, err := e.blockchainStore.GetTx(ctx, p.TxHash)
 			if err != nil {
 				if err == models.ErrNotFound {
-					logctx.Error(ctx, "Transaction not found but should be valid", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
+					logctx.Warn(ctx, "Transaction not found but should be valid", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 				} else {
 					logctx.Error(ctx, "Failed to get transaction", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 				}
@@ -66,7 +66,7 @@ func (e *EvmClient) CheckPendingTxs(ctx context.Context) error {
 			}
 
 			if tx == nil {
-				logctx.Error(ctx, "Transaction not found but should be valid", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
+				logctx.Error(ctx, "Transaction is null", logger.String("txHash", p.TxHash), logger.String("swapId", p.Id.String()))
 				return
 			}
 

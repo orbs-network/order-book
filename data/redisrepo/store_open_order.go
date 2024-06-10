@@ -2,7 +2,6 @@ package redisrepo
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/orbs-network/order-book/models"
 	"github.com/orbs-network/order-book/utils/logger"
@@ -13,14 +12,21 @@ import (
 // These methods should be used to store UNFILLED or PARTIALLY FILLED orders in Redis.
 //
 // `StoreFilledOrders` should be used to store completely filled orders.
-func (r *redisRepository) ensureMakerTokenForBalanceTracking(ctx context.Context, order models.Order) error {
+func (r *redisRepository) txEnsureMakerTokenForBalanceTracking(ctx context.Context, txid uint, order models.Order) error {
+	var tx redis.Pipeliner
+	var ok bool
+	if tx, ok = r.txMap[txid]; !ok {
+		logctx.Error(ctx, "TxModifyOrder txid not found", logger.Int("txid", int(txid)))
+		return models.ErrNotFound
+	}
+
 	key := Order2MakerTokenTrackKey(order)
 	if key == "" {
 		logctx.Error(ctx, "Order2MakerTokenTrackKey failed for order", logger.String("orderId", order.Id.String()))
 		return models.ErrInvalidInput
 	}
-	// chjeck if key already exists
-	exists, err := r.client.Exists(ctx, key).Result()
+	// check if key already exists
+	exists, err := tx.Exists(ctx, key).Result()
 	if err != nil {
 		logctx.Error(ctx, "ensureMakerTokenForBalanceTracking failed to check if key exists", logger.String("key", key), logger.Error(err))
 		return err
@@ -28,7 +34,7 @@ func (r *redisRepository) ensureMakerTokenForBalanceTracking(ctx context.Context
 
 	// If the key doesn't exist, set its value to -1.
 	if exists == 0 {
-		err := r.client.Set(ctx, key, -1, 0).Err()
+		err := tx.Set(ctx, key, -1, 0).Err()
 		if err != nil {
 			logctx.Error(ctx, "ensureMakerTokenForBalanceTracking failed to write new tracking key", logger.String("key", key), logger.Error(err))
 			return err
@@ -37,86 +43,49 @@ func (r *redisRepository) ensureMakerTokenForBalanceTracking(ctx context.Context
 	return nil
 }
 
-// TODO: combine `StoreOpenOrder` and `StoreFilledOrder` into a single `StoreOrder` method that checks order status and stores accordingly.
-func (r *redisRepository) StoreOpenOrder(ctx context.Context, order models.Order) error {
-
-	// --- START TRANSACTION ---
-	transaction := r.client.TxPipeline()
-
-	err := storeOrderTX(ctx, transaction, &order)
-	if err != nil {
+func (r *redisRepository) txAddOpenOrder(ctx context.Context, txid uint, order models.Order) error {
+	// add to order:id key
+	if err := r.TxModifyOrder(ctx, txid, models.Add, order); err != nil {
+		logctx.Error(ctx, "StoreOpenOrders TxModifyOrder Failed adding order", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
+		return err
+	}
+	// add to client oid key
+	if err := r.TxModifyClientOId(ctx, txid, models.Add, order); err != nil {
+		logctx.Error(ctx, "StoreOpenOrders TxModifyClientOId Failed adding order", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
 		return err
 	}
 
-	_, err = transaction.Exec(ctx)
-	if err != nil {
-		logctx.Error(ctx, "failed to store open order in Redis", logger.Error(err), logger.String("orderId", order.Id.String()))
-		return fmt.Errorf("failed to stores open order in Redis: %v", err)
+	// add to price
+	if err := r.TxModifyPrices(ctx, txid, models.Add, order); err != nil {
+		logctx.Error(ctx, "StoreOpenOrders TxModifyPrices Failed adding order", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
+		return err
+	}
+	// add to user:opeOrder key
+	if err := r.TxModifyUserOpenOrders(ctx, txid, models.Add, order); err != nil {
+		logctx.Error(ctx, "TxModifyUserOpenOrders TxModifyClientOId Failed adding order", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
+		return err
 	}
 
-	// make sure the maker's wallet and the token have entries in the store for onchain balance tracking
-	return r.ensureMakerTokenForBalanceTracking(ctx, order)
+	// ensure balance is tracked for this order
+	return r.txEnsureMakerTokenForBalanceTracking(ctx, txid, order)
 }
 
 func (r *redisRepository) StoreOpenOrders(ctx context.Context, orders []models.Order) error {
-	// --- START TRANSACTION ---
-	transaction := r.client.TxPipeline()
-
-	for _, order := range orders {
-		err := storeOrderTX(ctx, transaction, &order)
-		if err != nil {
-			return err
+	err := r.PerformTx(ctx, func(txid uint) error {
+		for _, order := range orders {
+			if err := r.txAddOpenOrder(ctx, txid, order); err != nil {
+				return err
+			}
 		}
-
-		logctx.Debug(ctx, "stored order", logger.String("orderId", order.Id.String()), logger.String("price", order.Price.String()), logger.String("size", order.Size.String()), logger.String("side", order.Side.String()))
-
-	}
-	_, err := transaction.Exec(ctx)
-	if err != nil {
-		logctx.Error(ctx, "failed to stores open order in Redis", logger.Error(err), logger.Strings("orderIds", models.OrderIdsToStrings(ctx, &orders)))
-		return fmt.Errorf("failed to stores open order in Redis: %v", err)
-	}
-
-	return nil
+		return nil
+	})
+	return err
 }
 
-func storeOrderTX(ctx context.Context, transaction redis.Pipeliner, order *models.Order) error {
-	orderMap := order.OrderToMap()
-
-	// Keep track of that user's orders
-	userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
-	userOrdersScore := float64(order.Timestamp.UTC().UnixNano())
-	transaction.ZAdd(ctx, userOrdersKey, redis.Z{
-		Score:  userOrdersScore,
-		Member: order.Id.String(),
+func (r *redisRepository) StoreOpenOrder(ctx context.Context, order models.Order) error {
+	err := r.PerformTx(ctx, func(txid uint) error {
+		return r.txAddOpenOrder(ctx, txid, order)
 	})
 
-	// Store order details by order ID
-	orderIDKey := CreateOrderIDKey(order.Id)
-	transaction.HSet(ctx, orderIDKey, orderMap)
-
-	// Store client order ID
-	clientOIDKey := CreateClientOIDKey(order.ClientOId)
-	transaction.Set(ctx, clientOIDKey, order.Id.String(), 0)
-
-	// Add order to the sorted set for that token pair
-	f64Price, _ := order.Price.Float64()
-	timestamp := float64(order.Timestamp.UTC().UnixNano()) / 1e9
-	score := f64Price + (timestamp / 1e12) // Use a combination of price and scaled timestamp so that orders with the same price are sorted by time. This should not be used for price comparison.
-
-	if order.Side == models.BUY {
-		buyPricesKey := CreateBuySidePricesKey(order.Symbol)
-		transaction.ZAdd(ctx, buyPricesKey, redis.Z{
-			Score:  score,
-			Member: order.Id.String(),
-		})
-	} else {
-		sellPricesKey := CreateSellSidePricesKey(order.Symbol)
-		transaction.ZAdd(ctx, sellPricesKey, redis.Z{
-			Score:  score,
-			Member: order.Id.String(),
-		})
-	}
-
-	return nil
+	return err
 }

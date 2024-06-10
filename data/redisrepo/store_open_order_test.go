@@ -14,7 +14,7 @@ import (
 func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 
 	timestamp := time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)
-
+	txMap := make(map[uint]redis.Pipeliner)
 	t.Run("store open order success (buy side) - should set user orders set, order ID hash, buy prices sorted set", func(t *testing.T) {
 		var buyOrder = models.Order{
 			Id:        orderId,
@@ -27,25 +27,25 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 		}
 
 		db, mock := redismock.NewClientMock()
-
 		repo := &redisRepository{
 			client: db,
+			txMap:  txMap,
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(buyOrder.UserId), redis.Z{
-			Score:  float64(timestamp.UnixNano()),
-			Member: buyOrder.Id.String(),
-		}).SetVal(1)
 		mock.ExpectHSet(CreateOrderIDKey(buyOrder.Id), buyOrder.OrderToMap()).SetVal(1)
 		mock.ExpectSet(CreateClientOIDKey(buyOrder.ClientOId), buyOrder.Id.String(), 0).SetVal("OK")
 		mock.ExpectZAdd(CreateBuySidePricesKey(buyOrder.Symbol), redis.Z{
 			Score:  10.0016969392,
 			Member: buyOrder.Id.String(),
 		}).SetVal(1)
-		mock.ExpectTxPipelineExec()
+		mock.ExpectZAdd(CreateUserOpenOrdersKey(buyOrder.UserId), redis.Z{
+			Score:  float64(timestamp.UnixNano()),
+			Member: buyOrder.Id.String(),
+		}).SetVal(1)
 		mock.ExpectExists(Order2MakerTokenTrackKey(order)).SetVal(0)
 		mock.ExpectSet(Order2MakerTokenTrackKey(order), -1, 0).SetVal("OK")
+		mock.ExpectTxPipelineExec()
 
 		err := repo.StoreOpenOrder(ctx, buyOrder)
 
@@ -67,22 +67,23 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 
 		repo := &redisRepository{
 			client: db,
+			txMap:  txMap,
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(sellOrder.UserId), redis.Z{
-			Score:  float64(timestamp.UnixNano()),
-			Member: sellOrder.Id.String(),
-		}).SetVal(1)
 		mock.ExpectHSet(CreateOrderIDKey(sellOrder.Id), sellOrder.OrderToMap()).SetVal(1)
 		mock.ExpectSet(CreateClientOIDKey(sellOrder.ClientOId), sellOrder.Id.String(), 0).SetVal("OK")
 		mock.ExpectZAdd(CreateSellSidePricesKey(sellOrder.Symbol), redis.Z{
 			Score:  10.0016969392,
 			Member: sellOrder.Id.String(),
 		}).SetVal(1)
-		mock.ExpectTxPipelineExec()
+		mock.ExpectZAdd(CreateUserOpenOrdersKey(sellOrder.UserId), redis.Z{
+			Score:  float64(timestamp.UnixNano()),
+			Member: sellOrder.Id.String(),
+		}).SetVal(1)
 		mock.ExpectExists(Order2MakerTokenTrackKey(order)).SetVal(0)
 		mock.ExpectSet(Order2MakerTokenTrackKey(order), -1, 0).SetVal("OK")
+		mock.ExpectTxPipelineExec()
 
 		err := repo.StoreOpenOrder(ctx, sellOrder)
 
@@ -90,31 +91,31 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 	})
 
 	t.Run("store open order fail - should return error when transaction fails", func(t *testing.T) {
-
 		db, mock := redismock.NewClientMock()
 
 		repo := &redisRepository{
 			client: db,
+			txMap:  txMap,
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(order.UserId), redis.Z{
-			Score:  float64(order.Timestamp.UnixNano()),
-			Member: order.Id.String(),
-		}).SetErr(assert.AnError)
 		mock.ExpectHSet(CreateOrderIDKey(order.Id), order.OrderToMap()).SetErr(assert.AnError)
 		mock.ExpectSet(CreateClientOIDKey(order.ClientOId), order.Id.String(), 0).SetVal("OK")
 		mock.ExpectZAdd(CreateSellSidePricesKey(order.Symbol), redis.Z{
 			Score:  10.0016969392,
 			Member: order.Id.String(),
 		}).SetVal(1)
-		mock.ExpectTxPipelineExec().SetErr(fmt.Errorf("transaction failed"))
+		mock.ExpectZAdd(CreateUserOpenOrdersKey(order.UserId), redis.Z{
+			Score:  float64(order.Timestamp.UnixNano()),
+			Member: order.Id.String(),
+		}).SetErr(assert.AnError)
 		mock.ExpectExists(Order2MakerTokenTrackKey(order)).SetVal(0)
 		mock.ExpectSet(Order2MakerTokenTrackKey(order), -1, 0).SetVal("OK")
+		mock.ExpectTxPipelineExec().SetErr(fmt.Errorf("transaction failed"))
 
 		err := repo.StoreOpenOrder(ctx, order)
 
-		assert.ErrorContains(t, err, "failed to stores open order in Redis", "should return error")
+		assert.ErrorContains(t, err, "PerformTx txEnd commit failed", "should return error")
 	})
 
 }
