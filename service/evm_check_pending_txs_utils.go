@@ -111,6 +111,10 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 		logctx.Error(ctx, "ResilvedSwap:true PerformTx failed", logger.Error(err), logger.String("swapId", swap.Id.String()))
 	}
 
+	// 1. update
+	// 2. close
+	//		- remove from user open orders
+
 	// update user(s) keys
 	for userId := range userIds {
 		// save resolved swap to a user
