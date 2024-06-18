@@ -19,6 +19,7 @@ services:
     develop:
       watch:
         - action: rebuild
+          path: .
           files:
             - ./**/*.go
             - ./go.mod

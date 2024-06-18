@@ -31,7 +31,7 @@ jobs:
 
       - name: Wait for services to be ready
         run: |
-          sleep 10
+          sleep 30
 
       - name: Set up Market Maker User
         run: |
