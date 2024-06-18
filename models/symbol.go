@@ -8,6 +8,7 @@ type Symbol string
 var (
 	symbolsMap = map[string]Symbol{
 		"MATIC-USDC": "MATIC-USDC",
+		"MATIC-USDT": "MATIC-USDT",
 	}
 
 	ErrInvalidSymbol = errors.New("invalid symbol")
