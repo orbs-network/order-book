@@ -54,9 +54,7 @@ func setup() {
 		panic(fmt.Errorf("failed to parse redis URL: %v", err))
 	}
 
-	//log.Printf("Redis address: %s", opt.Addr)
 	fmt.Println("Redis address:\t", opt.Addr)
-
 	port, found := os.LookupEnv("PORT")
 	if !found {
 		port = "8080"

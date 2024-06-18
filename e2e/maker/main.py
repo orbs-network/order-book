@@ -16,9 +16,9 @@ PRIVATE_KEY = os.environ.get(
     "PRIVATE_KEY", "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 )
 TICKER_URL = os.environ.get(
-    "TICKER_URL", "https://www.binance.com/api/v3/ticker/price?symbol=MATICUSDC"
+    "TICKER_URL", "https://www.binance.com/api/v3/ticker/price?symbol=MATICUSDT"
 )
-TICKER_SYMBOL = os.environ.get("TICKER_SYMBOL", "MATIC-USDC")
+TICKER_SYMBOL = os.environ.get("TICKER_SYMBOL", "MATIC-USDT")
 DEPTH_SIZE = os.environ.get("DEPTH_SIZE", "5")
 SLEEP_TIME = os.environ.get("SLEEP_TIME", "10")
 ORDER_SIZE_SCALE = os.environ.get("ORDER_SIZE_SCALE", "10")
@@ -132,7 +132,7 @@ class Client:
 
         ticker_data = response.json()
         ticker = Ticker(ticker_data["price"], ticker_data["symbol"])
-        print(f"ETH-USD Price: {ticker.price}")
+
         return ticker
 
     def _round(self, value):
