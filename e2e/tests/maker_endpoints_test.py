@@ -4,6 +4,8 @@ The tests use the Python SDK to interact with the API.
 A local Orderbook instance is required to run the tests.
 """
 
+PAIR = "MATIC-USDT"
+
 import pytest
 from orbs_orderbook import (
     CreateMultipleOrdersInput,
@@ -21,7 +23,7 @@ def test_create_order_success(ob_client, ob_signer):
     order_input = CreateOrderInput(
         price="0.86500000",
         size="40",
-        symbol="MATIC-USDC",
+        symbol=PAIR,
         side="sell",
         client_order_id=CLIENT_OID,
     )
@@ -43,7 +45,7 @@ def test_create_order_fails_with_same_clientoid(
     order_input = CreateOrderInput(
         price="0.86500000",
         size="40",
-        symbol="MATIC-USDC",
+        symbol=PAIR,
         side="sell",
         client_order_id=CLIENT_OID,
     )
@@ -157,7 +159,7 @@ def test_create_multiple_orders_successfully(ob_client, ob_signer):
     order_one = CreateOrderInput(
         price="0.86500000",
         size="40",
-        symbol="MATIC-USDC",
+        symbol=PAIR,
         side="buy",
         client_order_id="550e8400-e29b-41d4-a716-446655440000",
     )
@@ -166,14 +168,14 @@ def test_create_multiple_orders_successfully(ob_client, ob_signer):
     order_two = CreateOrderInput(
         price="0.87",
         size="40",
-        symbol="MATIC-USDC",
+        symbol=PAIR,
         side="sell",
         client_order_id="650e8400-e29b-41d4-a716-446655440001",
     )
     order_two_sig, order_two_msg = ob_signer.prepare_and_sign_order(order_two)
 
     create_orders_input = CreateMultipleOrdersInput(
-        symbol="MATIC-USDC",
+        symbol=PAIR,
         orders=[
             OrderWithSignature(
                 order=order_one,
@@ -205,7 +207,7 @@ def test_create_multiple_orders_rejects_order_with_same_client_oid(
     order_one = CreateOrderInput(
         price="0.86500000",
         size="40",
-        symbol="MATIC-USDC",
+        symbol=PAIR,
         side="buy",
         client_order_id=same_client_oid,
     )
@@ -214,14 +216,14 @@ def test_create_multiple_orders_rejects_order_with_same_client_oid(
     order_two = CreateOrderInput(
         price="0.87",
         size="40",
-        symbol="MATIC-USDC",
+        symbol=PAIR,
         side="sell",
         client_order_id=same_client_oid,
     )
     order_two_sig, order_two_msg = ob_signer.prepare_and_sign_order(order_two)
 
     create_orders_input = CreateMultipleOrdersInput(
-        symbol="MATIC-USDC",
+        symbol=PAIR,
         orders=[
             OrderWithSignature(
                 order=order_one,
