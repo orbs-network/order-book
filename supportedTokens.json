@@ -1,12 +1,17 @@
 {
-    "USDC-OLD": {
-        "desc": "first usdc we used",
+    "USDC": {
+        "desc": "Circle USDC polygon",
         "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
         "decimals": 6
     },
-    "USDC": {
-        "desc": "USDC.e most popular stablecoin March24",
+    "USDCE": {
+        "desc": "Circle USDC.e polygon",
         "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "decimals": 6
+    },
+    "USDT": {
+        "desc": "USDT on polygon",
+        "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
         "decimals": 6
     },
     "MATIC": {
