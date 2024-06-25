@@ -153,7 +153,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 
 	if err != nil {
 		logctx.Warn(ctx, "handleQuote Failed to convertFromTokenDec", logger.Error(err))
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InToken", req.InToken), logger.Error(models.ErrTokenNotsupported))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InToken", req.InToken), logger.String("outToken", req.OutToken), logger.Error(models.ErrTokenNotsupported))
 		return nil
 	}
 

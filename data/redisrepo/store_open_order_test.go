@@ -1,7 +1,6 @@
 package redisrepo
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -43,8 +42,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			Score:  float64(timestamp.UnixNano()),
 			Member: buyOrder.Id.String(),
 		}).SetVal(1)
-		mock.ExpectExists(Order2MakerTokenTrackKey(order)).SetVal(0)
-		mock.ExpectSet(Order2MakerTokenTrackKey(order), -1, 0).SetVal("OK")
+		mock.ExpectSetNX(Order2MakerTokenTrackKey(order), -1, 0).SetVal(true)
 		mock.ExpectTxPipelineExec()
 
 		err := repo.StoreOpenOrder(ctx, buyOrder)
@@ -81,8 +79,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			Score:  float64(timestamp.UnixNano()),
 			Member: sellOrder.Id.String(),
 		}).SetVal(1)
-		mock.ExpectExists(Order2MakerTokenTrackKey(order)).SetVal(0)
-		mock.ExpectSet(Order2MakerTokenTrackKey(order), -1, 0).SetVal("OK")
+		mock.ExpectSetNX(Order2MakerTokenTrackKey(order), -1, 0).SetVal(true)
 		mock.ExpectTxPipelineExec()
 
 		err := repo.StoreOpenOrder(ctx, sellOrder)
@@ -110,8 +107,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			Member: order.Id.String(),
 		}).SetErr(assert.AnError)
 		mock.ExpectExists(Order2MakerTokenTrackKey(order)).SetVal(0)
-		mock.ExpectSet(Order2MakerTokenTrackKey(order), -1, 0).SetVal("OK")
-		mock.ExpectTxPipelineExec().SetErr(fmt.Errorf("transaction failed"))
+		mock.ExpectSetNX(Order2MakerTokenTrackKey(order), -1, 0).SetVal(true)
 
 		err := repo.StoreOpenOrder(ctx, order)
 

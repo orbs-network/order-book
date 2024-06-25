@@ -25,21 +25,17 @@ func (r *redisRepository) txEnsureMakerTokenForBalanceTracking(ctx context.Conte
 		logctx.Error(ctx, "Order2MakerTokenTrackKey failed for order", logger.String("orderId", order.Id.String()))
 		return models.ErrInvalidInput
 	}
-	// check if key already exists
-	exists, err := tx.Exists(ctx, key).Result()
+	// Use SETNX to set the key only if it does not already exist
+	result, err := tx.SetNX(ctx, key, -1, 0).Result()
 	if err != nil {
-		logctx.Error(ctx, "ensureMakerTokenForBalanceTracking failed to check if key exists", logger.String("key", key), logger.Error(err))
+		logctx.Error(ctx, "ensureMakerTokenForBalanceTracking failed to set key", logger.String("key", key), logger.Error(err))
 		return err
 	}
 
-	// If the key doesn't exist, set its value to -1.
-	if exists == 0 {
-		err := tx.Set(ctx, key, -1, 0).Err()
-		if err != nil {
-			logctx.Error(ctx, "ensureMakerTokenForBalanceTracking failed to write new tracking key", logger.String("key", key), logger.Error(err))
-			return err
-		}
+	if result {
+		logctx.Debug(ctx, "MakerTokenTrackKey for balance was created value -1", logger.String("key", key))
 	}
+
 	return nil
 }
 
