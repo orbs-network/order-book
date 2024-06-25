@@ -32,8 +32,8 @@ func (r *redisRepository) txEnsureMakerTokenForBalanceTracking(ctx context.Conte
 		return err
 	}
 
-	if !result {
-		logctx.Debug(ctx, "MakerTokenTrackKey already exists", logger.String("key", key))
+	if result {
+		logctx.Debug(ctx, "MakerTokenTrackKey for balance was created value -1", logger.String("key", key))
 	}
 
 	return nil
