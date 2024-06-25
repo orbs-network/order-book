@@ -34,7 +34,7 @@ func (r *redisRepository) txEnsureMakerTokenForBalanceTracking(ctx context.Conte
 
 	// If the key doesn't exist, set its value to -1.
 	if exists == 0 {
-		logctx.Debug(ctx, "Order2MakerTokenTrackKey doesnt exist. create with -1", logger.String("key", key), logger.Error(err))
+		logctx.Debug(ctx, "MakerTokenTrackKey doesnt exist. reset with -1", logger.String("key", key), logger.Error(err))
 		err := tx.Set(ctx, key, -1, 0).Err()
 		if err != nil {
 			logctx.Error(ctx, "ensureMakerTokenForBalanceTracking failed to write new tracking key", logger.String("key", key), logger.Error(err))
