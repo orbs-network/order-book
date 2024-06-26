@@ -48,13 +48,39 @@ func WebSocketOrderHandler(orderSvc service.OrderBookService, getUserByApiKey mi
 			return
 		}
 
-		// Read messages from the channel and send to WebSocket
-		for msg := range messageChan {
-			if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-				logctx.Error(r.Context(), "error writing to websocket", logger.Error(err))
-				break
-			}
+		// Channel to signal closure
+		closeChan := make(chan struct{})
 
+		// Goroutine to handle closure from the client side
+		go func() {
+			defer close(closeChan)
+			for {
+				_, _, err := conn.ReadMessage()
+				if err != nil {
+					if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+						logctx.Error(r.Context(), "unexpected websocket closure", logger.Error(err))
+					}
+					break
+				}
+			}
+		}()
+
+		// Read messages from the channel and send to WebSocket
+		for {
+			select {
+			case msg := <-messageChan:
+				if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+					logctx.Error(r.Context(), "error writing to websocket", logger.Error(err))
+					break
+				}
+			case <-closeChan:
+				// Handle graceful closure
+				err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				if err != nil {
+					logctx.Error(r.Context(), "error sending close message", logger.Error(err))
+				}
+				return
+			}
 		}
 	}
 }
