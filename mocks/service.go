@@ -85,7 +85,7 @@ func (m *MockOrderBookStore) StoreSwap(ctx context.Context, swapId uuid.UUID, fr
 	return nil
 }
 
-func (m *MockOrderBookStore) GetOrdersForUser(ctx context.Context, userId uuid.UUID, isFilledOrders bool) (orders []models.Order, totalOrders int, err error) {
+func (m *MockOrderBookStore) GetOpenOrders(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
 	if m.Error != nil {
 		return nil, 0, m.Error
 	}
@@ -121,9 +121,9 @@ func (m *MockOrderBookStore) TxModifyUserOpenOrders(ctx context.Context, txid ui
 	return m.Error
 }
 
-func (m *MockOrderBookStore) TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
-	return m.Error
-}
+// func (m *MockOrderBookStore) TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
+// 	return m.Error
+// }
 
 func (m *MockOrderBookStore) TxRemoveOrder(ctx context.Context, txid uint, order models.Order) error {
 	return m.Error

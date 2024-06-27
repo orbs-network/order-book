@@ -17,11 +17,6 @@ func CreateUserOpenOrdersKey(userId uuid.UUID) string {
 	return fmt.Sprintf("userId:%s:openOrders", userId)
 }
 
-// CreateUserFilledOrdersKey creates a Redis key for storing the user's filled orders
-func CreateUserFilledOrdersKey(userId uuid.UUID) string {
-	return fmt.Sprintf("userId:%s:filledOrders", userId)
-}
-
 // CreateOrderIDKey creates a Redis key for a single order ID
 func CreateOrderIDKey(orderId uuid.UUID) string {
 	return fmt.Sprintf("orderID:%s:order", orderId)

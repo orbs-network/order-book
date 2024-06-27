@@ -22,7 +22,6 @@ type OrderBookService interface {
 	CancelOrdersForUser(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orderIds []uuid.UUID, err error)
 	GetSymbols(ctx context.Context) ([]models.Symbol, error)
 	GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
-	GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
 	GetSwapFills(ctx context.Context, userId uuid.UUID, symbol models.Symbol, startAt, endAt time.Time) ([]models.Fill, error)
 	// Subscribe to order updates for a specific user
 	SubscribeUserOrders(ctx context.Context, userId uuid.UUID) (chan []byte, error)

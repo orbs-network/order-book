@@ -13,7 +13,7 @@ import (
 
 func (s *Service) GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
 	logctx.Debug(ctx, "getting open orders for user", logger.String("user_id", userId.String()))
-	orders, _, err = s.orderBookStore.GetOrdersForUser(ctx, userId, false)
+	orders, _, err = s.orderBookStore.GetOpenOrders(ctx, userId)
 
 	if err != nil {
 		logctx.Error(ctx, "error getting open orders for user", logger.Error(err), logger.String("user_id", userId.String()))
@@ -31,20 +31,6 @@ func (s *Service) GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (o
 	logctx.Debug(ctx, "returning open orders for user", logger.String("user_id", userId.String()), logger.Int("orders_count", len(orders)))
 
 	return res, len(res), nil
-}
-
-func (s *Service) GetFilledOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
-	logctx.Debug(ctx, "getting filled orders for user", logger.String("user_id", userId.String()))
-	orders, totalOrders, err = s.orderBookStore.GetOrdersForUser(ctx, userId, true)
-
-	if err != nil {
-		logctx.Error(ctx, "error getting filled orders for user", logger.Error(err), logger.String("user_id", userId.String()))
-		return nil, 0, fmt.Errorf("error getting filled orders for user: %w", err)
-	}
-
-	logctx.Debug(ctx, "returning filled orders for user", logger.String("user_id", userId.String()), logger.Int("orders_count", len(orders)))
-
-	return orders, totalOrders, nil
 }
 
 const MAX_FILLS = 256

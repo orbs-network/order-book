@@ -37,16 +37,7 @@ func storeFilledOrderTx(ctx context.Context, transaction redis.Pipeliner, order 
 	// 1. Remove the order from the user's open orders set
 	userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
 	transaction.ZRem(ctx, userOrdersKey, order.Id.String())
-
-	// 2. Store the order in the filled orders set
-	userFilledOrdersKey := CreateUserFilledOrdersKey(order.UserId)
-	userFilledOrdersScore := float64(order.Timestamp.UTC().UnixNano())
-	transaction.ZAdd(ctx, userFilledOrdersKey, redis.Z{
-		Score:  userFilledOrdersScore,
-		Member: order.Id.String(),
-	})
-
-	// 3. Remove the order from the buy/sell prices set for that pair
+	// 2. Remove the order from the buy/sell prices set for that pair
 	if order.Side == models.BUY {
 		buyPricesKey := CreateBuySidePricesKey(order.Symbol)
 		transaction.ZRem(ctx, buyPricesKey, order.Id.String())
