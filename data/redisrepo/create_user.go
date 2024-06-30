@@ -16,14 +16,16 @@ var orderId = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 var clientOId = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 var userId = uuid.MustParse("00000000-0000-0000-0000-000000000003")
 var size, _ = decimal.NewFromString("10000324.123456789")
-var symbol, _ = models.StrToSymbol("MATIC-USDC")
+
+// for tests
+var test_symbol, _ = models.StrToSymbol("MATIC-USDC")
 var price = decimal.NewFromFloat(10.0)
 
-var order = models.Order{
+var test_order = models.Order{
 	Id:     orderId,
 	Price:  price,
 	Size:   size,
-	Symbol: symbol,
+	Symbol: test_symbol,
 	Side:   models.BUY,
 }
 

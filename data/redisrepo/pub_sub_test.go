@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var orderJson, _ = order.ToJson()
+var orderJson, _ = test_order.ToJson()
 
 func TestRedisRepository_PublishEvent(t *testing.T) {
 
@@ -18,9 +18,9 @@ func TestRedisRepository_PublishEvent(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectPublish(order.Id.String(), orderJson).SetVal(1)
+		mock.ExpectPublish(test_order.Id.String(), orderJson).SetVal(1)
 
-		err := repo.PublishEvent(ctx, order.Id.String(), orderJson)
+		err := repo.PublishEvent(ctx, test_order.Id.String(), orderJson)
 
 		assert.NoError(t, err)
 	})
@@ -32,9 +32,9 @@ func TestRedisRepository_PublishEvent(t *testing.T) {
 			client: db,
 		}
 
-		mock.ExpectPublish(order.Id.String(), orderJson).SetErr(assert.AnError)
+		mock.ExpectPublish(test_order.Id.String(), orderJson).SetErr(assert.AnError)
 
-		err := repo.PublishEvent(ctx, order.Id.String(), orderJson)
+		err := repo.PublishEvent(ctx, test_order.Id.String(), orderJson)
 
 		assert.ErrorContains(t, err, "failed to publish redis event")
 	})

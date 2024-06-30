@@ -19,7 +19,7 @@ func TestRedisRepository_StoreFilledOrders(t *testing.T) {
 			ClientOId:   clientOId,
 			Price:       price,
 			Size:        size,
-			Symbol:      symbol,
+			Symbol:      test_symbol,
 			Side:        models.BUY,
 			Timestamp:   timestamp,
 			SizePending: decimal.Zero,
@@ -34,7 +34,7 @@ func TestRedisRepository_StoreFilledOrders(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZRem(CreateUserOpenOrdersKey(buyOrder.UserId, symbol), buyOrder.Id.String()).SetVal(1)
+		mock.ExpectZRem(CreateUserOpenOrdersKey(buyOrder.UserId, buyOrder.Symbol), buyOrder.Id.String()).SetVal(1)
 		mock.ExpectZRem(CreateBuySidePricesKey(buyOrder.Symbol), buyOrder.Id.String()).SetVal(1)
 		mock.ExpectHSet(CreateOrderIDKey(buyOrder.Id), buyOrder.OrderToMap()).SetVal(1)
 		mock.ExpectTxPipelineExec()
@@ -50,7 +50,7 @@ func TestRedisRepository_StoreFilledOrders(t *testing.T) {
 			ClientOId:   clientOId,
 			Price:       price,
 			Size:        size,
-			Symbol:      symbol,
+			Symbol:      test_symbol,
 			Side:        models.SELL,
 			Timestamp:   timestamp,
 			SizePending: decimal.Zero,
@@ -65,7 +65,7 @@ func TestRedisRepository_StoreFilledOrders(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZRem(CreateUserOpenOrdersKey(sellOrder.UserId, symbol), sellOrder.Id.String()).SetVal(1)
+		mock.ExpectZRem(CreateUserOpenOrdersKey(sellOrder.UserId, sellOrder.Symbol), sellOrder.Id.String()).SetVal(1)
 		mock.ExpectZRem(CreateSellSidePricesKey(sellOrder.Symbol), sellOrder.Id.String()).SetVal(1)
 		mock.ExpectHSet(CreateOrderIDKey(sellOrder.Id), sellOrder.OrderToMap()).SetVal(1)
 		mock.ExpectTxPipelineExec()
@@ -87,7 +87,7 @@ func TestRedisRepository_StoreFilledOrders(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZRem(CreateUserOpenOrdersKey(sellOrder.UserId, symbol), sellOrder.Id.String()).SetErr(assert.AnError)
+		mock.ExpectZRem(CreateUserOpenOrdersKey(sellOrder.UserId, sellOrder.Symbol), sellOrder.Id.String()).SetErr(assert.AnError)
 
 		err := repo.StoreFilledOrders(ctx, []models.Order{sellOrder})
 

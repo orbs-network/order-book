@@ -157,7 +157,7 @@ func TestRedisRepository_TxModifyPrices(t *testing.T) {
 			ClientOId: clientOId,
 			Price:     price,
 			Size:      size,
-			Symbol:    symbol,
+			Symbol:    test_symbol,
 			Side:      models.BUY,
 			Timestamp: timestamp,
 		}
@@ -184,7 +184,7 @@ func TestRedisRepository_TxModifyPrices(t *testing.T) {
 			ClientOId: clientOId,
 			Price:     price,
 			Size:      size,
-			Symbol:    symbol,
+			Symbol:    test_symbol,
 			Side:      models.SELL,
 			Timestamp: timestamp,
 		}
@@ -276,12 +276,13 @@ func TestRedisRepository_TxModifyUserOpenOrders(t *testing.T) {
 	timestamp := time.Date(2023, 10, 10, 12, 0, 0, 0, time.UTC)
 	order := models.Order{
 		Timestamp: timestamp,
+		Symbol:    test_symbol,
 	}
 
 	t.Run("successfully adds user open order", func(t *testing.T) {
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(order.UserId, symbol), redis.Z{
+		mock.ExpectZAdd(CreateUserOpenOrdersKey(order.UserId, order.Symbol), redis.Z{
 			Score:  float64(timestamp.UnixNano()),
 			Member: order.Id.String(),
 		}).SetVal(1)
@@ -298,11 +299,11 @@ func TestRedisRepository_TxModifyUserOpenOrders(t *testing.T) {
 	t.Run("successfully removes user open order", func(t *testing.T) {
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZRem(CreateUserOpenOrdersKey(order.UserId, symbol), order.Id.String()).SetVal(1)
+		mock.ExpectZRem(CreateUserOpenOrdersKey(test_order.UserId, test_symbol), test_order.Id.String()).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
 		err := repo.PerformTx(ctx, func(txid uint) error {
-			return repo.TxModifyUserOpenOrders(ctx, txid, models.Remove, order)
+			return repo.TxModifyUserOpenOrders(ctx, txid, models.Remove, test_order)
 		})
 
 		assert.NoError(t, err)
