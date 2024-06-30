@@ -24,3 +24,4 @@ override.tf.json
 .terraformrc
 terraform.rc
 tfplan
+api_key.txt
