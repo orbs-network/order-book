@@ -18,14 +18,17 @@ func (h *Handler) GetOpenOrders(w http.ResponseWriter, r *http.Request) {
 	// symbol
 	symbolStr := r.URL.Query().Get("symbol")
 	if symbolStr == "" {
-		logctx.Error(ctx, "symbol is missing")
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "symbol parameter is missing")
+		symbolStr = r.URL.Query().Get("pair")
+		if symbolStr == "" {
+			logctx.Error(ctx, "symbol/pair is missing")
+			restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "symbol parameter is missing")
+		}
 		return
 	}
 
 	symbol, err := models.StrToSymbol(symbolStr)
 	if err != nil {
-		logctx.Error(ctx, "symbol is not supported", logger.String("symbol", symbolStr))
+		logctx.Error(ctx, "symbol/pair is not supported", logger.String("symbol", symbolStr))
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "symbol is not supported")
 		return
 	}
