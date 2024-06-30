@@ -22,8 +22,9 @@ func (h *Handler) GetOpenOrders(w http.ResponseWriter, r *http.Request) {
 		if symbolStr == "" {
 			logctx.Error(ctx, "symbol/pair is missing")
 			restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "symbol parameter is missing")
+			return
 		}
-		return
+
 	}
 
 	symbol, err := models.StrToSymbol(symbolStr)
