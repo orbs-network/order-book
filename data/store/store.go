@@ -23,11 +23,10 @@ type OrderBookStore interface {
 	FindOrdersByIds(ctx context.Context, ids []uuid.UUID, onlyOpen bool) ([]models.Order, error)
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
-	GetOpenOrders(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error)
+	GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orders []models.Order, totalOrders int, err error)
 	// ------------------------------
 	// Generic getters
-	//GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]models.Order, error)
-	GetOpenOrderIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
+	GetOpenOrderIds(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]uuid.UUID, error)
 	// ------------------------------
 	// Generic Building blocks with no biz logic in a single tx
 

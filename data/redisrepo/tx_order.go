@@ -157,9 +157,10 @@ func (r *redisRepository) TxModifyUserOpenOrders(ctx context.Context, txid uint,
 		return models.ErrNotFound
 	}
 
+	userOrdersKey := CreateUserOpenOrdersKey(order.UserId, symbol)
 	switch operation {
 	case models.Add:
-		userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
+
 		userOrdersScore := float64(order.Timestamp.UTC().UnixNano())
 		tx.ZAdd(ctx, userOrdersKey, redis.Z{
 			Score:  userOrdersScore,
@@ -167,7 +168,6 @@ func (r *redisRepository) TxModifyUserOpenOrders(ctx context.Context, txid uint,
 		})
 		logctx.Debug(ctx, "ModifyUserOpenOrders add", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
 	case models.Remove:
-		userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
 		tx.ZRem(ctx, userOrdersKey, order.Id.String())
 		logctx.Debug(ctx, "ModifyUserOpenOrders remove", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
 	default:

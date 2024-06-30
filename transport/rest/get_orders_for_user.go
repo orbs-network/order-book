@@ -12,8 +12,25 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func (h *Handler) GetOpenOrdersForUser(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetOpenOrders(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
+	// symbol
+	symbolStr := r.URL.Query().Get("symbol")
+	if symbolStr == "" {
+		logctx.Error(ctx, "symbol is missing")
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "symbol parameter is missing")
+		return
+	}
+
+	symbol, err := models.StrToSymbol(symbolStr)
+	if err != nil {
+		logctx.Error(ctx, "symbol is not supported", logger.String("symbol", symbolStr))
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "symbol is not supported")
+		return
+	}
+
+	// user
 	user := utils.GetUserCtx(ctx)
 	if user == nil {
 		logctx.Error(ctx, "user should be in context")
@@ -23,7 +40,7 @@ func (h *Handler) GetOpenOrdersForUser(w http.ResponseWriter, r *http.Request) {
 
 	logctx.Debug(r.Context(), "user trying to get their open orders", logger.String("userId", user.Id.String()))
 
-	orders, totalOrders, err := h.svc.GetOpenOrdersForUser(r.Context(), user.Id)
+	orders, totalOrders, err := h.svc.GetOpenOrders(r.Context(), user.Id, symbol)
 
 	if err != nil {
 		logctx.Error(r.Context(), "error getting open orders for user", logger.Error(err), logger.String("userId", user.Id.String()))

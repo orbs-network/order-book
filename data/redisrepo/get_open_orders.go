@@ -11,16 +11,16 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-// GetOpenOrders returns all orders (open only) for a given user TODO in Pair, sorted by creation time.
+// GetOpenOrders returns all orders (open only) for a given user in Pair/symbol, sorted by creation time.
 
 // This function is paginated, and returns the total number of orders for the user
-func (r *redisRepository) GetOpenOrders(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+func (r *redisRepository) GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orders []models.Order, totalOrders int, err error) {
 	start, stop := utils.PaginationBounds(ctx)
 
 	var key string
 
 	logctx.Debug(ctx, "getting open orders for user", logger.String("userId", userId.String()))
-	key = CreateUserOpenOrdersKey(userId)
+	key = CreateUserOpenOrdersKey(userId, symbol)
 
 	count, err := r.client.ZCard(ctx, key).Result()
 

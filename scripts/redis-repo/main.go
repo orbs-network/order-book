@@ -307,7 +307,7 @@ func removeOrders() {
 	}
 
 	// NOTE: This ignores pagination
-	orders, _, err := repository.GetOpenOrders(ctx, userId)
+	orders, _, err := repository.GetOpenOrders(ctx, userId, symbol)
 	if err != nil {
 		log.Fatalf("error getting orders: %v", err)
 	}

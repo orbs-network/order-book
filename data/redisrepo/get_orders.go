@@ -10,8 +10,8 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func (r *redisRepository) GetOpenOrderIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
-	userOrdersKey := CreateUserOpenOrdersKey(userId)
+func (r *redisRepository) GetOpenOrderIds(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]uuid.UUID, error) {
+	userOrdersKey := CreateUserOpenOrdersKey(userId, symbol)
 
 	// Fetch all order IDs for the user
 	orderIdStrs, err := r.client.ZRange(ctx, userOrdersKey, 0, -1).Result()

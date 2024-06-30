@@ -35,7 +35,7 @@ func (r *redisRepository) StoreFilledOrders(ctx context.Context, orders []models
 
 func storeFilledOrderTx(ctx context.Context, transaction redis.Pipeliner, order *models.Order) error {
 	// 1. Remove the order from the user's open orders set
-	userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
+	userOrdersKey := CreateUserOpenOrdersKey(order.UserId, symbol)
 	transaction.ZRem(ctx, userOrdersKey, order.Id.String())
 	// 2. Remove the order from the buy/sell prices set for that pair
 	if order.Side == models.BUY {

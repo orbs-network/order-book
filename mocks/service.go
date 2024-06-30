@@ -85,14 +85,14 @@ func (m *MockOrderBookStore) StoreSwap(ctx context.Context, swapId uuid.UUID, fr
 	return nil
 }
 
-func (m *MockOrderBookStore) GetOpenOrders(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+func (m *MockOrderBookStore) GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orders []models.Order, totalOrders int, err error) {
 	if m.Error != nil {
 		return nil, 0, m.Error
 	}
 	return m.Orders, len(m.Orders), nil
 }
 
-func (m *MockOrderBookStore) GetOpenOrderIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error) {
+func (m *MockOrderBookStore) GetOpenOrderIds(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]uuid.UUID, error) {
 	var orderIds []uuid.UUID
 	for _, order := range m.Orders {
 		orderIds = append(orderIds, order.Id)

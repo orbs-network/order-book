@@ -108,7 +108,7 @@ func (h *Handler) initMakerRoutes(getUserByApiKey middleware.GetUserByApiKeyFunc
 	// Get an order by ID
 	getApi.HandleFunc("/order/{orderId}", h.GetOrderById)
 	// Get all open orders for a user
-	getApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOpenOrdersForUser))
+	getApi.HandleFunc("/orders", middleware.PaginationMiddleware(h.GetOpenOrders))
 	// correct way to Get fills using data in swaps
 	getApi.HandleFunc("/fills", h.GetSwapFills)
 	// Get all symbols

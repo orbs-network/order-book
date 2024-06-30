@@ -11,9 +11,9 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
-func (s *Service) GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) (orders []models.Order, totalOrders int, err error) {
+func (s *Service) GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orders []models.Order, totalOrders int, err error) {
 	logctx.Debug(ctx, "getting open orders for user", logger.String("user_id", userId.String()))
-	orders, _, err = s.orderBookStore.GetOpenOrders(ctx, userId)
+	orders, _, err = s.orderBookStore.GetOpenOrders(ctx, userId, symbol)
 
 	if err != nil {
 		logctx.Error(ctx, "error getting open orders for user", logger.Error(err), logger.String("user_id", userId.String()))
