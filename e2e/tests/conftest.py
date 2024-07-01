@@ -32,7 +32,7 @@ def ob_signer(ob_client):
 @pytest.fixture(autouse=True, scope="function")
 def cancel_all_orders(ob_client, ob_signer):
     try:
-        ob_client.cancel_all_orders()
+        ob_client.cancel_all_orders_by_symbol(SYMBOL)
     except Exception:
         print("No orders to cancel")
         pass

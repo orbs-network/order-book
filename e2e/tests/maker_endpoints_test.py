@@ -4,7 +4,7 @@ The tests use the Python SDK to interact with the API.
 A local Orderbook instance is required to run the tests.
 """
 
-PAIR = "MATIC-USDT"
+PAIR = "MATIC-USDC"
 
 import pytest
 from orbs_orderbook import (
