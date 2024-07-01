@@ -121,10 +121,6 @@ func (m *MockOrderBookStore) TxModifyUserOpenOrders(ctx context.Context, txid ui
 	return m.Error
 }
 
-// func (m *MockOrderBookStore) TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
-// 	return m.Error
-// }
-
 func (m *MockOrderBookStore) TxRemoveOrder(ctx context.Context, txid uint, order models.Order) error {
 	return m.Error
 }
