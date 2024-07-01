@@ -20,7 +20,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			ClientOId: clientOId,
 			Price:     price,
 			Size:      size,
-			Symbol:    symbol,
+			Symbol:    test_symbol,
 			Side:      models.BUY,
 			Timestamp: timestamp,
 		}
@@ -42,7 +42,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			Score:  float64(timestamp.UnixNano()),
 			Member: buyOrder.Id.String(),
 		}).SetVal(1)
-		mock.ExpectSetNX(Order2MakerTokenTrackKey(order), -1, 0).SetVal(true)
+		mock.ExpectSetNX(Order2MakerTokenTrackKey(buyOrder), -1, 0).SetVal(true)
 		mock.ExpectTxPipelineExec()
 
 		err := repo.StoreOpenOrder(ctx, buyOrder)
@@ -56,7 +56,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			ClientOId: clientOId,
 			Price:     price,
 			Size:      size,
-			Symbol:    symbol,
+			Symbol:    test_symbol,
 			Side:      models.SELL,
 			Timestamp: timestamp,
 		}
@@ -79,7 +79,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			Score:  float64(timestamp.UnixNano()),
 			Member: sellOrder.Id.String(),
 		}).SetVal(1)
-		mock.ExpectSetNX(Order2MakerTokenTrackKey(order), -1, 0).SetVal(true)
+		mock.ExpectSetNX(Order2MakerTokenTrackKey(sellOrder), -1, 0).SetVal(true)
 		mock.ExpectTxPipelineExec()
 
 		err := repo.StoreOpenOrder(ctx, sellOrder)
@@ -96,20 +96,20 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 		}
 
 		mock.ExpectTxPipeline()
-		mock.ExpectHSet(CreateOrderIDKey(order.Id), order.OrderToMap()).SetErr(assert.AnError)
-		mock.ExpectSet(CreateClientOIDKey(order.ClientOId), order.Id.String(), 0).SetVal("OK")
-		mock.ExpectZAdd(CreateSellSidePricesKey(order.Symbol), redis.Z{
+		mock.ExpectHSet(CreateOrderIDKey(test_order.Id), test_order.OrderToMap()).SetErr(assert.AnError)
+		mock.ExpectSet(CreateClientOIDKey(test_order.ClientOId), test_order.Id.String(), 0).SetVal("OK")
+		mock.ExpectZAdd(CreateSellSidePricesKey(test_order.Symbol), redis.Z{
 			Score:  10.0016969392,
-			Member: order.Id.String(),
+			Member: test_order.Id.String(),
 		}).SetVal(1)
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(order.UserId), redis.Z{
-			Score:  float64(order.Timestamp.UnixNano()),
-			Member: order.Id.String(),
+		mock.ExpectZAdd(CreateUserOpenOrdersKey(test_order.UserId), redis.Z{
+			Score:  float64(test_order.Timestamp.UnixNano()),
+			Member: test_order.Id.String(),
 		}).SetErr(assert.AnError)
-		mock.ExpectExists(Order2MakerTokenTrackKey(order)).SetVal(0)
-		mock.ExpectSetNX(Order2MakerTokenTrackKey(order), -1, 0).SetVal(true)
+		mock.ExpectExists(Order2MakerTokenTrackKey(test_order)).SetVal(0)
+		mock.ExpectSetNX(Order2MakerTokenTrackKey(test_order), -1, 0).SetVal(true)
 
-		err := repo.StoreOpenOrder(ctx, order)
+		err := repo.StoreOpenOrder(ctx, test_order)
 
 		assert.ErrorContains(t, err, "PerformTx txEnd commit failed", "should return error")
 	})

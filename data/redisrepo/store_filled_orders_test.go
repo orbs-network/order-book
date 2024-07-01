@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-redis/redismock/v9"
 	"github.com/orbs-network/order-book/models"
-	"github.com/redis/go-redis/v9"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +19,7 @@ func TestRedisRepository_StoreFilledOrders(t *testing.T) {
 			ClientOId:   clientOId,
 			Price:       price,
 			Size:        size,
-			Symbol:      symbol,
+			Symbol:      test_symbol,
 			Side:        models.BUY,
 			Timestamp:   timestamp,
 			SizePending: decimal.Zero,
@@ -36,10 +35,6 @@ func TestRedisRepository_StoreFilledOrders(t *testing.T) {
 
 		mock.ExpectTxPipeline()
 		mock.ExpectZRem(CreateUserOpenOrdersKey(buyOrder.UserId), buyOrder.Id.String()).SetVal(1)
-		mock.ExpectZAdd(CreateUserFilledOrdersKey(buyOrder.UserId), redis.Z{
-			Score:  float64(timestamp.UnixNano()),
-			Member: buyOrder.Id.String(),
-		}).SetVal(1)
 		mock.ExpectZRem(CreateBuySidePricesKey(buyOrder.Symbol), buyOrder.Id.String()).SetVal(1)
 		mock.ExpectHSet(CreateOrderIDKey(buyOrder.Id), buyOrder.OrderToMap()).SetVal(1)
 		mock.ExpectTxPipelineExec()
@@ -55,7 +50,7 @@ func TestRedisRepository_StoreFilledOrders(t *testing.T) {
 			ClientOId:   clientOId,
 			Price:       price,
 			Size:        size,
-			Symbol:      symbol,
+			Symbol:      test_symbol,
 			Side:        models.SELL,
 			Timestamp:   timestamp,
 			SizePending: decimal.Zero,
@@ -71,10 +66,6 @@ func TestRedisRepository_StoreFilledOrders(t *testing.T) {
 
 		mock.ExpectTxPipeline()
 		mock.ExpectZRem(CreateUserOpenOrdersKey(sellOrder.UserId), sellOrder.Id.String()).SetVal(1)
-		mock.ExpectZAdd(CreateUserFilledOrdersKey(sellOrder.UserId), redis.Z{
-			Score:  float64(timestamp.UnixNano()),
-			Member: sellOrder.Id.String(),
-		}).SetVal(1)
 		mock.ExpectZRem(CreateSellSidePricesKey(sellOrder.Symbol), sellOrder.Id.String()).SetVal(1)
 		mock.ExpectHSet(CreateOrderIDKey(sellOrder.Id), sellOrder.OrderToMap()).SetVal(1)
 		mock.ExpectTxPipelineExec()

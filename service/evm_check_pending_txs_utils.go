@@ -86,12 +86,6 @@ func (e *EvmClient) ResolveSwap(ctx context.Context, swap models.Swap, isSuccess
 
 			// close fully filled orders
 			if isFullyFilled {
-				// add to user:filledOrders
-				if err := e.orderBookStore.TxModifyUserFilledOrders(ctx, txid, models.Add, order); err != nil {
-					logctx.Error(ctx, "ResolveSwap:true Failed adding order to user filled orders", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()), logger.Error(err))
-					return err
-				}
-				// remove from price list (if still there and not been cancelled since pending)
 				// remove from user:openOrders
 				if err := e.orderBookStore.TxCloseOrder(ctx, txid, order); err != nil {
 					logctx.Error(ctx, "ResolveSwap:true Failed CLOSE filled order", logger.Error(err), logger.String("orderId", order.Id.String()))

@@ -157,9 +157,9 @@ func (r *redisRepository) TxModifyUserOpenOrders(ctx context.Context, txid uint,
 		return models.ErrNotFound
 	}
 
+	userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
 	switch operation {
 	case models.Add:
-		userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
 		userOrdersScore := float64(order.Timestamp.UTC().UnixNano())
 		tx.ZAdd(ctx, userOrdersKey, redis.Z{
 			Score:  userOrdersScore,
@@ -167,39 +167,10 @@ func (r *redisRepository) TxModifyUserOpenOrders(ctx context.Context, txid uint,
 		})
 		logctx.Debug(ctx, "ModifyUserOpenOrders add", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
 	case models.Remove:
-		userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
 		tx.ZRem(ctx, userOrdersKey, order.Id.String())
 		logctx.Debug(ctx, "ModifyUserOpenOrders remove", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
 	default:
 		logctx.Error(ctx, "ModifyUserOpenOrders unsupported operation", logger.Int("operation", int(operation)))
-		return models.ErrUnsupportedOperation
-	}
-	return nil
-}
-
-// This should be used for all write interactions with the `user:<userId>:filledOrders` sorted set (used to store partial-filled and cancelled OR fully filled orders for each user)
-func (r *redisRepository) TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error {
-	var tx redis.Pipeliner
-	var ok bool
-	if tx, ok = r.txMap[txid]; !ok {
-		logctx.Error(ctx, "TxModifyUserFilledOrders txid not found", logger.Int("txid", int(txid)))
-		return models.ErrNotFound
-	}
-
-	userFilledOrdersKey := CreateUserFilledOrdersKey(order.UserId)
-	switch operation {
-	case models.Add:
-		userFilledOrdersScore := float64(order.Timestamp.UTC().UnixNano())
-		tx.ZAdd(ctx, userFilledOrdersKey, redis.Z{
-			Score:  userFilledOrdersScore,
-			Member: order.Id.String(),
-		})
-		logctx.Debug(ctx, "ModifyUserFilledOrders add", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
-	case models.Remove:
-		tx.ZRem(ctx, userFilledOrdersKey, order.Id.String())
-		logctx.Debug(ctx, "ModifyUserFilledOrders remove", logger.String("orderId", order.Id.String()), logger.String("userId", order.UserId.String()))
-	default:
-		logctx.Error(ctx, "ModifyUserFilledOrders unsupported operation", logger.Int("operation", int(operation)))
 		return models.ErrUnsupportedOperation
 	}
 	return nil

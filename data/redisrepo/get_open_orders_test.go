@@ -21,6 +21,9 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 		Side:   models.BUY,
 	}
 
+	symbol, err := models.StrToSymbol("MATIC-USDC")
+	assert.NoError(t, err)
+
 	t.Run("should get orders for user", func(t *testing.T) {
 
 		db, mock := redismock.NewClientMock()
@@ -37,7 +40,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 		mock.ExpectZRange(key, int64(0), int64(10)).SetVal([]string{"00000000-0000-0000-0000-000000000001"})
 		mock.ExpectHGetAll(CreateOrderIDKey(order.Id)).SetVal(order.OrderToMap())
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
+		orders, totalOrders, err := repo.GetOpenOrders(ctx, userId, symbol)
 
 		assert.Equal(t, orders[0].Id, order.Id)
 		assert.Equal(t, orders[0].UserId, order.UserId)
@@ -60,7 +63,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		mock.ExpectZCard(key).SetErr(assert.AnError)
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
+		orders, totalOrders, err := repo.GetOpenOrders(ctx, userId, symbol)
 
 		assert.Equal(t, orders, []models.Order{})
 		assert.Equal(t, totalOrders, 0)
@@ -82,7 +85,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetErr(assert.AnError)
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
+		orders, totalOrders, err := repo.GetOpenOrders(ctx, userId, symbol)
 
 		assert.Equal(t, orders, []models.Order{})
 		assert.Equal(t, totalOrders, 0)
@@ -104,7 +107,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetVal([]string{"bad-uuid"})
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
+		orders, totalOrders, err := repo.GetOpenOrders(ctx, userId, symbol)
 
 		assert.Equal(t, orders, []models.Order{})
 		assert.Equal(t, totalOrders, 0)
@@ -127,7 +130,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 		mock.ExpectZRange(key, int64(0), int64(10)).SetVal([]string{"00000000-0000-0000-0000-000000000001"})
 		mock.ExpectHGetAll(CreateOrderIDKey(order.Id)).SetErr(assert.AnError)
 
-		orders, totalOrders, err := repo.GetOrdersForUser(ctx, userId, false)
+		orders, totalOrders, err := repo.GetOpenOrders(ctx, userId, symbol)
 
 		assert.Equal(t, orders, []models.Order{})
 		assert.Equal(t, totalOrders, 0)

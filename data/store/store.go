@@ -23,11 +23,10 @@ type OrderBookStore interface {
 	FindOrdersByIds(ctx context.Context, ids []uuid.UUID, onlyOpen bool) ([]models.Order, error)
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
-	GetOrdersForUser(ctx context.Context, userId uuid.UUID, isFilledOrders bool) (orders []models.Order, totalOrders int, err error)
+	GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orders []models.Order, totalOrders int, err error)
 	// ------------------------------
 	// Generic getters
-	//GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]models.Order, error)
-	GetOpenOrderIds(ctx context.Context, userId uuid.UUID) ([]uuid.UUID, error)
+	GetOpenOrderIds(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]uuid.UUID, error)
 	// ------------------------------
 	// Generic Building blocks with no biz logic in a single tx
 
@@ -37,7 +36,6 @@ type OrderBookStore interface {
 	TxModifyPrices(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
 	TxModifyClientOId(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
 	TxModifyUserOpenOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
-	TxModifyUserFilledOrders(ctx context.Context, txid uint, operation models.Operation, order models.Order) error
 	TxCloseOrder(ctx context.Context, txid uint, order models.Order) error
 	TxRemoveOrder(ctx context.Context, txid uint, order models.Order) error
 	// ------------------------------

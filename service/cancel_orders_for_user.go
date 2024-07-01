@@ -11,7 +11,7 @@ import (
 
 func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orderIds []uuid.UUID, err error) {
 
-	ids, err := s.orderBookStore.GetOpenOrderIds(ctx, userId)
+	ids, err := s.orderBookStore.GetOpenOrderIds(ctx, userId, symbol)
 	if err != nil {
 		logctx.Debug(ctx, "no orders found for user", logger.String("userId", userId.String()))
 		return []uuid.UUID{}, err
