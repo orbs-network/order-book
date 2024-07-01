@@ -282,7 +282,7 @@ func TestRedisRepository_TxModifyUserOpenOrders(t *testing.T) {
 	t.Run("successfully adds user open order", func(t *testing.T) {
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(order.UserId, order.Symbol), redis.Z{
+		mock.ExpectZAdd(CreateUserOpenOrdersKey(order.UserId), redis.Z{
 			Score:  float64(timestamp.UnixNano()),
 			Member: order.Id.String(),
 		}).SetVal(1)
@@ -299,7 +299,7 @@ func TestRedisRepository_TxModifyUserOpenOrders(t *testing.T) {
 	t.Run("successfully removes user open order", func(t *testing.T) {
 
 		mock.ExpectTxPipeline()
-		mock.ExpectZRem(CreateUserOpenOrdersKey(test_order.UserId, test_symbol), test_order.Id.String()).SetVal(1)
+		mock.ExpectZRem(CreateUserOpenOrdersKey(test_order.UserId), test_order.Id.String()).SetVal(1)
 		mock.ExpectTxPipelineExec()
 
 		err := repo.PerformTx(ctx, func(txid uint) error {

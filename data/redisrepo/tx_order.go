@@ -157,7 +157,7 @@ func (r *redisRepository) TxModifyUserOpenOrders(ctx context.Context, txid uint,
 		return models.ErrNotFound
 	}
 
-	userOrdersKey := CreateUserOpenOrdersKey(order.UserId, order.Symbol)
+	userOrdersKey := CreateUserOpenOrdersKey(order.UserId)
 	switch operation {
 	case models.Add:
 		userOrdersScore := float64(order.Timestamp.UTC().UnixNano())

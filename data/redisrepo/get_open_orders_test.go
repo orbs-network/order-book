@@ -34,7 +34,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOpenOrdersKey(userId, symbol)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetVal([]string{"00000000-0000-0000-0000-000000000001"})
@@ -59,7 +59,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOpenOrdersKey(userId, symbol)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetErr(assert.AnError)
 
@@ -80,7 +80,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOpenOrdersKey(userId, symbol)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetErr(assert.AnError)
@@ -102,7 +102,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOpenOrdersKey(userId, symbol)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetVal([]string{"bad-uuid"})
@@ -124,7 +124,7 @@ func TestRedisRepository_GetOrdersForUser(t *testing.T) {
 
 		ctx := mocks.AddPaginationToCtx(1, 10)
 
-		key := CreateUserOpenOrdersKey(userId, symbol)
+		key := CreateUserOpenOrdersKey(userId)
 
 		mock.ExpectZCard(key).SetVal(1)
 		mock.ExpectZRange(key, int64(0), int64(10)).SetVal([]string{"00000000-0000-0000-0000-000000000001"})

@@ -20,7 +20,7 @@ func (r *redisRepository) GetOpenOrders(ctx context.Context, userId uuid.UUID, s
 	var key string
 
 	logctx.Debug(ctx, "getting open orders for user", logger.String("userId", userId.String()))
-	key = CreateUserOpenOrdersKey(userId, symbol)
+	key = CreateUserOpenOrdersKey(userId)
 
 	count, err := r.client.ZCard(ctx, key).Result()
 
@@ -56,13 +56,22 @@ func (r *redisRepository) GetOpenOrders(ctx context.Context, userId uuid.UUID, s
 			end = len(orderIds)
 		}
 
-		o, err := r.FindOrdersByIds(ctx, orderIds[i:end], false)
+		batch, err := r.FindOrdersByIds(ctx, orderIds[i:end], false)
 		if err != nil {
 			logctx.Error(ctx, "failed to find orders by IDs", logger.String("userId", userId.String()), logger.Error(err))
 			return []models.Order{}, 0, fmt.Errorf("failed to find orders by IDs: %v", err)
 		}
 
-		ordersSlice = append(ordersSlice, o...)
+		if symbol == "" {
+			ordersSlice = append(ordersSlice, batch...)
+		} else {
+			// apply symbol filter if needed
+			for _, o := range batch {
+				if o.Symbol == symbol {
+					ordersSlice = append(ordersSlice, o)
+				}
+			}
+		}
 	}
 
 	logctx.Debug(ctx, "got orders for user", logger.String("userId", userId.String()), logger.Int("count", len(orders)))

@@ -38,7 +38,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			Score:  10.0016969392,
 			Member: buyOrder.Id.String(),
 		}).SetVal(1)
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(buyOrder.UserId, buyOrder.Symbol), redis.Z{
+		mock.ExpectZAdd(CreateUserOpenOrdersKey(buyOrder.UserId), redis.Z{
 			Score:  float64(timestamp.UnixNano()),
 			Member: buyOrder.Id.String(),
 		}).SetVal(1)
@@ -75,7 +75,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			Score:  10.0016969392,
 			Member: sellOrder.Id.String(),
 		}).SetVal(1)
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(sellOrder.UserId, sellOrder.Symbol), redis.Z{
+		mock.ExpectZAdd(CreateUserOpenOrdersKey(sellOrder.UserId), redis.Z{
 			Score:  float64(timestamp.UnixNano()),
 			Member: sellOrder.Id.String(),
 		}).SetVal(1)
@@ -102,7 +102,7 @@ func TestRedisRepository_StoreOpenOrder(t *testing.T) {
 			Score:  10.0016969392,
 			Member: test_order.Id.String(),
 		}).SetVal(1)
-		mock.ExpectZAdd(CreateUserOpenOrdersKey(test_order.UserId, test_order.Symbol), redis.Z{
+		mock.ExpectZAdd(CreateUserOpenOrdersKey(test_order.UserId), redis.Z{
 			Score:  float64(test_order.Timestamp.UnixNano()),
 			Member: test_order.Id.String(),
 		}).SetErr(assert.AnError)

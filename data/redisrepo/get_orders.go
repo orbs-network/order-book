@@ -10,8 +10,9 @@ import (
 	"github.com/orbs-network/order-book/utils/logger/logctx"
 )
 
+// returns all open IDs if symbol is empty
 func (r *redisRepository) GetOpenOrderIds(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]uuid.UUID, error) {
-	userOrdersKey := CreateUserOpenOrdersKey(userId, symbol)
+	userOrdersKey := CreateUserOpenOrdersKey(userId)
 
 	// Fetch all order IDs for the user
 	orderIdStrs, err := r.client.ZRange(ctx, userOrdersKey, 0, -1).Result()

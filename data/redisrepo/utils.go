@@ -12,9 +12,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// CreateUserOpenOrdersKey creates a Redis key for storing the user's open orders
-func CreateUserOpenOrdersKey(userId uuid.UUID, symbol models.Symbol) string {
-	return fmt.Sprintf("userId:%s:%s:openOrders", userId, symbol.String())
+func CreateUserOpenOrdersKey(userId uuid.UUID) string {
+	return fmt.Sprintf("userId:%s:openOrders", userId)
 }
 
 // CreateOrderIDKey creates a Redis key for a single order ID
