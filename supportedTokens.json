@@ -18,5 +18,25 @@
         "desc": "erc-20 address of WMATIC wrapped",
         "address": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
         "decimals": 18
+    },
+    "ETH": {
+        "desc": "Aave Polygon WETH",
+        "address": "0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8",
+        "decimals": 18
+    },
+    "QUICK": {
+        "desc": "Quickswap token",
+        "address": "0x831753DD7087CaC61aB5644b308642cc1c33Dc13",
+        "decimals": 18
+    },
+    "DAI": {
+        "desc": "DAI token",
+        "address": "0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE",
+        "decimals": 18
+    },
+    "BTC": {
+        "desc": "WBTC token",
+        "address": "0x078f358208685046a11C85e8ad32895DED33A249",
+        "decimals": 8
     }
 }
