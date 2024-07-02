@@ -7,8 +7,18 @@ type Symbol string
 // TODO: not final list of symbols
 var (
 	symbolsMap = map[string]Symbol{
-		"MATIC-USDC": "MATIC-USDC",
-		"MATIC-USDT": "MATIC-USDT",
+		"MATIC-USDC":  "MATIC-USDC",
+		"USDCE-USDT":  "USDCE-USDT",
+		"ETH-BTC":     "ETH-BTC",
+		"ETH-USDCE":   "ETH-USDCE",
+		"MATIC-ETH":   "MATIC-ETH",
+		"MATIC-USDCE": "MATIC-USDCE",
+		"ETH-USDC":    "ETH-USDC",
+		"USDCE-USDC":  "USDCE-USDC",
+		"ETH-USDT":    "ETH-USDT",
+		"DAI-USDCE":   "DAI-USDCE",
+		"MATIC-USDT":  "MATIC-USDT",
+		"BTC-USDCE":   "BTC-USDCE",
 	}
 
 	ErrInvalidSymbol = errors.New("invalid symbol")
