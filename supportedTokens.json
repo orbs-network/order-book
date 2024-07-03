@@ -20,8 +20,8 @@
         "decimals": 18
     },
     "ETH": {
-        "desc": "Aave Polygon WETH",
-        "address": "0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8",
+        "desc": "Polygon Wrapped Ether",
+        "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
         "decimals": 18
     },
     "QUICK": {
@@ -30,13 +30,13 @@
         "decimals": 18
     },
     "DAI": {
-        "desc": "DAI token",
-        "address": "0x82E64f49Ed5EC1bC6e43DAD4FC8Af9bb3A2312EE",
+        "desc": "(PoS) Dai Stablecoin",
+        "address": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
         "decimals": 18
     },
     "BTC": {
-        "desc": "WBTC token",
-        "address": "0x078f358208685046a11C85e8ad32895DED33A249",
+        "desc": "(PoS) Wrapped BTC",
+        "address": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
         "decimals": 8
     }
 }
