@@ -139,7 +139,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		return nil
 	}
 
-	logctx.Debug(ctx, "QuoteReq", logger.String("InToken", req.InToken), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("MinOutAmount", req.MinOutAmount))
+	logctx.Debug(ctx, "QuoteReq", logger.String("InToken", req.InToken), logger.String("InTokenAddress", req.InTokenAddress), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("OutTokenAddress", req.OutTokenAddress), logger.String("MinOutAmount", req.MinOutAmount))
 
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
