@@ -48,7 +48,12 @@ func NewPairMngr() *PairMngr {
 	symbolPairs := GetAllSymbols()
 	for _, sp := range symbolPairs {
 		arr := strings.Split(sp.String(), "-")
-		m.aToken2PairArr[arr[0]] = []*Pair{NewPair(arr[0], arr[1])}
+		pair := NewPair(arr[0], arr[1])
+		if len(m.aToken2PairArr[arr[0]]) == 0 {
+			m.aToken2PairArr[arr[0]] = []*Pair{}
+		}
+		m.aToken2PairArr[arr[0]] = append(m.aToken2PairArr[arr[0]], pair)
+		fmt.Println("aToken2PairArr pair added: " + sp)
 	}
 	return &m
 }
