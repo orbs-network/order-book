@@ -210,7 +210,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		Fragments: []Fragment{},
 	}
 
-	logctx.Debug(ctx, "QuoteRes OK", logger.String("OutAmount", res.OutAmount))
+	logctx.Debug(ctx, "QuoteRes OK", logger.String("OutAmount", res.OutAmount), logger.String("InToken", req.InToken), logger.String("outToken", req.OutToken))
 
 	if isSwap {
 		// lock liquidity
@@ -225,7 +225,6 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		signedOrders := []abi.SignedOrder{}
 
 		for i := 0; i < len(swapData.Fragments); i++ {
-
 			// Maker In Amount is Taker's OutAmount!
 
 			// conver In/Out amount to token decimals
