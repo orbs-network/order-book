@@ -139,7 +139,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		return nil
 	}
 
-	logctx.Debug(ctx, "QuoteReq", logger.String("InToken", req.InToken), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("MinOutAmount", req.MinOutAmount))
+	logctx.Debug(ctx, "QuoteReq", logger.String("InToken", req.InToken), logger.String("InTokenAddress", req.InTokenAddress), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("OutTokenAddress", req.OutTokenAddress), logger.String("MinOutAmount", req.MinOutAmount))
 
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
@@ -210,7 +210,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		Fragments: []Fragment{},
 	}
 
-	logctx.Debug(ctx, "QuoteRes OK", logger.String("OutAmount", res.OutAmount))
+	logctx.Debug(ctx, "QuoteRes OK", logger.String("OutAmount", res.OutAmount), logger.String("InToken", req.InToken), logger.String("outToken", req.OutToken))
 
 	if isSwap {
 		// lock liquidity
@@ -225,7 +225,6 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		signedOrders := []abi.SignedOrder{}
 
 		for i := 0; i < len(swapData.Fragments); i++ {
-
 			// Maker In Amount is Taker's OutAmount!
 
 			// conver In/Out amount to token decimals
