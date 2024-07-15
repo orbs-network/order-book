@@ -131,20 +131,22 @@ func Signature2Bytes(sig string) []byte {
 
 func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) *QuoteRes {
 	var req QuoteReq
+	logFields := []logger.Field{logger.Bool("isSwap", isSwap), logger.String("InToken", req.InToken), logger.String("InTokenAddress", req.InTokenAddress), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("OutTokenAddress", req.OutTokenAddress), logger.String("MinOutAmount", req.MinOutAmount)}
+
 	ctx := r.Context()
+	logctx.Info(ctx, "handleQuote start", logFields...)
+
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		logctx.Warn(ctx, "handleQuote Failed to decode json", logger.Error(err))
+		logctx.Warn(ctx, "handleQuote Failed to decode json", append(logFields, logger.Error(err))...)
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
 		return nil
 	}
 
-	logctx.Debug(ctx, "QuoteReq", logger.String("InToken", req.InToken), logger.String("InTokenAddress", req.InTokenAddress), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("OutTokenAddress", req.OutTokenAddress), logger.String("MinOutAmount", req.MinOutAmount))
-
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
 	if err != nil {
-		logctx.Warn(ctx, "handleQuote Failed to resolveQuoteTokenNames", logger.Error(err))
+		logctx.Warn(ctx, "handleQuote Failed to resolveQuoteTokenNames", append(logFields, logger.Error(err))...)
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InTokenAddress", req.InTokenAddress), logger.String("OutTokenAddress", req.OutTokenAddress))
 		return nil
 	}
@@ -152,7 +154,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	inAmount, err := h.convertFromTokenDec(ctx, req.InToken, req.InAmount)
 
 	if err != nil {
-		logctx.Warn(ctx, "handleQuote Failed to convertFromTokenDec", logger.Error(err))
+		logctx.Warn(ctx, "handleQuote Failed to convertFromTokenDec", append(logFields, logger.Error(err))...)
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InToken", req.InToken), logger.String("outToken", req.OutToken), logger.Error(models.ErrTokenNotsupported))
 		return nil
 	}
@@ -169,6 +171,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 
 	pair := h.pairMngr.Resolve(req.InToken, req.OutToken)
+
 	if pair == nil {
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "no suppoerted pair was found for tokens", logger.String("InToken", req.InToken), logger.String("OutToken", req.OutToken))
 		return nil
@@ -213,14 +216,15 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	logctx.Debug(ctx, "QuoteRes OK", logger.String("OutAmount", res.OutAmount), logger.String("InToken", req.InToken), logger.String("outToken", req.OutToken))
 
 	if isSwap {
+		logctx.Info(ctx, "BeginSwap", logFields...)
 		// lock liquidity
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
 		res.SwapId = swapData.SwapId.String()
-		logctx.Debug(ctx, "BeginSwap", logger.String("swapId", res.SwapId))
 		if err != nil {
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return nil
 		}
+		logctx.Info(ctx, "BeginSwap OK", append(logFields, logger.String("swapId", res.SwapId))...)
 
 		signedOrders := []abi.SignedOrder{}
 
@@ -271,6 +275,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 
 	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res)
+	logctx.Info(ctx, "handleQuote end", logFields...)
 	return &res
 }
 
