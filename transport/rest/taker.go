@@ -333,7 +333,6 @@ func (h *Handler) swapStarted(w http.ResponseWriter, r *http.Request) {
 		Status:     http.StatusOK,
 	}
 	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res, logger.String("swapId started", swapId.String()))
-
 }
 
 // POST
