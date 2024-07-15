@@ -117,7 +117,7 @@ func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash stri
 		logctx.Error(ctx, "StoreNewPendingSwap failed", logger.Error(err))
 	}
 
-	logctx.Info(ctx, "SwapStarted", logger.String("symbol", swap.Symbol), logger.String("side", swap.Side), logger.String("swapId", swapId.String()))
+	logctx.Info(ctx, "swapStarted", logger.String("symbol", swap.Symbol), logger.String("side", swap.Side), logger.String("swapId", swapId.String()))
 	return err
 }
 

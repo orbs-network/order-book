@@ -165,7 +165,8 @@ func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol
 }
 
 func (m *MockOrderBookStore) StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) (*models.Swap, error) {
-	return nil, m.Error
+	swap := models.NewSwap(m.Order.Symbol, m.Order.Side, m.Frags)
+	return swap, m.Error
 }
 
 func (m *MockOrderBookStore) ResolveSwap(ctx context.Context, swap models.Swap) error {
