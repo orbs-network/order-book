@@ -131,17 +131,16 @@ func Signature2Bytes(sig string) []byte {
 
 func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap bool) *QuoteRes {
 	var req QuoteReq
-	logFields := []logger.Field{logger.Bool("isSwap", isSwap), logger.String("InToken", req.InToken), logger.String("InTokenAddress", req.InTokenAddress), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("OutTokenAddress", req.OutTokenAddress), logger.String("MinOutAmount", req.MinOutAmount)}
 
 	ctx := r.Context()
-	logctx.Info(ctx, "handleQuote start", logFields...)
-
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		logctx.Warn(ctx, "handleQuote Failed to decode json", append(logFields, logger.Error(err))...)
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
+		logctx.Warn(ctx, "handleQuote Failed to decode json", logger.Error(err))
 		return nil
 	}
+
+	logFields := []logger.Field{logger.Bool("isSwap", isSwap), logger.String("InToken", req.InToken), logger.String("InTokenAddress", req.InTokenAddress), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("OutTokenAddress", req.OutTokenAddress), logger.String("MinOutAmount", req.MinOutAmount)}
+	logctx.Info(ctx, "handleQuote start", logFields...)
 
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
