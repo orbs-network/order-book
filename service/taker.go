@@ -101,7 +101,7 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 		return models.BeginSwapRes{}, err
 	}
 
-	logctx.Info(ctx, "BeginSwap end ok", logger.String("swapId", string(res.SwapId.String())))
+	logctx.Info(ctx, "BeginSwap end ok", logger.String("symbol", res.Orders[0].Symbol.String()), logger.String("side", string(res.Orders[0].Side)))
 
 	// add oredebook signature on the buffer HERE if needed
 	return res, nil
