@@ -11,22 +11,22 @@ import (
 )
 
 // StoreNewPendingSwap stores a new pending swap in order for its status (pending/complete) to be checked later
-func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.SwapTx) error {
+func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.SwapTx) (*models.Swap, error) {
 	// confirm swapID is valid
 	swap, err := r.GetSwap(ctx, p.SwapId, true)
 	if err != nil {
 		if err == models.ErrNotFound {
 			logctx.Warn(ctx, "no swap found by that ID", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
-			return err
+			return nil, err
 		}
 		logctx.Error(ctx, "failed to get swap", logger.Error(err), logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
-		return fmt.Errorf("failed to get swap unexpectedly: %s", err)
+		return nil, fmt.Errorf("failed to get swap unexpectedly: %s", err)
 	}
 
 	// protect re-entry
 	if swap.IsStarted() {
 		logctx.Error(ctx, "swap is already started", logger.Error(err), logger.String("startedSwapId", p.SwapId.String()))
-		return fmt.Errorf("swap is already started: %s", err)
+		return nil, fmt.Errorf("swap is already started: %s", err)
 	}
 
 	// update swapId:started field
@@ -36,9 +36,9 @@ func (r *redisRepository) StoreNewPendingSwap(ctx context.Context, p models.Swap
 	err = r.saveSwap(ctx, p.SwapId, *swap, false)
 	if err != nil {
 		logctx.Error(ctx, "failed to update swap started time", logger.Error(err), logger.String("swapId", p.SwapId.String()))
-		return fmt.Errorf("failed to update swap started time: %s", err)
+		return nil, fmt.Errorf("failed to update swap started time: %s", err)
 	}
 
 	logctx.Debug(ctx, "store pending swap", logger.String("swapId", p.SwapId.String()), logger.String("txHash", p.TxHash))
-	return nil
+	return swap, nil
 }

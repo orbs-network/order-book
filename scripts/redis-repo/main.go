@@ -236,7 +236,7 @@ func createSwaps() {
 
 	ctx := context.Background()
 
-	err = repository.StoreSwap(ctx, swapId, fillOrders)
+	err = repository.StoreSwap(ctx, swapId, models.Symbol("MATIC_USDC"), models.BUY, fillOrders)
 	if err != nil {
 		log.Fatalf("error storing swap: %v", err)
 	}
@@ -419,7 +419,7 @@ func storePendingSwap() {
 	}
 
 	for i := 0; i < 1000; i++ {
-		err := repository.StoreNewPendingSwap(ctx, p)
+		_, err := repository.StoreNewPendingSwap(ctx, p)
 		if err != nil {
 			log.Fatalf("error storing pending swap: %v", err)
 		}

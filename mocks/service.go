@@ -77,7 +77,7 @@ func (m *MockOrderBookStore) GetMarketDepth(ctx context.Context, symbol models.S
 	return m.MarketDepth, nil
 }
 
-func (m *MockOrderBookStore) StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error {
+func (m *MockOrderBookStore) StoreSwap(ctx context.Context, swapId uuid.UUID, symbol models.Symbol, side models.Side, frags []models.OrderFrag) error {
 	if m.Error != nil {
 		return m.Error
 	}
@@ -144,7 +144,7 @@ func (m *MockOrderBookStore) GetSwap(ctx context.Context, swapId uuid.UUID, open
 	if m.Error != nil {
 		return nil, m.Error
 	}
-	return models.NewSwap(m.Frags), nil
+	return models.NewSwap(models.Symbol("MATIC_USDC"), models.BUY, m.Frags), nil
 }
 
 func (m *MockOrderBookStore) RemoveSwap(ctx context.Context, swapId uuid.UUID) error {
@@ -164,8 +164,9 @@ func (m *MockOrderBookStore) GetMaxBid(ctx context.Context, symbol models.Symbol
 	return m.BidOrderIter
 }
 
-func (m *MockOrderBookStore) StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) error {
-	return m.Error
+func (m *MockOrderBookStore) StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) (*models.Swap, error) {
+	swap := models.NewSwap(m.Order.Symbol, m.Order.Side, m.Frags)
+	return swap, m.Error
 }
 
 func (m *MockOrderBookStore) ResolveSwap(ctx context.Context, swap models.Swap) error {

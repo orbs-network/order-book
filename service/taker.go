@@ -94,27 +94,30 @@ func (s *Service) BeginSwap(ctx context.Context, data models.QuoteRes) (models.B
 		logctx.Error(ctx, "BeginSwap Failed store:PerformTX", logger.Error(err))
 	}
 
-	err = s.orderBookStore.StoreSwap(ctx, swapId, res.Fragments)
+	// resolve symbol and side from orders[0]
+	err = s.orderBookStore.StoreSwap(ctx, swapId, res.Orders[0].Symbol, res.Orders[0].Side, res.Fragments)
 	if err != nil {
 		logctx.Error(ctx, "StoreSwap Failed", logger.Error(err))
 		return models.BeginSwapRes{}, err
 	}
 
-	logctx.Info(ctx, "BeginSwap end ok", logger.String("swapId", string(res.SwapId.String())))
+	logctx.Info(ctx, "BeginSwap end ok", logger.String("symbol", res.Orders[0].Symbol.String()), logger.String("side", string(res.Orders[0].Side)))
 
 	// add oredebook signature on the buffer HERE if needed
 	return res, nil
 }
 
 func (s *Service) SwapStarted(ctx context.Context, swapId uuid.UUID, txHash string) error {
-	logctx.Info(ctx, "SwapStarted", logger.String("swapId", swapId.String()))
-	err := s.orderBookStore.StoreNewPendingSwap(ctx, models.SwapTx{
+
+	swap, err := s.orderBookStore.StoreNewPendingSwap(ctx, models.SwapTx{
 		SwapId: swapId,
 		TxHash: txHash,
 	})
 	if err != nil {
 		logctx.Error(ctx, "StoreNewPendingSwap failed", logger.Error(err))
 	}
+
+	logctx.Info(ctx, "swapStarted", logger.String("symbol", swap.Symbol), logger.String("side", swap.Side), logger.String("swapId", swapId.String()))
 	return err
 }
 

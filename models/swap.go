@@ -51,6 +51,8 @@ func MarshalOrderFrags(orderFrags []OrderFrag) ([]byte, error) {
 
 type Swap struct {
 	Id        uuid.UUID   `json:"id"`
+	Symbol    string      `json:"symbol"`
+	Side      string      `json:"side"`
 	Created   time.Time   `json:"created"`
 	Started   time.Time   `json:"started"`
 	Mined     time.Time   `json:"mined"`
@@ -60,10 +62,12 @@ type Swap struct {
 	Frags     []OrderFrag `json:"frags"`
 }
 
-func NewSwap(frags []OrderFrag) *Swap {
+func NewSwap(symbol Symbol, side Side, frags []OrderFrag) *Swap {
 	return &Swap{
 		Created: time.Now(),
 		Frags:   frags,
+		Symbol:  symbol.String(),
+		Side:    side.String(),
 	}
 }
 
