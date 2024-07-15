@@ -28,8 +28,8 @@ func (r *redisRepository) saveSwap(ctx context.Context, swapId uuid.UUID, swap m
 	return err
 }
 
-func (r *redisRepository) StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error {
-	swap := models.NewSwap(frags)
+func (r *redisRepository) StoreSwap(ctx context.Context, swapId uuid.UUID, symbol models.Symbol, side models.Side, frags []models.OrderFrag) error {
+	swap := models.NewSwap(symbol, side, frags)
 
 	err := r.saveSwap(ctx, swapId, *swap, false)
 	if err != nil {

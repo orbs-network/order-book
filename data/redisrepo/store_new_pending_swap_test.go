@@ -22,7 +22,7 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 
 		mock.ExpectGet(CreateOpenSwapKey(mocks.SwapTx.SwapId)).SetVal("")
 
-		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
+		_, err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
 
 		assert.ErrorIs(t, err, models.ErrNotFound)
 	})
@@ -36,7 +36,7 @@ func TestRedisRepo_StoreNewPendingSwap(t *testing.T) {
 
 		mock.ExpectGet(CreateOpenSwapKey(mocks.SwapTx.SwapId)).SetErr(assert.AnError)
 
-		err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
+		_, err := repo.StoreNewPendingSwap(ctx, mocks.SwapTx)
 
 		assert.ErrorContains(t, err, "failed to get swap unexpectedly")
 	})

@@ -44,11 +44,11 @@ type OrderBookStore interface {
 	GetMaxBid(ctx context.Context, symbol models.Symbol) models.OrderIter
 	// taker side
 	GetSwap(ctx context.Context, swapId uuid.UUID, open bool) (*models.Swap, error)
-	StoreSwap(ctx context.Context, swapId uuid.UUID, frags []models.OrderFrag) error
+	StoreSwap(ctx context.Context, swapId uuid.UUID, symbol models.Symbol, side models.Side, frags []models.OrderFrag) error
 	RemoveSwap(ctx context.Context, swapId uuid.UUID) error
 	GetOpenSwaps(ctx context.Context) ([]models.Swap, error)
 	// Pending Swap+Transaction (TODO: rename)
-	StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) error
+	StoreNewPendingSwap(ctx context.Context, pendingSwap models.SwapTx) (*models.Swap, error)
 	// removes from "swapid" key
 	// adds to "swapResolve" key
 	ResolveSwap(ctx context.Context, swap models.Swap) error

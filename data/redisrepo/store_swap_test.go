@@ -41,7 +41,7 @@ func TestRedisRepository_StoreSwap(t *testing.T) {
 
 		mock.ExpectRPush(CreateOpenSwapKey(swapID), swapJson).SetErr(assert.AnError)
 
-		err := repo.StoreSwap(ctx, swapID, swap.Frags)
+		err := repo.StoreSwap(ctx, swapID, models.Symbol("MATIC_USDC"), models.BUY, swap.Frags)
 		assert.ErrorContains(t, err, "failed to store swap")
 	})
 
