@@ -128,6 +128,6 @@ func (r *Reporter) tick() {
 			logctx.Error(r.ctx, "sumOrderSide failed", logger.Error(err))
 		}
 		// report
-		logctx.Info(r.ctx, "report", r.fields...)
+		logctx.Debug(r.ctx, "report", r.fields...)
 	}
 }
