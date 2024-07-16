@@ -144,6 +144,9 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 
 	// ensure token names if only addresses were sent
 	err = h.resolveQuoteTokenNames(&req)
+	// refresh log fields now that name been resolved
+	logFields = []logger.Field{logger.Bool("isSwap", isSwap), logger.String("InToken", req.InToken), logger.String("InTokenAddress", req.InTokenAddress), logger.String("InAmount", req.InAmount), logger.String("OutToken", req.OutToken), logger.String("OutTokenAddress", req.OutTokenAddress), logger.String("MinOutAmount", req.MinOutAmount)}
+
 	if err != nil {
 		logctx.Warn(ctx, "handleQuote Failed to resolveQuoteTokenNames", append(logFields, logger.Error(err))...)
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InTokenAddress", req.InTokenAddress), logger.String("OutTokenAddress", req.OutTokenAddress))
@@ -172,7 +175,8 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	pair := h.pairMngr.Resolve(req.InToken, req.OutToken)
 
 	if pair == nil {
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "no suppoerted pair was found for tokens", logger.String("InToken", req.InToken), logger.String("OutToken", req.OutToken))
+		logctx.Warn(ctx, "'Quote::minOutAmount' is not a valid number format - passing nil", logFields...)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "no suppoerted pair was found for tokens", logFields...)
 		return nil
 	}
 	// taker's in token to maker's side
@@ -188,11 +192,11 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	svcQuoteRes, err := h.svc.GetQuote(r.Context(), pair.Symbol(), makerSide, inAmount, minOutAmount, makerInAdrs)
 	if err != nil {
 		if err == models.ErrMinOutAmount {
-			restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error())
+			restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logFields...)
 		} else if err == models.ErrInsufficientBalance {
-			restutils.WriteJSONError(ctx, w, http.StatusConflict, err.Error())
+			restutils.WriteJSONError(ctx, w, http.StatusConflict, err.Error(), logFields...)
 		} else {
-			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
+			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error(), logFields...)
 		}
 		return nil
 	}
