@@ -38,45 +38,53 @@ func (p *Pair) GetMakerSide(takerInToken string) Side {
 //////////////////////////////////////////////////////////////////////
 
 type PairMngr struct {
-	aToken2PairArr map[string][]*Pair
+	token2PairArr map[string][]*Pair
+	// bToken2PairArr map[string][]*Pair
 }
 
 func NewPairMngr() *PairMngr {
 	m := PairMngr{
-		aToken2PairArr: make(map[string][]*Pair),
+		token2PairArr: make(map[string][]*Pair),
 	}
 	symbolPairs := GetAllSymbols()
 	for _, sp := range symbolPairs {
 		arr := strings.Split(sp.String(), "-")
-		pair := NewPair(arr[0], arr[1])
-		if len(m.aToken2PairArr[arr[0]]) == 0 {
-			m.aToken2PairArr[arr[0]] = []*Pair{}
+		aToken := arr[0]
+		bToken := arr[1]
+		pair := NewPair(aToken, bToken)
+		// A token map
+		if len(m.token2PairArr[aToken]) == 0 {
+			m.token2PairArr[aToken] = []*Pair{}
 		}
-		m.aToken2PairArr[arr[0]] = append(m.aToken2PairArr[arr[0]], pair)
+		m.token2PairArr[aToken] = append(m.token2PairArr[aToken], pair)
+		// B token map
+		if len(m.token2PairArr[bToken]) == 0 {
+			m.token2PairArr[bToken] = []*Pair{}
+		}
+		m.token2PairArr[bToken] = append(m.token2PairArr[bToken], pair)
+
 		fmt.Println("aToken2PairArr pair added: " + sp)
 	}
 	return &m
 }
 
-func bTokenOfArr(arr []*Pair, bToken string) *Pair {
+func findPair(arr []*Pair, outToken string) *Pair {
 	for _, pair := range arr {
-		if pair.bToken == bToken {
+		if pair.aToken == outToken || pair.bToken == outToken {
 			return pair
 		}
 	}
 	return nil
 }
 
-func (m *PairMngr) Resolve(xToken, yToken string) *Pair {
-	// attempt x as aToken
-	pairArr, ok := m.aToken2PairArr[xToken]
-	if !ok {
-		// attempt y as aToken
-		pairArr, ok = m.aToken2PairArr[yToken]
-		if !ok {
-			return nil // pair not found for these two tokens
-		}
-		return bTokenOfArr(pairArr, xToken)
+func (m *PairMngr) Resolve(inToken, outToken string) *Pair {
+	if inToken == outToken {
+		return nil // illegal pair same token
 	}
-	return bTokenOfArr(pairArr, yToken)
+	// attempt inToken as aToken
+	pairArr, ok := m.token2PairArr[inToken]
+	if !ok {
+		return nil // pair not found for these two tokens
+	}
+	return findPair(pairArr, outToken)
 }
