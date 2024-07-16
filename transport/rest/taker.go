@@ -149,16 +149,15 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 
 	if err != nil {
 		logctx.Warn(ctx, "handleQuote Failed to resolveQuoteTokenNames", append(logFields, logger.Error(err))...)
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logFields...)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InTokenAddress", req.InTokenAddress), logger.String("OutTokenAddress", req.OutTokenAddress))
 		return nil
 	}
 
 	inAmount, err := h.convertFromTokenDec(ctx, req.InToken, req.InAmount)
 
 	if err != nil {
-		logFields = append(logFields, logger.Error(err))
-		logctx.Warn(ctx, "handleQuote Failed to convertFromTokenDec", logFields...)
-		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logFields...)
+		logctx.Warn(ctx, "handleQuote Failed to convertFromTokenDec", append(logFields, logger.Error(err))...)
+		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, err.Error(), logger.String("InToken", req.InToken), logger.String("outToken", req.OutToken), logger.Error(models.ErrTokenNotsupported))
 		return nil
 	}
 
