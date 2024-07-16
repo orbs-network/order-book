@@ -166,16 +166,14 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	if req.MinOutAmount != "" {
 		convMinOutAmount, err := h.convertFromTokenDec(ctx, req.OutToken, req.MinOutAmount)
 		if err != nil {
-			logctx.Warn(ctx, "'Quote::minOutAmount' is not a valid number format - passing nil", logger.Error(err))
+			logctx.Warn(ctx, "minOutAmount is not a valid number format - passing nil", logger.Error(err))
 		} else {
 			minOutAmount = &convMinOutAmount
 		}
 	}
 
 	pair := h.pairMngr.Resolve(req.InToken, req.OutToken)
-
 	if pair == nil {
-		logctx.Warn(ctx, "'Quote::minOutAmount' is not a valid number format - passing nil", logFields...)
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "no suppoerted pair was found for tokens", logFields...)
 		return nil
 	}
