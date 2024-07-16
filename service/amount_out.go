@@ -102,22 +102,22 @@ func getOutAmountInAToken(ctx context.Context, it models.OrderIter, inAmountB de
 		if validateOrder(ctx, order) {
 			// max Spend in B token for this order
 			orderSizeB := order.Price.Mul(order.GetAvailableSize())
-			// spend the min of orderSizeB/inAmountB
-			spendB := decimal.Min(orderSizeB, inAmountB)
-
-			// to verify onChain
-			verifier.Add(order.Signature.AbiFragment.Info.Swapper.String(), spendB)
+			// user spends B the min of orderSizeB / inAmountB
+			takerSpendB := decimal.Min(orderSizeB, inAmountB)
 
 			//Gain
-			gainA := spendB.Div(order.Price)
+			takerGainA := takerSpendB.Div(order.Price)
+
+			// to verify onChain the maker can spend A token the taker gains
+			verifier.Add(order.Signature.AbiFragment.Info.Swapper.String(), takerGainA)
 
 			//sub - add
-			inAmountB = inAmountB.Sub(spendB)
-			outAmountA = outAmountA.Add(gainA)
+			inAmountB = inAmountB.Sub(takerSpendB)
+			outAmountA = outAmountA.Add(takerGainA)
 
 			// append
-			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainA, InSize: spendB})
-			logctx.Debug(ctx, "getOutAmountInAToken - append order frag", logger.String("gainA", gainA.String()), logger.String("spendB", spendB.String()))
+			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: takerGainA, InSize: takerSpendB})
+			logctx.Debug(ctx, "getOutAmountInAToken - append order frag", logger.String("takerGainA", takerGainA.String()), logger.String("takerSpendB", takerSpendB.String()))
 		}
 	}
 	// not all is Spent - error
@@ -139,22 +139,22 @@ func getOutAmountInBToken(ctx context.Context, it models.OrderIter, inAmountA de
 	for it.HasNext() && inAmountA.IsPositive() {
 		order = it.Next(ctx)
 		if validateOrder(ctx, order) {
-			// Spend
-			spendA := decimal.Min(order.GetAvailableSize(), inAmountA)
+			// user Spends A
+			takerSpendA := decimal.Min(order.GetAvailableSize(), inAmountA)
 
-			// to verify onChain
-			verifier.Add(order.Signature.AbiFragment.Info.Swapper.String(), spendA)
+			// user Gains B
+			takerGainB := order.Price.Mul(takerSpendA)
 
-			// Gain
-			gainB := order.Price.Mul(spendA)
+			// to verify onChain maker has the B funds for the user to gain
+			verifier.Add(order.Signature.AbiFragment.Info.Swapper.String(), takerGainB)
 
 			// sub-add
-			inAmountA = inAmountA.Sub(spendA)
-			outAmountB = outAmountB.Add(gainB)
+			inAmountA = inAmountA.Sub(takerSpendA)
+			outAmountB = outAmountB.Add(takerGainB)
 
 			// res
-			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: gainB, InSize: spendA})
-			logctx.Debug(ctx, "getOutAmountInBToken append order frag", logger.String("gainB", gainB.String()), logger.String("spendA", spendA.String()))
+			frags = append(frags, models.OrderFrag{OrderId: order.Id, OutSize: takerGainB, InSize: takerSpendA})
+			logctx.Debug(ctx, "getOutAmountInBToken append order frag", logger.String("takerGainB", takerGainB.String()), logger.String("takerSpendA", takerSpendA.String()))
 		}
 	}
 	if inAmountA.IsPositive() {
