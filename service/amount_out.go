@@ -51,7 +51,7 @@ func (s *Service) GetQuote(ctx context.Context, symbol models.Symbol, makerSide 
 		res, err = getOutAmountInBToken(ctx, it, inAmount, walletVerifier)
 	}
 	if err != nil {
-		logctx.Error(ctx, "getQuoteResIn failed", logger.Error(err))
+		logctx.Warn(ctx, "getQuoteResIn failed", logger.Error(err))
 		return models.QuoteRes{}, err
 	}
 

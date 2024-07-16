@@ -53,8 +53,8 @@ func WriteJSONError(ctx context.Context, w http.ResponseWriter, status int, mess
 	}
 
 	// log details about why the request failed or was rejected
+	logFields = append(logFields, logger.String("sys_msg", message))
 	logFields = append(logFields, logger.String("status", http.StatusText(status)))
-	logFields = append(logFields, logger.String("message", message))
 	logctx.Warn(ctx, "api request not successful", logFields...)
 }
 
