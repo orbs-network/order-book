@@ -127,7 +127,7 @@ func (r *Reporter) tick() {
 		if err != nil {
 			logctx.Error(r.ctx, "sumOrderSide failed", logger.Error(err))
 		}
-		// report
-		logctx.Debug(r.ctx, "report", r.fields...)
+		// report - has to be info to be picked up by prod as well as staging and dev
+		logctx.Info(r.ctx, "report", r.fields...)
 	}
 }
