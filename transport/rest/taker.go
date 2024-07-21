@@ -177,6 +177,9 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		restutils.WriteJSONError(ctx, w, http.StatusBadRequest, "no suppoerted pair was found for tokens", logFields...)
 		return nil
 	}
+	// add symbol to all log fields
+	logFields = append(logFields, logger.String("symbol", pair.String()))
+
 	// taker's in token to maker's side
 	makerSide := pair.GetMakerSide(req.InToken)
 
@@ -214,18 +217,20 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 		Fragments: []Fragment{},
 	}
 
-	logctx.Debug(ctx, "QuoteRes OK", logger.String("OutAmount", res.OutAmount), logger.String("InToken", req.InToken), logger.String("outToken", req.OutToken))
+	logctx.Debug(ctx, "QuoteRes OK", logFields...)
 
 	if isSwap {
 		logctx.Info(ctx, "BeginSwap", logFields...)
 		// lock liquidity
 		swapData, err := h.svc.BeginSwap(r.Context(), svcQuoteRes)
-		res.SwapId = swapData.SwapId.String()
 		if err != nil {
 			restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, err.Error())
 			return nil
 		}
-		logctx.Info(ctx, "BeginSwap OK", append(logFields, logger.String("swapId", res.SwapId))...)
+
+		res.SwapId = swapData.SwapId.String()
+		logFields = append(logFields, logger.String("swapId", res.SwapId))
+		logctx.Info(ctx, "BeginSwap OK", logFields...)
 
 		signedOrders := []abi.SignedOrder{}
 
@@ -241,7 +246,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 			abiOrder.ExclusivityOverrideBps = big.NewInt(0)
 
 			if len(abiOrder.Outputs) == 0 {
-				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "abiOrder.Outputs length is 0", logger.Error(err))
+				restutils.WriteJSONError(ctx, w, http.StatusInternalServerError, "abiOrder.Outputs length is 0", logFields...)
 				return nil
 			}
 
@@ -276,7 +281,7 @@ func (h *Handler) handleQuote(w http.ResponseWriter, r *http.Request, isSwap boo
 	}
 
 	restutils.WriteJSONResponse(r.Context(), w, http.StatusOK, res)
-	logctx.Info(ctx, "handleQuote end", logFields...)
+	logctx.Info(ctx, "handleQuote end OK", logFields...)
 	return &res
 }
 
