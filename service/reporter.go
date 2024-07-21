@@ -56,9 +56,9 @@ func (r *Reporter) Stop() {
 	close(r.stop)
 }
 
-func (r *Reporter) sumOrderSide(isAsk bool, it models.OrderIter) error {
+func (r *Reporter) sumOrderSide(symbol models.Symbol, isAsk bool, it models.OrderIter) error {
 	if !it.HasNext() {
-		logctx.Debug(r.ctx, "no orders in iterator")
+		logctx.Info(r.ctx, "no orders in iterator", logger.String("symbol", symbol.String()), logger.Bool("isAsk", isAsk))
 	}
 	topOrder := float64(0)
 	sumSize := float64(0)
@@ -77,7 +77,7 @@ func (r *Reporter) sumOrderSide(isAsk bool, it models.OrderIter) error {
 		order = it.Next(r.ctx)
 		// unexpected
 		if order == nil {
-			logctx.Error(r.ctx, "order::it.Next() returned nil")
+			logctx.Error(r.ctx, "iterator next returned nil", logger.String("symbol", symbol.String()), logger.Bool("isAsk", isAsk))
 			return models.ErrUnexpectedError
 		}
 		// sum & count
@@ -113,7 +113,7 @@ func (r *Reporter) tick() {
 			logctx.Error(r.ctx, "GetMinAsk failed")
 			return
 		}
-		err := r.sumOrderSide(true, itAsk)
+		err := r.sumOrderSide(sym, true, itAsk)
 		if err != nil {
 			logctx.Error(r.ctx, "sumOrderSide failed", logger.Error(err))
 		}
@@ -123,7 +123,7 @@ func (r *Reporter) tick() {
 			logctx.Error(r.ctx, "GetMinAsk failed")
 			return
 		}
-		err = r.sumOrderSide(false, itBid)
+		err = r.sumOrderSide(sym, false, itBid)
 		if err != nil {
 			logctx.Error(r.ctx, "sumOrderSide failed", logger.Error(err))
 		}
