@@ -65,4 +65,5 @@ type OrderBookStore interface {
 	// PubSub
 	PublishEvent(ctx context.Context, key string, value interface{}) error
 	SubscribeToEvents(ctx context.Context, channel string) (chan []byte, error)
+	UnsubscribeFromEvents(ctx context.Context, channel string, clientChan chan []byte)
 }
