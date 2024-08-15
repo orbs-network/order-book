@@ -42,9 +42,16 @@ func WebSocketOrderHandler(orderSvc service.OrderBookService, getUserByApiKey mi
 		}
 		defer conn.Close()
 
-		conn.SetReadDeadline(time.Now().Add(120 * time.Second))
+		if err := conn.SetReadDeadline(time.Now().Add(120 * time.Second)); err != nil {
+			logctx.Error(ctx, "error setting initial read deadline", logger.Error(err), logger.String("userId", user.Id.String()))
+			http.Error(w, "Error subscribing to orders", http.StatusInternalServerError)
+			return
+		}
 		conn.SetPongHandler(func(appData string) error {
-			conn.SetReadDeadline(time.Now().Add(120 * time.Second)) // Extend deadline on pong
+			if err := conn.SetReadDeadline(time.Now().Add(120 * time.Second)); err != nil {
+				logctx.Error(ctx, "error extending read deadline", logger.Error(err), logger.String("userId", user.Id.String()))
+				// Not returning an error here because the connection is still valid
+			}
 			return nil
 		})
 
@@ -57,7 +64,10 @@ func WebSocketOrderHandler(orderSvc service.OrderBookService, getUserByApiKey mi
 
 		// Ensure Redis connection is unsubscribed and closed when the WebSocket disconnects
 		defer func() {
-			orderSvc.UnsubscribeUserOrders(ctx, user.Id, messageChan)
+			err := orderSvc.UnsubscribeUserOrders(ctx, user.Id, messageChan)
+			if err != nil {
+				logctx.Error(ctx, "error unsubscribing from user orders", logger.Error(err), logger.String("userId", user.Id.String()))
+			}
 		}()
 
 		ticker := time.NewTicker(60 * time.Second)
