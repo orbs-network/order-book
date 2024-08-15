@@ -193,6 +193,9 @@ func (m *MockOrderBookStore) SubscribeToEvents(ctx context.Context, channel stri
 	return m.EventsChan, m.Error
 }
 
+func (m *MockOrderBookStore) UnsubscribeFromEvents(ctx context.Context, channel string, clientChan chan []byte) {
+}
+
 func (r *MockOrderBookStore) ReadStrKey(ctx context.Context, key string) (string, error) {
 	return "", nil
 }

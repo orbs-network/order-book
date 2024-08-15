@@ -13,17 +13,27 @@ import (
 )
 
 func (s *Service) SubscribeUserOrders(ctx context.Context, userId uuid.UUID) (chan []byte, error) {
-	logctx.Debug(ctx, "subscribing to user orders", logger.String("userId", userId.String()))
+	logctx.Info(ctx, "subscribing to user orders", logger.String("userId", userId.String()))
 
 	eventKey := models.CreateUserOrdersEventKey(userId)
 
-	channel, err := s.orderBookStore.SubscribeToEvents(ctx, fmt.Sprintf("user_orders:%s", userId))
+	channel, err := s.orderBookStore.SubscribeToEvents(ctx, eventKey)
 	if err != nil {
 		logctx.Error(ctx, "failed to subscribe to user orders", logger.String("event", eventKey), logger.Error(err))
 		return nil, fmt.Errorf("failed to subscribe to user orders: %w", err)
 	}
 
 	return channel, nil
+}
+
+func (s *Service) UnsubscribeUserOrders(ctx context.Context, userId uuid.UUID, clientChan chan []byte) error {
+	logctx.Info(ctx, "unsubscribing from user orders", logger.String("userId", userId.String()))
+
+	eventKey := models.CreateUserOrdersEventKey(userId)
+
+	s.orderBookStore.UnsubscribeFromEvents(ctx, eventKey, clientChan)
+
+	return nil
 }
 
 func publishFillEvent(ctx context.Context, store store.OrderBookStore, userId uuid.UUID, fill models.Fill) {

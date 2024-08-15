@@ -72,6 +72,7 @@ func setup() {
 	}
 
 	rdb := redis.NewClient(opt)
+	defer rdb.Close()
 
 	repository, err := redisrepo.NewRedisRepository(rdb)
 	if err != nil {

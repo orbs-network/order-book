@@ -25,6 +25,7 @@ type OrderBookService interface {
 	GetSwapFills(ctx context.Context, userId uuid.UUID, symbol models.Symbol, startAt, endAt time.Time) ([]models.Fill, error)
 	// Subscribe to order updates for a specific user
 	SubscribeUserOrders(ctx context.Context, userId uuid.UUID) (chan []byte, error)
+	UnsubscribeUserOrders(ctx context.Context, userId uuid.UUID, clientChan chan []byte) error
 
 	// taker api - INSTEAD
 	GetQuote(ctx context.Context, symbol models.Symbol, makerSide models.Side, inAmount decimal.Decimal, minOutAmount *decimal.Decimal, makerInToken string) (models.QuoteRes, error)
