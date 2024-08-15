@@ -1,5 +1,6 @@
 .vscode/
 etl/
+node_modules/
 __debug_*
 .DS_Store
 *secret*
