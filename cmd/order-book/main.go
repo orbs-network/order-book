@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/gorilla/mux"
@@ -116,7 +120,25 @@ func setup() {
 	handler.Init(userSvc.GetUserByApiKey)
 
 	server := rest.NewHTTPServer(":"+port, handler.Router)
-	server.StartServer()
-	// blocking
-	<-server.StopChannel
+
+	// Handle SIGINT and SIGTERM signals
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		server.StartServer()
+	}()
+
+	sig := <-signalChan
+	log.Printf("Received SIGTERM signal: %s. Initiating shutdown...\n", sig)
+
+	// Heroku gives 30 seconds to shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	if err := server.StopServer(ctx); err != nil {
+		log.Fatalf("Failed to stop server: %v\n", err)
+	}
+
+	log.Printf("Server gracefully stopped\n")
 }
