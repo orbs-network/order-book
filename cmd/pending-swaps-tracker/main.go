@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -81,19 +83,40 @@ func main() {
 	ticker := time.NewTicker(tickerDuration)
 	defer ticker.Stop()
 
-	ctx := context.Background()
+	// Handle SIGINT and SIGTERM signals
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
-	for range ticker.C {
-		// updating maker on chain wallets per token
-		err := evmClient.UpdateMakerBalances(ctx)
-		if err != nil {
-			log.Printf("error checking makers token balance: %v", err)
-		}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-		// check pending transactions
-		err = evmClient.CheckPendingTxs(ctx)
-		if err != nil {
-			log.Printf("error checking pending txs: %v", err)
+	// Graceful shutdown handler
+	go func() {
+		sig := <-signalChan
+		log.Printf("Tracker: received SIGTERM signal: %s. Initiating shutdown...\n", sig)
+		cancel()
+	}()
+
+	log.Printf("Swaps tracker running with ticker duration: %s\n", tickerDuration)
+
+	for {
+		select {
+		case <-ticker.C:
+			// updating maker on-chain wallets per token
+			err := evmClient.UpdateMakerBalances(ctx)
+			if err != nil {
+				log.Printf("error checking makers token balance: %v\n", err)
+			}
+
+			// check pending transactions
+			err = evmClient.CheckPendingTxs(ctx)
+			if err != nil {
+				log.Printf("error checking pending txs: %v", err)
+			}
+
+		case <-ctx.Done():
+			log.Println("Shutting down swaps tracker...")
+			return
 		}
 	}
 }

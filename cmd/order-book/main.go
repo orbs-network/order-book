@@ -130,7 +130,7 @@ func setup() {
 	}()
 
 	sig := <-signalChan
-	log.Printf("Received SIGTERM signal: %s. Initiating shutdown...\n", sig)
+	log.Printf("Server: received SIGTERM signal: %s. Initiating shutdown...\n", sig)
 
 	// Heroku gives 30 seconds to shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
