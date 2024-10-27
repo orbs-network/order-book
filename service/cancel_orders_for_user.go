@@ -11,16 +11,13 @@ import (
 
 func (s *Service) CancelOrdersForUser(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orderIds []uuid.UUID, err error) {
 
-	ids, err := s.orderBookStore.GetOpenOrderIds(ctx, userId, symbol)
+	orders, err := s.orderBookStore.GetOpenOrdersForUser(ctx, userId)
 	if err != nil {
-		logctx.Debug(ctx, "no orders found for user", logger.String("userId", userId.String()))
-		return []uuid.UUID{}, err
-	}
-
-	orders, err := s.orderBookStore.FindOrdersByIds(ctx, ids, true)
-	if err != nil {
-		logctx.Error(ctx, "FindOrdersByIds open orders failed", logger.Error(err), logger.String("userId", userId.String()))
-		return []uuid.UUID{}, err
+		if err == models.ErrNotFound {
+			return nil, err
+		}
+		logctx.Error(ctx, "could not get open orders for user", logger.Error(err), logger.String("userId", userId.String()))
+		return nil, err
 	}
 	res := []uuid.UUID{}
 	for _, order := range orders {
