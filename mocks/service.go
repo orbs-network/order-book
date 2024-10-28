@@ -92,12 +92,8 @@ func (m *MockOrderBookStore) GetOpenOrders(ctx context.Context, userId uuid.UUID
 	return m.Orders, len(m.Orders), nil
 }
 
-func (m *MockOrderBookStore) GetOpenOrderIds(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]uuid.UUID, error) {
-	var orderIds []uuid.UUID
-	for _, order := range m.Orders {
-		orderIds = append(orderIds, order.Id)
-	}
-	return orderIds, m.Error
+func (m *MockOrderBookStore) GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) ([]models.Order, error) {
+	return m.Orders, m.Error
 }
 
 // Generic Building blocks with no biz logic in a single TX

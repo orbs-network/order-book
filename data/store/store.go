@@ -24,9 +24,8 @@ type OrderBookStore interface {
 	GetOrdersAtPrice(ctx context.Context, symbol models.Symbol, price decimal.Decimal) ([]models.Order, error)
 	GetMarketDepth(ctx context.Context, symbol models.Symbol, depth int) (models.MarketDepth, error)
 	GetOpenOrders(ctx context.Context, userId uuid.UUID, symbol models.Symbol) (orders []models.Order, totalOrders int, err error)
-	// ------------------------------
-	// Generic getters
-	GetOpenOrderIds(ctx context.Context, userId uuid.UUID, symbol models.Symbol) ([]uuid.UUID, error)
+	// Fetches order IDs and their respective orders in one call
+	GetOpenOrdersForUser(ctx context.Context, userId uuid.UUID) ([]models.Order, error)
 	// ------------------------------
 	// Generic Building blocks with no biz logic in a single tx
 
