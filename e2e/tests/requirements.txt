@@ -1,3 +1,4 @@
 orbs-orderbook-sdk==0.10.2
 pytest==7.4.4
 redis==5.0.3
+./payload_pkg
